@@ -4,7 +4,7 @@
 """
 """
 
-import sys
+import sys, traceback
 if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
 from pathlib import Path
 sys.path[:0] = [str(Path(sys.argv[0]).resolve().parents[1].joinpath("dist")), str(Path(sys.argv[0]).resolve().parents[1].joinpath("python"))]
@@ -15,7 +15,7 @@ import hidb
 # ----------------------------------------------------------------------
 
 def main(args):
-    print(dir(hidb))
+    hidb.import_chart(args.input[0])
 
 # ----------------------------------------------------------------------
 
@@ -24,8 +24,9 @@ try:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-d', '--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging output.')
 
+    parser.add_argument('input', nargs="+", help='Source files to process.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
-    parser.add_argument('output', nargs="?", help='Seqdb to write.')
+    # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")

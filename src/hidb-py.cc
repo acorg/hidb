@@ -8,6 +8,8 @@
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #pragma GCC diagnostic ignored "-Wdeprecated"
 #pragma GCC diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wrange-loop-analysis"
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
 #endif
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
