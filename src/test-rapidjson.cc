@@ -61,7 +61,6 @@ void test_sax(int num_tests, std::string source)
     for (int i = 0; i < num_tests; ++i) {
         Chart* chart = import_chart(source);
         delete chart;
-        break;
     }
 }
 

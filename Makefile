@@ -31,7 +31,7 @@ PYTHON_MODULE_SUFFIX = $(shell $(PYTHON_CONFIG) --extension-suffix)
 # -fvisibility=hidden and -flto make resulting lib smaller (pybind11) but linking is much slower
 OPTIMIZATION = -O3 #-fvisibility=hidden -flto
 CXXFLAGS = -MMD -g $(OPTIMIZATION) -fPIC -std=$(STD) $(WEVERYTHING) $(WARNINGS) -I$(BUILD)/include $(PKG_INCLUDES) $(MODULES_INCLUDE)
-LDFLAGS =
+LDFLAGS = -O3
 HIDB_LDLIBS = $$(pkg-config --libs liblzma) $$($(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
 
 MODULES_INCLUDE = -Imodules/rapidjson/include -Imodules/pybind11/include

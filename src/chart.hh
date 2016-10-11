@@ -6,6 +6,7 @@
 // ----------------------------------------------------------------------
 
 class Chart;
+class ChartReaderEventHandler;
 
 class AntigenSerum
 {
@@ -20,6 +21,7 @@ class AntigenSerum
     inline AntigenSerum(Chart& aChart) : mChart(aChart) {}
 
  private:
+    friend class ChartReaderEventHandler;
     Chart& mChart;
     std::string mName; // "N" "[VIRUS_TYPE/][HOST/]LOCATION/ISOLATION/YEAR" or "CDC_ABBR NAME" or "NAME"
     std::string mLineage; // "L"
@@ -32,13 +34,11 @@ class AntigenSerum
 class Antigen : public AntigenSerum
 {
  public:
+    inline Antigen(Chart& aChart) : AntigenSerum(aChart), mReference(false) {}
     inline std::string date() const { return mDate; }
 
- protected:
-    friend class ChartReaderEventHandler;
-    inline Antigen(Chart& aChart) : AntigenSerum(aChart) {}
-
  private:
+    friend class ChartReaderEventHandler;
     std::string mDate; // "D"
     std::string mLabId; // "l"
     bool mReference; // "r"
@@ -47,13 +47,13 @@ class Antigen : public AntigenSerum
 
 class Serum : public AntigenSerum
 {
- protected:
-    friend class ChartReaderEventHandler;
-    inline Serum(Chart& aChart) : AntigenSerum(aChart) {}
+ public:
+    inline Serum(Chart& aChart) : AntigenSerum(aChart), mHomologous(-1) {}
 
  private:
+    friend class ChartReaderEventHandler;
     std::string mSerumId; // "I"
-    size_t mHomologous; // "h"
+    int mHomologous; // "h"
     std::string mSerumSpecies; // "zs"
 };
 
@@ -67,7 +67,11 @@ class ChartInfo
 
  private:
     friend class ChartReaderEventHandler;
-    std::string mVirusType;
+    std::string mVirusType;     // "virus_type"
+    std::string mAssay;         // "assay"
+    std::string mDate;          // "date"
+    std::string mLab;           // "lab"
+    std::string mRbc;           // "rbc"
 };
 
 // ----------------------------------------------------------------------
