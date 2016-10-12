@@ -44,7 +44,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
         Comment='?', Comment_='_',
         Chart='c', Antigens='a', Sera='s', Info='i', Projections='P', PlotSpec='p', Titers='t',
         Assay='A', Virus='v', VirusType='V', Date='D', Name='N', Lab='l', Rbc='r', VirusSubset='s', TableType='T', Sources='S',
-        Clades='c'
+        Lineage='L', Passage='P', Reassortant='R', LabId='l', Reference='r', Annotations='a', Clades='c',
+        SerumId='I', HomologousAntigen='h', SerumSpecies='s',
+        TitersList='l', TitersDict='d', TitersLayers='L',
     };
 
  public:
@@ -59,6 +61,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   break;
               case State::Chart:
               case State::Info:
+              case State::Titers:
+              case State::Projections:
+              case State::PlotSpec:
                   break;
               case State::Ignore:
                   ++ignore_compound;
@@ -133,6 +138,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         }
                         break;
                     case State::Chart:
+                          // std::cerr << "State::Chart " << str[0] << std::endl;
                         switch (static_cast<AceKey>(str[0])) {
                           case AceKey::Comment:
                           case AceKey::Comment_:
@@ -205,8 +211,102 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         state.push(push_state);
                         break;
                     case State::Antigen:
+                        push_state = State::StringField;
+                        switch (static_cast<AceKey>(str[0])) {
+                          case AceKey::Comment:
+                          case AceKey::Comment_:
+                              push_state = State::Ignore;
+                              break;
+                          case AceKey::Name:
+                              string_to_fill = &chart->mAntigens.back().mName;
+                              break;
+                          case AceKey::Date:
+                              string_to_fill = &chart->mAntigens.back().mDate;
+                              break;
+                          case AceKey::Lineage:
+                              string_to_fill = &chart->mAntigens.back().mLineage;
+                              break;
+                          case AceKey::Passage:
+                              string_to_fill = &chart->mAntigens.back().mPassage;
+                              break;
+                          case AceKey::Reassortant:
+                              string_to_fill = &chart->mAntigens.back().mReassortant;
+                              break;
+                          case AceKey::LabId:
+                              string_to_fill = &chart->mAntigens.back().mLabId;
+                              break;
+                          case AceKey::Reference:
+                              push_state = State::BoolField;
+                              bool_to_fill = &chart->mAntigens.back().mReference;
+                              break;
+                          case AceKey::Annotations:
+                              push_state = State::AntigenAnnotations;
+                              break;
+                          case AceKey::Clades:
+                              push_state = State::Clades;
+                              break;
+                          default:
+                              r = false;
+                              break;
+                        }
+                        state.push(push_state);
+                        break;
                     case State::Serum:
+                        push_state = State::StringField;
+                        switch (static_cast<AceKey>(str[0])) {
+                          case AceKey::Comment:
+                          case AceKey::Comment_:
+                              push_state = State::Ignore;
+                              break;
+                          case AceKey::Name:
+                              string_to_fill = &chart->mSera.back().mName;
+                              break;
+                          case AceKey::Lineage:
+                              string_to_fill = &chart->mSera.back().mLineage;
+                              break;
+                          case AceKey::Passage:
+                              string_to_fill = &chart->mSera.back().mPassage;
+                              break;
+                          case AceKey::Reassortant:
+                              string_to_fill = &chart->mSera.back().mReassortant;
+                              break;
+                          case AceKey::Annotations:
+                              push_state = State::AntigenAnnotations;
+                              break;
+                          case AceKey::SerumId:
+                              string_to_fill = &chart->mSera.back().mSerumId;
+                              break;
+                          case AceKey::HomologousAntigen:
+                              push_state = State::IntField;
+                              int_to_fill = &chart->mSera.back().mHomologous;
+                              break;
+                          case AceKey::SerumSpecies:
+                              string_to_fill = &chart->mSera.back().mSerumSpecies;
+                              break;
+                          default:
+                              r = false;
+                              break;
+                        }
+                        state.push(push_state);
+                        break;
                     case State::Titers:
+                        std::cerr << "State::Titers " << str[0] << std::endl;
+                        switch (static_cast<AceKey>(str[0])) {
+                          case AceKey::Comment:
+                          case AceKey::Comment_:
+                              push_state = State::Ignore;
+                              break;
+                          case AceKey::TitersList:
+                          case AceKey::TitersDict:
+                          case AceKey::TitersLayers:
+                              push_state = State::Ignore;
+                              break;
+                          default:
+                              r = false;
+                              break;
+                        }
+                        break;
+                    case State::PlotSpec:
                     case State::StringField:
                     case State::BoolField:
                     case State::IntField:
@@ -230,64 +330,6 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   else if (state.top() != State::Ignore) {
                       r = false;
                   }
-                  break;
-            }
-            return r;
-
-            const std::string key(str, length);
-            switch (state.top()) {
-              case State::Antigen:
-                  push_state = State::StringField;
-                  if (key == "N")
-                      string_to_fill = &chart->mAntigens.back().mName;
-                  else if (key == "D")
-                      string_to_fill = &chart->mAntigens.back().mDate;
-                  else if (key == "L")
-                      string_to_fill = &chart->mAntigens.back().mLineage;
-                  else if (key == "P")
-                      string_to_fill = &chart->mAntigens.back().mPassage;
-                  else if (key == "R")
-                      string_to_fill = &chart->mAntigens.back().mReassortant;
-                  else if (key == "l")
-                      string_to_fill = &chart->mAntigens.back().mLabId;
-                  else if (key == "c")
-                      push_state = State::Clades;
-                  else if (key == "a")
-                      push_state = State::AntigenAnnotations;
-                  else if (key == "r") {
-                      push_state = State::BoolField;
-                      bool_to_fill = &chart->mAntigens.back().mReference;
-                  }
-                  else
-                      r = false;
-                  state.push(push_state);
-                  break;
-              case State::Serum:
-                  push_state = State::StringField;
-                  if (key == "N")
-                      string_to_fill = &chart->mSera.back().mName;
-                  else if (key == "L")
-                      string_to_fill = &chart->mSera.back().mLineage;
-                  else if (key == "P")
-                      string_to_fill = &chart->mSera.back().mPassage;
-                  else if (key == "R")
-                      string_to_fill = &chart->mSera.back().mReassortant;
-                  else if (key == "a")
-                      push_state = State::SerumAnnotations;
-                  else if (key == "I")
-                      string_to_fill = &chart->mSera.back().mSerumId;
-                  else if (key == "s")
-                      string_to_fill = &chart->mSera.back().mSerumSpecies;
-                  else if (key == "h")
-                      int_to_fill = &chart->mSera.back().mHomologous;
-                  else
-                      r = false;
-                  state.push(push_state);
-                  break;
-              case State::Ignore:
-                  break;
-              default:
-                  r = false;
                   break;
             }
             return r;
