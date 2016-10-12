@@ -27,7 +27,7 @@ class AntigenSerum
     std::string mLineage; // "L"
     std::string mPassage; // "P"
     std::string mReassortant; // "R"
-    std::vector<std::string> mAnnotations; // "za"
+    std::vector<std::string> mAnnotations; // "a"
 
 };
 
@@ -42,7 +42,7 @@ class Antigen : public AntigenSerum
     std::string mDate; // "D"
     std::string mLabId; // "l"
     bool mReference; // "r"
-    std::string mClade; // "zc"
+    std::vector<std::string> mClades; // "c"
 };
 
 class Serum : public AntigenSerum
@@ -54,7 +54,7 @@ class Serum : public AntigenSerum
     friend class ChartReaderEventHandler;
     std::string mSerumId; // "I"
     int mHomologous; // "h"
-    std::string mSerumSpecies; // "zs"
+    std::string mSerumSpecies; // "s"
 };
 
 // ----------------------------------------------------------------------
@@ -62,16 +62,22 @@ class Serum : public AntigenSerum
 class ChartInfo
 {
  public:
-    inline ChartInfo() {}
+    enum TableType {Antigenic, Genetic};
+    inline ChartInfo() : mType(Antigenic) {}
     inline std::string virus_type() const { return mVirusType; }
 
  private:
     friend class ChartReaderEventHandler;
-    std::string mVirusType;     // "virus_type"
-    std::string mAssay;         // "assay"
-    std::string mDate;          // "date"
-    std::string mLab;           // "lab"
-    std::string mRbc;           // "rbc"
+    std::string mVirus;     // "v"
+    std::string mVirusType;     // "V"
+    std::string mAssay;         // "A"
+    std::string mDate;          // "D"
+    std::string mLab;           // "l"
+    std::string mRbc;           // "r"
+    std::string mName;           // "N"
+    std::string mSubset;           // "s"
+    TableType mType;             // "T"
+    std::vector<ChartInfo> mSources; // "S"
 };
 
 // ----------------------------------------------------------------------

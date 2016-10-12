@@ -26,7 +26,7 @@ Chart* RJ::import_chart(std::string buffer)
         const auto version = d->FindMember("  version");
         if (version == d->MemberEnd() || version->value != "acmacs-ace-v1")
             throw std::runtime_error("cannot import chart: unrecognized data version");
-        const auto chart_data = d->FindMember("chart");
+        const auto chart_data = d->FindMember("c");
         if (chart_data == d->MemberEnd())
             throw std::runtime_error("cannot import chart: chart data not found");
         chart = new Chart(d, chart_data->value);

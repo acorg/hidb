@@ -19,7 +19,33 @@
 class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, ChartReaderEventHandler>
 {
  private:
-    enum class State { Ignore, Init, Root, Version, Chart, Info, Antigens, Antigen, Sera, Serum, Titers, StringField, BoolField, IntField, AntigenAnnotations, SerumAnnotations };
+    enum class State { Ignore, Init, Root, Version, Chart, Info, TableType, Antigen, Serum, Titers, Projections, PlotSpec, Clades, StringField, BoolField, IntField, AntigenAnnotations, SerumAnnotations };
+
+                    // case State::Ignore:
+                    // case State::Init:
+                    // case State::Root:
+                    // case State::Version:
+                    // case State::Chart:
+                    // case State::Info:
+                    // case State::Antigen:
+                    // case State::Serum:
+                    // case State::Titers:
+                    // case State::StringField:
+                    // case State::BoolField:
+                    // case State::IntField:
+                    // case State::AntigenAnnotations:
+                    // case State::SerumAnnotations:
+                    // case State::Projections:
+                    // case State::PlotSpec:
+                    // case State::Clades:
+                    // case State::TableType:
+
+    enum class AceKey : char {
+        Comment='?', Comment_='_',
+        Chart='c', Antigens='a', Sera='s', Info='i', Projections='P', PlotSpec='p', Titers='t',
+        Assay='A', Virus='v', VirusType='V', Date='D', Name='N', Lab='l', Rbc='r', VirusSubset='s', TableType='T', Sources='S',
+        Clades='c'
+    };
 
  public:
     inline ChartReaderEventHandler(Chart* aChart) : chart(aChart), ignore_compound(0), string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr) { state.push(State::Init); }
@@ -37,11 +63,11 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Ignore:
                   ++ignore_compound;
                   break;
-              case State::Antigens:
+              case State::Antigen:
                   state.push(State::Antigen);
                   chart->mAntigens.emplace_back(*chart);
                   break;
-              case State::Sera:
+              case State::Serum:
                   state.push(State::Serum);
                   chart->mSera.emplace_back(*chart);
                   break;
@@ -82,31 +108,134 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
     inline bool Key(const char* str, rapidjson::SizeType length, bool /*copy*/)
         {
             bool r = true;
-            const std::string key(str, length);
             State push_state;
-            switch (state.top()) {
-              case State::Root:
-                  if (length == 0 || key[0] == '?' || key == "_" || key == " created")
+            switch (length) {
+              case 0:
+                  r = false;
+                  break;
+              case 1:           // "_", "?"
+                  switch (state.top()) {
+                    case State::Init:
+                    case State::Version:
+                        r = false;
+                        break;
+                    case State::Root:
+                        switch (static_cast<AceKey>(str[0])) {
+                          case AceKey::Comment:
+                          case AceKey::Comment_:
+                              state.push(State::Ignore);
+                              break;
+                          case AceKey::Chart:
+                              state.push(State::Chart);
+                              break;
+                          default:
+                              r = false;
+                        }
+                        break;
+                    case State::Chart:
+                        switch (static_cast<AceKey>(str[0])) {
+                          case AceKey::Comment:
+                          case AceKey::Comment_:
+                              state.push(State::Ignore);
+                              break;
+                          case AceKey::Antigens:
+                              state.push(State::Antigen);
+                              break;
+                          case AceKey::Sera:
+                              state.push(State::Serum);
+                              break;
+                          case AceKey::Info:
+                              state.push(State::Info);
+                              break;
+                          case AceKey::Titers:
+                              state.push(State::Titers);
+                              break;
+                          case AceKey::Projections:
+                              state.push(State::Projections);
+                              break;
+                          case AceKey::PlotSpec:
+                              state.push(State::PlotSpec);
+                              break;
+                          default:
+                              r = false;
+                              break;
+                        }
+                        break;
+                    case State::Info:
+                        push_state = State::StringField;
+                        switch (static_cast<AceKey>(str[0])) {
+                          case AceKey::Comment:
+                          case AceKey::Comment_:
+                              push_state = State::Ignore;
+                              break;
+                          case AceKey::Assay:
+                              string_to_fill = &chart->mInfo.mAssay;
+                              break;
+                          case AceKey::Virus:
+                              string_to_fill = &chart->mInfo.mVirus;
+                              break;
+                          case AceKey::VirusType:
+                              string_to_fill = &chart->mInfo.mVirusType;
+                              break;
+                          case AceKey::Date:
+                              string_to_fill = &chart->mInfo.mDate;
+                              break;
+                          case AceKey::Name:
+                              string_to_fill = &chart->mInfo.mName;
+                              break;
+                          case AceKey::Lab:
+                              string_to_fill = &chart->mInfo.mLab;
+                              break;
+                          case AceKey::Rbc:
+                              string_to_fill = &chart->mInfo.mRbc;
+                              break;
+                          case AceKey::VirusSubset:
+                              string_to_fill = &chart->mInfo.mSubset;
+                              break;
+                          case AceKey::TableType:
+                              push_state = State::TableType;
+                              break;
+                          case AceKey::Sources:
+                              r = false;
+                              break;
+                          default:
+                              r = false;
+                              break;
+                        }
+                        state.push(push_state);
+                        break;
+                    case State::Antigen:
+                    case State::Serum:
+                    case State::Titers:
+                    case State::StringField:
+                    case State::BoolField:
+                    case State::IntField:
+                    case State::AntigenAnnotations:
+                    case State::SerumAnnotations:
+                    case State::Projections:
+                    case State::Clades:
+                    case State::TableType:
+                    case State::Ignore:
+                        r = false;
+                        break;
+                  }
+                  break;
+              default:
+                  if (static_cast<AceKey>(str[0]) == AceKey::Comment) {
                       state.push(State::Ignore);
-                  else if (key == "  version")
+                  }
+                  else if (state.top() == State::Root && std::string(str, length) == "  version") {
                       state.push(State::Version);
-                  else if (key == "chart")
-                      state.push(State::Chart);
-                  else
+                  }
+                  else if (state.top() != State::Ignore) {
                       r = false;
+                  }
                   break;
-              case State::Chart:
-                  if (key == "antigens")
-                      state.push(State::Antigens);
-                  else if (key == "sera")
-                      state.push(State::Sera);
-                  else if (key == "info")
-                      state.push(State::Info);
-                  else if (key == "titers")
-                      state.push(State::Ignore); // state.push(State::Titers);
-                  else
-                      r = false;
-                  break;
+            }
+            return r;
+
+            const std::string key(str, length);
+            switch (state.top()) {
               case State::Antigen:
                   push_state = State::StringField;
                   if (key == "N")
@@ -121,9 +250,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                       string_to_fill = &chart->mAntigens.back().mReassortant;
                   else if (key == "l")
                       string_to_fill = &chart->mAntigens.back().mLabId;
-                  else if (key == "zc")
-                      string_to_fill = &chart->mAntigens.back().mClade;
-                  else if (key == "za")
+                  else if (key == "c")
+                      push_state = State::Clades;
+                  else if (key == "a")
                       push_state = State::AntigenAnnotations;
                   else if (key == "r") {
                       push_state = State::BoolField;
@@ -143,30 +272,14 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                       string_to_fill = &chart->mSera.back().mPassage;
                   else if (key == "R")
                       string_to_fill = &chart->mSera.back().mReassortant;
-                  else if (key == "za")
+                  else if (key == "a")
                       push_state = State::SerumAnnotations;
                   else if (key == "I")
                       string_to_fill = &chart->mSera.back().mSerumId;
-                  else if (key == "zs")
+                  else if (key == "s")
                       string_to_fill = &chart->mSera.back().mSerumSpecies;
                   else if (key == "h")
                       int_to_fill = &chart->mSera.back().mHomologous;
-                  else
-                      r = false;
-                  state.push(push_state);
-                  break;
-              case State::Info:
-                  push_state = State::StringField;
-                  if (key == "assay")
-                      string_to_fill = &chart->mInfo.mAssay;
-                  else if (key == "date")
-                      string_to_fill = &chart->mInfo.mDate;
-                  else if (key == "lab")
-                      string_to_fill = &chart->mInfo.mLab;
-                  else if (key == "rbc")
-                      string_to_fill = &chart->mInfo.mRbc;
-                  else if (key == "virus_type")
-                      string_to_fill = &chart->mInfo.mVirusType;
                   else
                       r = false;
                   state.push(push_state);
@@ -184,10 +297,11 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
         {
             bool r = true;
             switch (state.top()) {
-              case State::Antigens:
-              case State::Sera:
+              case State::Antigen:
+              case State::Serum:
               case State::AntigenAnnotations:
               case State::SerumAnnotations:
+              case State::Clades:
                   break;
               case State::Ignore:
                   ++ignore_compound;
@@ -203,10 +317,11 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
         {
             bool r = true;
             switch (state.top()) {
-              case State::Antigens:
-              case State::Sera:
+              case State::Antigen:
+              case State::Serum:
               case State::AntigenAnnotations:
               case State::SerumAnnotations:
+              case State::Clades:
                   state.pop();
                   break;
               case State::Ignore:
@@ -235,7 +350,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                       state.pop();
                   break;
               case State::Version:
-                  if (std::string(str, length) != "acmacs-ace-v1")
+                  if (std::memcmp(str, "acmacs-ace-v1", length))
                       r = false;
                   state.pop();
                   break;
@@ -247,8 +362,26 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::AntigenAnnotations:
                   chart->mAntigens.back().mAnnotations.emplace_back(str, length);
                   break;
+              case State::Clades:
+                  chart->mAntigens.back().mClades.emplace_back(str, length);
+                  break;
               case State::SerumAnnotations:
                   chart->mSera.back().mAnnotations.emplace_back(str, length);
+                  break;
+              case State::TableType:
+                  switch (str[0]) {
+                    case 'A':
+                    case 'a':
+                        chart->mInfo.mType = ChartInfo::Antigenic;
+                        break;
+                    case 'G':
+                    case 'g':
+                        chart->mInfo.mType = ChartInfo::Genetic;
+                        break;
+                    default:
+                        r = false;
+                        break;
+                  }
                   break;
               default:
                   r = false;
