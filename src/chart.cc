@@ -22,7 +22,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
     enum class State { Ignore, Init, Root, Version, Chart, Info, TableType, Antigen, Serum, Titers, Projections, PlotSpec,
                        TitersList, TitersList2, TitersDict, TitersLayers,
                        Clades, StringField, BoolField, IntField, DoubleField,
-                       AntigenAnnotations, SerumAnnotations, Sources };
+                       AntigenAnnotations, SerumAnnotations, Sources, ColumnBases };
 
                     // case State::Ignore:
                     // case State::Init:
@@ -50,7 +50,8 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
         Lineage='L', Passage='P', Reassortant='R', LabId='l', Reference='r', Annotations='a', Clades='c',
         SerumId='I', HomologousAntigen='h', SerumSpecies='s',
         TitersList='l', TitersDict='d', TitersLayers='L',
-        DrawingOrder='d', ErrorLinePositive='E', ErrorLineNegative='e', Grid='g', PointIndex='p', PointStyles='P', ProcrustesIndex='l', ProcrustesStyle='L', ShownOnAll='s', Title='t'
+        DrawingOrder='d', ErrorLinePositive='E', ErrorLineNegative='e', Grid='g', PointIndex='p', PointStyles='P', ProcrustesIndex='l', ProcrustesStyle='L', ShownOnAll='s', Title='t',
+        ColumnBases='C',
     };
 
  public:
@@ -185,6 +186,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                           case AceKey::PlotSpec:
                               state.push(State::PlotSpec);
                               break;
+                          case AceKey::ColumnBases:
+                              state.push(State::ColumnBases);
+                              break;
                           default:
                               r = false;
                               break;
@@ -317,6 +321,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                     case State::TitersList:
                     case State::TitersList2:
                     case State::TitersLayers:
+                    case State::ColumnBases:
                         r = false;
                         break;
                   }
@@ -438,6 +443,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Clades:
               case State::Projections:
               case State::Sources:
+              case State::ColumnBases:
                   break;
               case State::TitersList:
                   state.push(State::TitersList2);
@@ -479,6 +485,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::TitersLayers:
               case State::Projections:
               case State::Sources:
+              case State::ColumnBases:
                   state.pop();
                   break;
               case State::TitersDict:
@@ -610,6 +617,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   *double_to_fill = d;
                   double_to_fill = nullptr;
                   state.pop();
+                  break;
+              case State::ColumnBases:
+                  chart->mColumnBases.push_back(d);
                   break;
               default:
                   r = false;

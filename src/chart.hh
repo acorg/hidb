@@ -118,6 +118,7 @@ class Chart
     std::vector<Antigen> mAntigens;
     std::vector<Serum> mSera;
     ChartTiters mTiters;
+    std::vector <double> mColumnBases;
 
     inline Chart(const Chart&) = default;
 };
