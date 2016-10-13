@@ -92,6 +92,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Serum:
               case State::Info:
               case State::Chart:
+              case State::Titers:
+              case State::Projections:
+              case State::PlotSpec:
                   state.pop();
                   break;
               case State::Ignore:
@@ -104,6 +107,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   }
                   break;
               default:
+                    // std::cerr << "EndObject " << static_cast<int>(state.top()) << std::endl;
                   r = false;
                   break;
             }
@@ -290,7 +294,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         state.push(push_state);
                         break;
                     case State::Titers:
-                        std::cerr << "State::Titers " << str[0] << std::endl;
+                          // std::cerr << "State::Titers " << str[0] << std::endl;
                         switch (static_cast<AceKey>(str[0])) {
                           case AceKey::Comment:
                           case AceKey::Comment_:
@@ -305,6 +309,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                               r = false;
                               break;
                         }
+                        state.push(push_state);
                         break;
                     case State::PlotSpec:
                     case State::StringField:

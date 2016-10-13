@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cctype>
 
+#include "rapidjson/reader.h"
 #include "rapidjson/error/en.h"
 
 #include "chart-rj.hh"
@@ -9,9 +10,7 @@
 
 // ----------------------------------------------------------------------
 
-using namespace RJ;
-
-Chart* RJ::import_chart(std::string buffer)
+RJ::Chart* RJ::import_chart(std::string buffer)
 {
     if (buffer == "-")
         buffer = read_stdin();
@@ -64,6 +63,35 @@ bool RJ::AntigenSerum::is_egg() const
     }
     return egg;
 }
+
+// ----------------------------------------------------------------------
+
+class EventHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, EventHandler>
+{
+};
+
+RJ_SAX::Chart* RJ_SAX::import_chart(std::string buffer)
+{
+    if (buffer == "-")
+        buffer = read_stdin();
+    else
+        buffer = read_file(buffer);
+    Chart* chart = nullptr;
+    if (buffer[0] == '{') { // && buffer.find("\"  version\": \"acmacs-ace-v1\"") != std::string::npos) {
+        chart = new Chart;
+        EventHandler handler;
+        rapidjson::Reader reader;
+        rapidjson::StringStream ss(buffer.c_str());
+        reader.Parse(ss, handler);
+        if (reader.HasParseError())
+            throw std::runtime_error("cannot import chart: data parsing failed at " + std::to_string(reader.GetErrorOffset()) + ": " +  GetParseError_En(reader.GetParseErrorCode()) + "\n" + buffer.substr(reader.GetErrorOffset(), 50));
+    }
+    else
+        throw std::runtime_error("cannot import chart: unrecognized source format");
+    return chart;
+}
+
+// ----------------------------------------------------------------------
 
 
 // ----------------------------------------------------------------------

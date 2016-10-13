@@ -26,6 +26,7 @@ class Timeit
 
 void test_big_object();
 void test_rj(int num_tests, std::string source);
+void test_rj_sax(int num_tests, std::string source);
 void test_sax(int num_tests, std::string source);
 
 // 0.00023 sec per /tmp/e.ace
@@ -35,6 +36,7 @@ int main()
     int N = 10000;
     std::string source = "/tmp/a.ace";
     test_rj(N, source);
+    test_rj_sax(N, source);
     test_sax(N, source);
 
     return 0;
@@ -48,6 +50,18 @@ void test_rj(int num_tests, std::string source)
 
     for (int i = 0; i < num_tests; ++i) {
         RJ::Chart* chart = RJ::import_chart(source);
+        delete chart;
+    }
+}
+
+// ----------------------------------------------------------------------
+
+void test_rj_sax(int num_tests, std::string source)
+{
+    Timeit timeit("import " + std::to_string(num_tests) + " charts via RJ_SAX: ");
+
+    for (int i = 0; i < num_tests; ++i) {
+        RJ_SAX::Chart* chart = RJ_SAX::import_chart(source);
         delete chart;
     }
 }
