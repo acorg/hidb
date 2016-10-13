@@ -33,8 +33,9 @@ void test_sax(int num_tests, std::string source);
 
 int main()
 {
-    int N = 10000;
-    std::string source = "/tmp/a.ace";
+    int N = 100;
+      // std::string source = "/tmp/a.ace";
+    std::string source = "/tmp/cdc-h3.ace";
     test_rj(N, source);
     test_rj_sax(N, source);
     test_sax(N, source);

@@ -19,7 +19,9 @@
 class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, ChartReaderEventHandler>
 {
  private:
-    enum class State { Ignore, Init, Root, Version, Chart, Info, TableType, Antigen, Serum, Titers, Projections, PlotSpec, Clades, StringField, BoolField, IntField, AntigenAnnotations, SerumAnnotations };
+    enum class State { Ignore, Init, Root, Version, Chart, Info, TableType, Antigen, Serum, Titers, Projections, PlotSpec,
+                       TitersList, TitersList2, TitersDict, TitersLayers,
+                       Clades, StringField, BoolField, IntField, AntigenAnnotations, SerumAnnotations };
 
                     // case State::Ignore:
                     // case State::Init:
@@ -301,9 +303,13 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                               push_state = State::Ignore;
                               break;
                           case AceKey::TitersList:
+                              push_state = State::TitersList;
+                              break;
                           case AceKey::TitersDict:
+                              push_state = State::TitersDict;
+                              break;
                           case AceKey::TitersLayers:
-                              push_state = State::Ignore;
+                              push_state = State::TitersLayers;
                               break;
                           default:
                               r = false;
@@ -320,6 +326,10 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                     case State::Projections:
                     case State::Clades:
                     case State::TableType:
+                    case State::TitersList:
+                    case State::TitersList2:
+                    case State::TitersDict:
+                    case State::TitersLayers:
                     case State::Ignore:
                         r = false;
                         break;
@@ -350,6 +360,12 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::SerumAnnotations:
               case State::Clades:
                   break;
+              case State::TitersList:
+                  state.push(State::TitersList2);
+                  break;
+              case State::TitersList2:
+                  chart->mTiters.mList.emplace_back();
+                  break;
               case State::Ignore:
                   ++ignore_compound;
                   break;
@@ -369,6 +385,8 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::AntigenAnnotations:
               case State::SerumAnnotations:
               case State::Clades:
+              case State::TitersList:
+              case State::TitersList2:
                   state.pop();
                   break;
               case State::Ignore:
@@ -429,6 +447,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         r = false;
                         break;
                   }
+                  break;
+              case State::TitersList2:
+                  chart->mTiters.mList.back().emplace_back(str, length);
                   break;
               default:
                   r = false;
@@ -511,26 +532,6 @@ Chart* import_chart(std::string buffer)
         reader.Parse(ss, handler);
         if (reader.HasParseError())
             throw std::runtime_error("cannot import chart: data parsing failed at " + std::to_string(reader.GetErrorOffset()) + ": " +  GetParseError_En(reader.GetParseErrorCode()) + "\n" + buffer.substr(reader.GetErrorOffset(), 50));
-
-        // std::shared_ptr<rapidjson::Document> d(new rapidjson::Document());
-        // d->Parse(buffer.c_str());
-        // if (d->HasParseError())
-        //     throw std::runtime_error("cannot import chart: data parsing failed at " + std::to_string(d->GetErrorOffset()) + ": " +  GetParseError_En(d->GetParseError()));
-        // const auto version = d->FindMember("  version");
-        // if (version == d->MemberEnd() || version->value != "acmacs-ace-v1")
-        //     throw std::runtime_error("cannot import chart: unrecognized data version");
-        // const auto chart_data = d->FindMember("chart");
-        // if (chart_data == d->MemberEnd())
-        //     throw std::runtime_error("cannot import chart: chart data not found");
-        // chart = new Chart(d, chart_data->value);
-
-        // std::cout << "Ag:" << chart->number_of_antigens() << " Sr:" << chart->number_of_sera() << std::endl;
-        // for (size_t ag_no = 0; ag_no < chart->number_of_antigens(); ++ag_no) {
-        //     std::cout << "AG " << ag_no << " " << chart->antigen(ag_no).name() << " || D:" << chart->antigen(ag_no).date() << " || P:" << chart->antigen(ag_no).passage() << " || E?" << chart->antigen(ag_no).is_egg() << std::endl;
-        // }
-        // for (size_t sr_no = 0; sr_no < chart->number_of_sera(); ++sr_no) {
-        //     std::cout << "SR " << sr_no << " " << chart->serum(sr_no).name() << " || P:" << chart->serum(sr_no).passage() << " || E?" << chart->serum(sr_no).is_egg() << std::endl;
-        // }
     }
     else
         throw std::runtime_error("cannot import chart: unrecognized source format");

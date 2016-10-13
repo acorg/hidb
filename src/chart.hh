@@ -82,6 +82,23 @@ class ChartInfo
 
 // ----------------------------------------------------------------------
 
+class ChartTiters
+{
+ public:
+    typedef std::vector<std::vector<std::string>> List;
+    typedef std::vector<std::vector<std::pair<std::string, std::string>>> Dict;
+
+    inline ChartTiters() {}
+
+ private:
+    friend class ChartReaderEventHandler;
+    List mList;
+    Dict mDict;
+    std::vector<Dict> mLayers;
+};
+
+// ----------------------------------------------------------------------
+
 class Chart
 {
  public:
@@ -100,6 +117,7 @@ class Chart
     ChartInfo mInfo;
     std::vector<Antigen> mAntigens;
     std::vector<Serum> mSera;
+    ChartTiters mTiters;
 
     inline Chart(const Chart&) = default;
 };
