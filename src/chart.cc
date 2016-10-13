@@ -21,7 +21,8 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
  private:
     enum class State { Ignore, Init, Root, Version, Chart, Info, TableType, Antigen, Serum, Titers, Projections, PlotSpec,
                        TitersList, TitersList2, TitersDict, TitersLayers,
-                       Clades, StringField, BoolField, IntField, AntigenAnnotations, SerumAnnotations };
+                       Clades, StringField, BoolField, IntField, DoubleField,
+                       AntigenAnnotations, SerumAnnotations, Sources };
 
                     // case State::Ignore:
                     // case State::Init:
@@ -49,10 +50,14 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
         Lineage='L', Passage='P', Reassortant='R', LabId='l', Reference='r', Annotations='a', Clades='c',
         SerumId='I', HomologousAntigen='h', SerumSpecies='s',
         TitersList='l', TitersDict='d', TitersLayers='L',
+        DrawingOrder='d', ErrorLinePositive='E', ErrorLineNegative='e', Grid='g', PointIndex='p', PointStyles='P', ProcrustesIndex='l', ProcrustesStyle='L', ShownOnAll='s', Title='t'
     };
 
  public:
-    inline ChartReaderEventHandler(Chart* aChart) : chart(aChart), ignore_compound(0), string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr) { state.push(State::Init); }
+    inline ChartReaderEventHandler(Chart* aChart)
+        : chart(aChart), ignore_compound(0),
+          string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr), layer_to_fill(nullptr)
+        { state.push(State::Init); }
 
     inline bool StartObject()
         {
@@ -64,7 +69,6 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Chart:
               case State::Info:
               case State::Titers:
-              case State::Projections:
               case State::PlotSpec:
                   break;
               case State::Ignore:
@@ -77,6 +81,16 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Serum:
                   state.push(State::Serum);
                   chart->mSera.emplace_back(*chart);
+                  break;
+              case State::Sources:
+                  chart->mInfo.mSources.emplace_back();
+                  break;
+              case State::Projections:
+                  state.push(State::Ignore);
+                  ++ignore_compound;
+                  break;
+              case State::TitersDict:
+                  layer_to_fill->emplace_back();
                   break;
               default:
                   r = false;
@@ -98,6 +112,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Projections:
               case State::PlotSpec:
                   state.pop();
+                  break;
+              case State::Sources:
+              case State::TitersDict:
                   break;
               case State::Ignore:
                   if (ignore_compound == 0)
@@ -174,47 +191,10 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         }
                         break;
                     case State::Info:
-                        push_state = State::StringField;
-                        switch (static_cast<AceKey>(str[0])) {
-                          case AceKey::Comment:
-                          case AceKey::Comment_:
-                              push_state = State::Ignore;
-                              break;
-                          case AceKey::Assay:
-                              string_to_fill = &chart->mInfo.mAssay;
-                              break;
-                          case AceKey::Virus:
-                              string_to_fill = &chart->mInfo.mVirus;
-                              break;
-                          case AceKey::VirusType:
-                              string_to_fill = &chart->mInfo.mVirusType;
-                              break;
-                          case AceKey::Date:
-                              string_to_fill = &chart->mInfo.mDate;
-                              break;
-                          case AceKey::Name:
-                              string_to_fill = &chart->mInfo.mName;
-                              break;
-                          case AceKey::Lab:
-                              string_to_fill = &chart->mInfo.mLab;
-                              break;
-                          case AceKey::Rbc:
-                              string_to_fill = &chart->mInfo.mRbc;
-                              break;
-                          case AceKey::VirusSubset:
-                              string_to_fill = &chart->mInfo.mSubset;
-                              break;
-                          case AceKey::TableType:
-                              push_state = State::TableType;
-                              break;
-                          case AceKey::Sources:
-                              r = false;
-                              break;
-                          default:
-                              r = false;
-                              break;
-                        }
-                        state.push(push_state);
+                        r = infoField(static_cast<AceKey>(str[0]), chart->mInfo, false);
+                        break;
+                    case State::Sources:
+                        r = infoField(static_cast<AceKey>(str[0]), chart->mInfo.mSources.back(), true);
                         break;
                     case State::Antigen:
                         push_state = State::StringField;
@@ -317,10 +297,18 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         }
                         state.push(push_state);
                         break;
+                    case State::Ignore:
+                        break;
                     case State::PlotSpec:
+                        r = plotSpecField(static_cast<AceKey>(str[0]));
+                        break;
+                    case State::TitersDict:
+                        layer_to_fill->back().emplace_back(std::string(str, length), std::string());
+                        break;
                     case State::StringField:
                     case State::BoolField:
                     case State::IntField:
+                    case State::DoubleField:
                     case State::AntigenAnnotations:
                     case State::SerumAnnotations:
                     case State::Projections:
@@ -328,9 +316,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                     case State::TableType:
                     case State::TitersList:
                     case State::TitersList2:
-                    case State::TitersDict:
                     case State::TitersLayers:
-                    case State::Ignore:
                         r = false;
                         break;
                   }
@@ -339,14 +325,105 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   if (static_cast<AceKey>(str[0]) == AceKey::Comment) {
                       state.push(State::Ignore);
                   }
-                  else if (state.top() == State::Root && std::string(str, length) == "  version") {
-                      state.push(State::Version);
-                  }
-                  else if (state.top() != State::Ignore) {
-                      r = false;
+                  else {
+                      switch (state.top()) {
+                        case State::Root:
+                            if (std::string(str, length) == "  version")
+                                state.push(State::Version);
+                            else
+                                r = false;
+                            break;
+                        case State::TitersDict:
+                            layer_to_fill->back().emplace_back(std::string(str, length), std::string());
+                            break;
+                        case State::Ignore:
+                            break;
+                        default:
+                            r = false;
+                            break;
+                      }
                   }
                   break;
             }
+            return r;
+        }
+
+    inline bool infoField(AceKey key, ChartInfo& info, bool aSources)
+        {
+            bool r = true;
+            State push_state = State::StringField;
+            switch (key) {
+              case AceKey::Comment:
+              case AceKey::Comment_:
+                  push_state = State::Ignore;
+                  break;
+              case AceKey::Assay:
+                  string_to_fill = &info.mAssay;
+                  break;
+              case AceKey::Virus:
+                  string_to_fill = &info.mVirus;
+                  break;
+              case AceKey::VirusType:
+                  string_to_fill = &info.mVirusType;
+                  break;
+              case AceKey::Date:
+                  string_to_fill = &info.mDate;
+                  break;
+              case AceKey::Name:
+                  string_to_fill = &info.mName;
+                  break;
+              case AceKey::Lab:
+                  string_to_fill = &info.mLab;
+                  break;
+              case AceKey::Rbc:
+                  string_to_fill = &info.mRbc;
+                  break;
+              case AceKey::VirusSubset:
+                  string_to_fill = &info.mSubset;
+                  break;
+              case AceKey::TableType:
+                  r = !aSources;
+                  push_state = State::TableType;
+                  break;
+              case AceKey::Sources:
+                  r = !aSources;
+                  push_state = State::Sources;
+                  break;
+              default:
+                  r = false;
+                  break;
+            }
+            state.push(push_state);
+            return r;
+        }
+
+    inline bool plotSpecField(AceKey key)
+        {
+            bool r = true;
+            State push_state = State::StringField;
+            switch (key) {
+              case AceKey::Comment:
+              case AceKey::Comment_:
+                  push_state = State::Ignore;
+                  break;
+              case AceKey::DrawingOrder:
+              case AceKey::ErrorLinePositive:
+              case AceKey::ErrorLineNegative:
+              case AceKey::Grid:
+              case AceKey::PointIndex:
+              case AceKey::PointStyles:
+              case AceKey::ProcrustesIndex:
+              case AceKey::ProcrustesStyle:
+              case AceKey::ShownOnAll:
+              case AceKey::Title:
+                  std::cerr << "Warning: plot spec field " << static_cast<char>(key) << " ignored" << std::endl;
+                  push_state = State::Ignore;
+                  break;
+              default:
+                  r = false;
+                  break;
+            }
+            state.push(push_state);
             return r;
         }
 
@@ -359,12 +436,24 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::AntigenAnnotations:
               case State::SerumAnnotations:
               case State::Clades:
+              case State::Projections:
+              case State::Sources:
                   break;
               case State::TitersList:
                   state.push(State::TitersList2);
                   break;
               case State::TitersList2:
                   chart->mTiters.mList.emplace_back();
+                  break;
+              case State::TitersLayers:
+                  chart->mTiters.mLayers.emplace_back();
+                  layer_to_fill = &chart->mTiters.mLayers.back();
+                  state.push(State::TitersDict);
+                  break;
+              case State::TitersDict:
+                  if (layer_to_fill == nullptr) {
+                      layer_to_fill = &chart->mTiters.mDict;
+                  }
                   break;
               case State::Ignore:
                   ++ignore_compound;
@@ -387,6 +476,13 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Clades:
               case State::TitersList:
               case State::TitersList2:
+              case State::TitersLayers:
+              case State::Projections:
+              case State::Sources:
+                  state.pop();
+                  break;
+              case State::TitersDict:
+                  layer_to_fill = nullptr;
                   state.pop();
                   break;
               case State::Ignore:
@@ -451,6 +547,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::TitersList2:
                   chart->mTiters.mList.back().emplace_back(str, length);
                   break;
+              case State::TitersDict:
+                  layer_to_fill->back().back().second.assign(str, length);
+                  break;
               default:
                   r = false;
                   break;
@@ -483,6 +582,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
             bool r = true;
             switch (state.top()) {
               case State::Ignore:
+                    // std::cerr << "Int ignore " << i << " compound " << ignore_compound << std::endl;
                   if (ignore_compound == 0)
                       state.pop();
                   break;
@@ -498,11 +598,34 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
             return r;
         }
 
+    bool Double(double d)
+        {
+            bool r = true;
+            switch (state.top()) {
+              case State::Ignore:
+                  if (ignore_compound == 0)
+                      state.pop();
+                  break;
+              case State::DoubleField:
+                  *double_to_fill = d;
+                  double_to_fill = nullptr;
+                  state.pop();
+                  break;
+              default:
+                  r = false;
+                  break;
+            }
+            return r;
+        }
+
+    bool Uint(unsigned u)
+        {
+            return Int(static_cast<int>(u));
+        }
+
     inline bool Null() { std::cout << "Null()" << std::endl; return false; }
-    bool Uint(unsigned u) { std::cout << "Uint(" << u << ")" << std::endl; return false; }
     bool Int64(int64_t i) { std::cout << "Int64(" << i << ")" << std::endl; return false; }
     bool Uint64(uint64_t u) { std::cout << "Uint64(" << u << ")" << std::endl; return false; }
-    bool Double(double d) { std::cout << "Double(" << d << ")" << std::endl; return false; }
 
  private:
     Chart* chart;
@@ -511,6 +634,8 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
     std::string* string_to_fill;
     bool* bool_to_fill;
     int* int_to_fill;
+    double* double_to_fill;
+    ChartTiters::Dict* layer_to_fill;
 };
 
 #pragma GCC diagnostic pop
