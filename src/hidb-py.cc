@@ -33,10 +33,29 @@ PYBIND11_PLUGIN(hidb_backend)
     py::module m("hidb_backend", "HiDB access plugin");
 
       // ----------------------------------------------------------------------
+      // Antigen, Serum
+      // ----------------------------------------------------------------------
+
+    py::class_<AntigenSerum>(m, "AntigenSerum")
+            .def("full_name", &AntigenSerum::full_name)
+            ;
+
+    py::class_<Antigen, AntigenSerum>(m, "Antigen")
+            ;
+
+    py::class_<Serum, AntigenSerum>(m, "Serum")
+            ;
+
+      // ----------------------------------------------------------------------
       // Chart
       // ----------------------------------------------------------------------
 
     py::class_<Chart>(m, "Chart")
+            .def("number_of_antigens", &Chart::number_of_antigens)
+            .def("number_of_sera", &Chart::number_of_sera)
+            .def("antigen", &Chart::antigen, py::arg("no"))
+            .def("serum", &Chart::serum, py::arg("no"))
+            .def("find_homologous_antigen_for_sera", &Chart::find_homologous_antigen_for_sera)
             ;
 
     m.def("import_chart", &import_chart, py::arg("data"), py::doc("Imports chart from a buffer or file in the ace format."));

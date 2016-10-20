@@ -1,0 +1,73 @@
+#! /usr/bin/env python3
+# -*- Python -*-
+
+"""
+"""
+
+import sys, traceback, tempfile, shutil, subprocess
+if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
+from pathlib import Path
+sys.path[:0] = [str(Path(sys.argv[0]).resolve().parents[1].joinpath("dist")), str(Path(sys.argv[0]).resolve().parents[1].joinpath("python"))]
+import logging; module_logger = logging.getLogger(__name__)
+
+import hidb
+
+# ----------------------------------------------------------------------
+
+def main(args):
+    try:
+        temp_dir = tempfile.mkdtemp()
+        for source1 in (Path(f).resolve() for f in args.input):
+            print(source1)
+            source2 = get_ace(Path(temp_dir), source1)
+            process(source2)
+            print("------------")
+    finally:
+        module_logger.info('removing {}'.format(temp_dir))
+        shutil.rmtree(temp_dir)
+
+# ----------------------------------------------------------------------
+
+def process(source):
+    chart = hidb.import_chart(str(source))
+    chart.find_homologous_antigen_for_sera()
+    # for sr_no in range(chart.number_of_sera()):
+    #     print(sr_no, chart.serum(sr_no).full_name())
+    # print(chart)
+
+# ----------------------------------------------------------------------
+
+def get_ace(temp_dir, source1):
+    if source1.suffixes[0] in [".acd1", ".acp1", ".acmacs-txt"]:
+        source2 = temp_dir.joinpath(source1.stem + ".ace")
+        subprocess.run("env ACMACS_ROOT=$HOME/ac/acmacs PYTHONPATH=$HOME/ac/acmacs:$HOME/ac/acmacs/build $HOME/c2r/bin/python3 $HOME/ac/acmacs/bin/convert.py -q '{}' '{}'".format(source1, source2), shell=True, check=True)
+    elif source1.suffixes[0] == ".ace":
+        source2 = source1
+    else:
+        source2 = None
+        module_logger.warning('Unsupported {}'.format(source1))
+    return source2
+
+# ----------------------------------------------------------------------
+
+try:
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging output.')
+
+    parser.add_argument('input', nargs="+", help='Source files to process.')
+    # parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
+    # parser.add_argument('output', nargs="?", help='hidb to write.')
+
+    args = parser.parse_args()
+    logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")
+    exit_code = main(args)
+except Exception as err:
+    logging.error('{}\n{}'.format(err, traceback.format_exc()))
+    exit_code = 1
+exit(exit_code)
+
+# ======================================================================
+### Local Variables:
+### eval: (if (fboundp 'eu-rename-buffer) (eu-rename-buffer))
+### End:

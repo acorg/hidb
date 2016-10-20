@@ -11,18 +11,26 @@ class ChartReaderEventHandler;
 class AntigenSerum
 {
  public:
-    std::string name() const;
+    virtual ~AntigenSerum();
+    virtual std::string full_name() const;
+
+    inline std::string name() const { return mName; }
     inline std::string passage() const { return mPassage; }
     inline std::string reassortant() const { return mReassortant; }
     bool is_egg() const;
     inline bool is_reassortant() const { return !mReassortant.empty(); }
 
  protected:
-    inline AntigenSerum(Chart& aChart) : mChart(aChart) {}
+    inline AntigenSerum() = default;
+    inline AntigenSerum(const AntigenSerum&) = default;
+      //inline AntigenSerum(Chart& aChart) : mChart(aChart) {}
+
+    inline bool has_semantic(char c) const { return mSemanticAttributes.find(c) != std::string::npos; }
+    inline bool has_annotation(std::string anno) const { return std::find(mAnnotations.begin(), mAnnotations.end(), anno) != mAnnotations.end(); }
 
  private:
     friend class ChartReaderEventHandler;
-    Chart& mChart;
+      // Chart& mChart;
     std::string mName; // "N" "[VIRUS_TYPE/][HOST/]LOCATION/ISOLATION/YEAR" or "CDC_ABBR NAME" or "NAME"
     std::string mLineage; // "L"
     std::string mPassage; // "P"
@@ -35,8 +43,13 @@ class AntigenSerum
 class Antigen : public AntigenSerum
 {
  public:
-    inline Antigen(Chart& aChart) : AntigenSerum(aChart) {}
+      // inline Antigen(Chart& aChart) : AntigenSerum(aChart) {}
+    inline Antigen() = default;
+    virtual std::string full_name() const;
+
     inline std::string date() const { return mDate; }
+    inline bool reference() const { return has_semantic('R'); }
+    inline bool distinct() const { return has_annotation("DISTINCT"); }
 
  private:
     friend class ChartReaderEventHandler;
@@ -48,7 +61,11 @@ class Antigen : public AntigenSerum
 class Serum : public AntigenSerum
 {
  public:
-    inline Serum(Chart& aChart) : AntigenSerum(aChart), mHomologous(-1) {}
+      // inline Serum(Chart& aChart) : AntigenSerum(aChart), mHomologous(-1) {}
+    inline Serum() : mHomologous(-1) {}
+    virtual std::string full_name() const;
+
+    inline void set_homologous(size_t ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
 
  private:
     friend class ChartReaderEventHandler;
@@ -112,6 +129,8 @@ class Chart
     inline Antigen& antigen(size_t ag_no) { return mAntigens[ag_no]; }
     inline Serum& serum(size_t sr_no) { return mSera[sr_no]; }
 
+    void find_homologous_antigen_for_sera();
+
  private:
     friend class ChartReaderEventHandler;
     ChartInfo mInfo;
@@ -126,16 +145,6 @@ class Chart
 // ----------------------------------------------------------------------
 
 Chart* import_chart(std::string data);
-
-// ----------------------------------------------------------------------
-
-inline std::string AntigenSerum::name() const
-{
-    if (std::count(mName.begin(), mName.end(), '/') >= 2 && mName.compare(0, 2, "A("))
-        return mChart.virus_type() + "/" + mName;
-    else
-        return mName;
-}
 
 // ----------------------------------------------------------------------
 /// Local Variables:

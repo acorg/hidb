@@ -77,11 +77,11 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   break;
               case State::Antigen:
                   state.push(State::Antigen);
-                  chart->mAntigens.emplace_back(*chart);
+                  chart->mAntigens.emplace_back();
                   break;
               case State::Serum:
                   state.push(State::Serum);
-                  chart->mSera.emplace_back(*chart);
+                  chart->mSera.emplace_back();
                   break;
               case State::Sources:
                   chart->mInfo.mSources.emplace_back();
@@ -683,6 +683,62 @@ Chart* import_chart(std::string buffer)
 
 // ----------------------------------------------------------------------
 
+AntigenSerum::~AntigenSerum()
+{
+
+} // AntigenSerum::~AntigenSerum
+
+// ----------------------------------------------------------------------
+
+std::string AntigenSerum::full_name() const
+{
+    std::string n = mName;
+    if (!mReassortant.empty()) {
+        n.append(1, ' ');
+        n.append(mReassortant);
+    }
+    if (!mAnnotations.empty()) {
+        for (const auto& ann: mAnnotations) {
+            n.append(1, ' ');
+            n.append(ann);
+        }
+    }
+    if (!mPassage.empty()) {
+        n.append(1, ' ');
+        n.append(mPassage);
+    }
+    return n;
+
+} // AntigenSerum::full_name
+
+// ----------------------------------------------------------------------
+
+std::string Antigen::full_name() const
+{
+    std::string n = AntigenSerum::full_name();
+    return n;
+
+} // Antigen::full_name
+
+// ----------------------------------------------------------------------
+
+std::string Serum::full_name() const
+{
+    std::string n = AntigenSerum::full_name();
+    if (!mSerumId.empty()) {
+        n.append(1, ' ');
+        n.append(mSerumId);
+    }
+    if (!mSerumSpecies.empty()) {
+        n.append(1, ' ');
+        n.append(mSerumSpecies);
+    }
+    return n;
+
+} // Serum::full_name
+
+// ----------------------------------------------------------------------
+
 bool AntigenSerum::is_egg() const
 {
     bool egg = false;
@@ -696,6 +752,45 @@ bool AntigenSerum::is_egg() const
     }
     return egg;
 }
+
+// ----------------------------------------------------------------------
+
+void Chart::find_homologous_antigen_for_sera()
+{
+    for (auto& serum: mSera) {
+          // std::cout << serum.full_name() << std::endl;
+        std::vector<size_t> candidates;
+        for (auto antigen = mAntigens.begin(); antigen != mAntigens.end(); ++antigen) {
+            if (!antigen->distinct() && serum.name() == antigen->name() && serum.reassortant() == antigen->reassortant() && (serum.passage().empty() || serum.is_egg() == antigen->is_egg())) {
+                candidates.push_back(static_cast<size_t>(antigen - mAntigens.begin()));
+            }
+        }
+        if (candidates.empty()) {
+            std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
+        }
+        else if (candidates.size() > 1) {
+              // multiple candidates, consider just reference ones
+            std::vector<size_t> reference_candidates;
+            std::copy_if(candidates.begin(), candidates.end(), std::back_inserter(reference_candidates), [this](auto index) -> bool { return mAntigens[index].reference(); });
+            if (reference_candidates.size() == 1) {
+                serum.set_homologous(reference_candidates.front());
+            }
+            else {
+                std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << std::endl;
+                for (const auto ag_no: candidates) {
+                    std::cerr << "    " << mAntigens[ag_no].full_name() << std::endl;
+                }
+            }
+        }
+        else {
+            serum.set_homologous(candidates.front());
+        }
+    }
+
+} // Chart::find_homologous_antigen_for_sera
+
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 /// Local Variables:
