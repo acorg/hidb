@@ -16,6 +16,7 @@ class AntigenSerum
 
     inline std::string name() const { return mName; }
     inline std::string passage() const { return mPassage; }
+    std::string passage_without_date() const;
     inline std::string reassortant() const { return mReassortant; }
     bool is_egg() const;
     inline bool is_reassortant() const { return !mReassortant.empty(); }
@@ -66,6 +67,7 @@ class Serum : public AntigenSerum
     virtual std::string full_name() const;
 
     inline void set_homologous(size_t ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
+    inline bool has_homologous() const { return mHomologous >= 0; }
 
  private:
     friend class ChartReaderEventHandler;

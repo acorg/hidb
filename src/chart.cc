@@ -713,6 +713,17 @@ std::string AntigenSerum::full_name() const
 
 // ----------------------------------------------------------------------
 
+std::string AntigenSerum::passage_without_date() const
+{
+    if (mPassage.size() > 13 && mPassage[mPassage.size() - 1] == ')' && mPassage[mPassage.size() - 12] == '(' && mPassage[mPassage.size() - 13] == ' ' && mPassage[mPassage.size() - 4] == '-' && mPassage[mPassage.size() - 7] == '-')
+        return std::string(mPassage, 0, mPassage.size() - 13);
+    else
+        return mPassage;
+
+} // AntigenSerum::passage_without_date
+
+// ----------------------------------------------------------------------
+
 std::string Antigen::full_name() const
 {
     std::string n = AntigenSerum::full_name();
@@ -774,6 +785,33 @@ void Chart::find_homologous_antigen_for_sera()
             std::copy_if(candidates.begin(), candidates.end(), std::back_inserter(reference_candidates), [this](auto index) -> bool { return mAntigens[index].reference(); });
             if (reference_candidates.size() == 1) {
                 serum.set_homologous(reference_candidates.front());
+            }
+            else if (reference_candidates.size() > 1) {
+                  // find with the same passage among reference
+                std::vector<size_t> passage_candidates;
+                std::copy_if(reference_candidates.begin(), reference_candidates.end(), std::back_inserter(passage_candidates), [&](auto index) -> bool { return mAntigens[index].passage() == serum.passage(); });
+                if (passage_candidates.size() == 1) {
+                    serum.set_homologous(passage_candidates.front());
+                }
+                else if (passage_candidates.size() == 0) {
+                    std::vector<size_t> passage_without_date_candidates;
+                    std::copy_if(reference_candidates.begin(), reference_candidates.end(), std::back_inserter(passage_without_date_candidates), [&](auto index) -> bool { return mAntigens[index].passage_without_date() == serum.passage_without_date(); });
+                    if (passage_without_date_candidates.size() == 1) {
+                        serum.set_homologous(passage_without_date_candidates.front());
+                    }
+                }
+                else {
+                    std::cerr << "Warning: Multiple reference homologous antigen passage_without_date candidates for " << serum.full_name() << " PD:[" << serum.passage_without_date() << ']' << std::endl;
+                    for (const auto ag_no: candidates) {
+                        std::cerr << "    " << mAntigens[ag_no].full_name() << " PD:[" << mAntigens[ag_no].passage_without_date() << ']' << std::endl;
+                    }
+                }
+                if (!serum.has_homologous()) {
+                    std::cerr << "Warning: Multiple reference homologous antigen candidates for " << serum.full_name() << " PD:[" << serum.passage_without_date() << ']' << std::endl;
+                    for (const auto ag_no: candidates) {
+                        std::cerr << "    " << mAntigens[ag_no].full_name() << " PD:[" << mAntigens[ag_no].passage_without_date() << ']' << std::endl;
+                    }
+                }
             }
             else {
                 std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << std::endl;
