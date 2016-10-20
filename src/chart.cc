@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cctype>
 #include <stack>
+#include <cassert>
 
 #include "rapidjson/reader.h"
 #include "rapidjson/error/en.h"
@@ -766,69 +767,110 @@ bool AntigenSerum::is_egg() const
 
 // ----------------------------------------------------------------------
 
-void Chart::find_homologous_antigen_for_sera()
+AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
 {
-    for (auto& serum: mSera) {
-          // std::cout << serum.full_name() << std::endl;
-        std::vector<size_t> candidates;
-        for (auto antigen = mAntigens.begin(); antigen != mAntigens.end(); ++antigen) {
-            if (!antigen->distinct() && serum.name() == antigen->name() && serum.reassortant() == antigen->reassortant() && (serum.passage().empty() || serum.is_egg() == antigen->is_egg())) {
-                candidates.push_back(static_cast<size_t>(antigen - mAntigens.begin()));
-            }
-        }
-        if (candidates.empty()) {
-            std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
-        }
-        else if (candidates.size() > 1) {
-              // multiple candidates, consider just reference ones
-            std::vector<size_t> reference_candidates;
-            std::copy_if(candidates.begin(), candidates.end(), std::back_inserter(reference_candidates), [this](auto index) -> bool { return mAntigens[index].reference(); });
-            if (reference_candidates.size() == 1) {
-                serum.set_homologous(reference_candidates.front());
-            }
-            else if (reference_candidates.size() > 1) {
-                  // find with the same passage among reference
-                std::vector<size_t> passage_candidates;
-                std::copy_if(reference_candidates.begin(), reference_candidates.end(), std::back_inserter(passage_candidates), [&](auto index) -> bool { return mAntigens[index].passage() == serum.passage(); });
-                if (passage_candidates.size() == 1) {
-                    serum.set_homologous(passage_candidates.front());
-                }
-                else if (passage_candidates.size() == 0) {
-                    std::vector<size_t> passage_without_date_candidates;
-                    std::copy_if(reference_candidates.begin(), reference_candidates.end(), std::back_inserter(passage_without_date_candidates), [&](auto index) -> bool { return mAntigens[index].passage_without_date() == serum.passage_without_date(); });
-                    if (passage_without_date_candidates.size() == 1) {
-                        serum.set_homologous(passage_without_date_candidates.front());
+      // fields not used for matching
+      // lineage, semantic-attributes, annotations (if antigen vs. serum matched)
+
+    AntigenSerumMatch match;
+    if (!distinct() && !aNother.distinct() && name() == aNother.name()) {
+        if (reassortant() == aNother.reassortant()) {
+            if (passage() != aNother.passage()) {
+                match.add(AntigenSerumMatch::PassageMismatch);
+                if (passage_without_date() != aNother.passage_without_date()) {
+                    match.add(AntigenSerumMatch::PassageWithoutDateMismatch);
+                    if (is_egg() != aNother.is_egg()) {
+                        match.add(AntigenSerumMatch::EggCellMismatch);
                     }
-                }
-                else {
-                    std::cerr << "Warning: Multiple reference homologous antigen passage_without_date candidates for " << serum.full_name() << " PD:[" << serum.passage_without_date() << ']' << std::endl;
-                    for (const auto ag_no: candidates) {
-                        std::cerr << "    " << mAntigens[ag_no].full_name() << " PD:[" << mAntigens[ag_no].passage_without_date() << ']' << std::endl;
-                    }
-                }
-                if (!serum.has_homologous()) {
-                    std::cerr << "Warning: Multiple reference homologous antigen candidates for " << serum.full_name() << " PD:[" << serum.passage_without_date() << ']' << std::endl;
-                    for (const auto ag_no: candidates) {
-                        std::cerr << "    " << mAntigens[ag_no].full_name() << " PD:[" << mAntigens[ag_no].passage_without_date() << ']' << std::endl;
-                    }
-                }
-            }
-            else {
-                std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << std::endl;
-                for (const auto ag_no: candidates) {
-                    std::cerr << "    " << mAntigens[ag_no].full_name() << std::endl;
                 }
             }
         }
         else {
-            serum.set_homologous(candidates.front());
+            match.add(AntigenSerumMatch::ReassortantMismatch);
+        }
+    }
+    else {
+        match.add(AntigenSerumMatch::NameMismatch);
+    }
+    return match;
+
+} // AntigenSerum::match
+
+// ----------------------------------------------------------------------
+
+AntigenSerumMatch Antigen::match(const Antigen& aNother) const
+{
+      // fields not used for matching
+      // date, clades, lab_id
+
+    AntigenSerumMatch m = AntigenSerum::match(aNother);
+    if (m < AntigenSerumMatch::Mismatch) {
+        if (annotations() != aNother.annotations()) {
+            m.add(AntigenSerumMatch::AnnotationMismatch);
+        }
+    }
+    return m;
+
+} // Antigen::match
+
+// ----------------------------------------------------------------------
+
+AntigenSerumMatch Serum::match(const Serum& aNother) const
+{
+      // fields not used for matching
+      // homologous
+
+    AntigenSerumMatch m = AntigenSerum::match(aNother);
+    if (m < AntigenSerumMatch::Mismatch) {
+        if (annotations() != aNother.annotations()) {
+            m.add(AntigenSerumMatch::AnnotationMismatch);
+        }
+        else {
+            if (serum_id() != aNother.serum_id())
+            m.add(AntigenSerumMatch::SerumIdMismatch);
+        if (serum_species() != aNother.serum_species())
+            m.add(AntigenSerumMatch::SerumSpeciesMismatch);
+        }
+    }
+    return m;
+
+} // Serum::match
+
+// ----------------------------------------------------------------------
+
+void Chart::find_homologous_antigen_for_sera()
+{
+    for (auto& serum: mSera) {
+          // std::cout << serum.full_name() << std::endl;
+        std::vector<std::pair<size_t, AntigenSerumMatch>> antigen_match;
+        for (auto antigen = mAntigens.begin(); antigen != mAntigens.end(); ++antigen) {
+            antigen_match.emplace_back(static_cast<size_t>(antigen - mAntigens.begin()), serum.match(*antigen));
+        }
+          // sort by AntigenSerumMatch but prefer reference antigens if matches are equal
+        std::sort(antigen_match.begin(), antigen_match.end(), [this](const auto& a, const auto& b) -> bool { return a.second == b.second ? mAntigens[a.first].reference() > mAntigens[b.first].reference() : a.second < b.second; });
+        assert(!antigen_match.empty());
+        if (antigen_match.front().second.homologous_match()) {
+            serum.set_homologous(antigen_match.front().first);
+            if (antigen_match.size() > 1 && antigen_match[0].second == antigen_match[1].second) {
+                std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << " (the first one was chosen)" << std::endl;
+                for (const auto ag: antigen_match) {
+                    if (ag.second != antigen_match.front().second)
+                        break;
+                    std::cerr << "    " << mAntigens[ag.first].full_name() << " Ref:" << mAntigens[ag.first].reference() << " Level:" << ag.second << std::endl;
+                }
+
+            }
+            // else if (!antigen_match.front().second.perfect()) {
+            //     std::cerr << "Info: Not a perfect match for " << serum.full_name() << " chosen" << std::endl;
+            //     std::cerr << "    " << mAntigens[antigen_match.front().first].full_name() << " Ref:" << mAntigens[antigen_match.front().first].reference() << " Level:" << antigen_match.front().second << std::endl;
+            // }
+        }
+        else {
+            std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
         }
     }
 
 } // Chart::find_homologous_antigen_for_sera
-
-// ----------------------------------------------------------------------
-
 
 // ----------------------------------------------------------------------
 /// Local Variables:
