@@ -21,7 +21,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
  private:
     enum class State { Ignore, Init, Root, Version, Chart, Info, TableType, Antigen, Serum, Titers, Projections, PlotSpec,
                        TitersList, TitersList2, TitersDict, TitersLayers,
-                       Clades, StringField, BoolField, IntField, DoubleField,
+                       LabId, Clades, StringField, BoolField, IntField, DoubleField,
                        AntigenAnnotations, SerumAnnotations, Sources, ColumnBases };
 
                     // case State::Ignore:
@@ -47,7 +47,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
         Comment='?', Comment_='_',
         Chart='c', Antigens='a', Sera='s', Info='i', Projections='P', PlotSpec='p', Titers='t',
         Assay='A', Virus='v', VirusType='V', Date='D', Name='N', Lab='l', Rbc='r', VirusSubset='s', TableType='T', Sources='S',
-        Lineage='L', Passage='P', Reassortant='R', LabId='l', Reference='r', Annotations='a', Clades='c',
+        Lineage='L', Passage='P', Reassortant='R', LabId='l', Annotations='a', Clades='c', SemanticAttributes='S',
         SerumId='I', HomologousAntigen='h', SerumSpecies='s',
         TitersList='l', TitersDict='d', TitersLayers='L',
         DrawingOrder='d', ErrorLinePositive='E', ErrorLineNegative='e', Grid='g', PointIndex='p', PointStyles='P', ProcrustesIndex='l', ProcrustesStyle='L', ShownOnAll='s', Title='t',
@@ -222,12 +222,11 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                           case AceKey::Reassortant:
                               string_to_fill = &chart->mAntigens.back().mReassortant;
                               break;
-                          case AceKey::LabId:
-                              string_to_fill = &chart->mAntigens.back().mLabId;
+                          case AceKey::SemanticAttributes:
+                              string_to_fill = &chart->mAntigens.back().mSemanticAttributes;
                               break;
-                          case AceKey::Reference:
-                              push_state = State::BoolField;
-                              bool_to_fill = &chart->mAntigens.back().mReference;
+                          case AceKey::LabId:
+                              push_state = State::LabId;
                               break;
                           case AceKey::Annotations:
                               push_state = State::AntigenAnnotations;
@@ -262,6 +261,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                               break;
                           case AceKey::Annotations:
                               push_state = State::AntigenAnnotations;
+                              break;
+                          case AceKey::SemanticAttributes:
+                              string_to_fill = &chart->mSera.back().mSemanticAttributes;
                               break;
                           case AceKey::SerumId:
                               string_to_fill = &chart->mSera.back().mSerumId;
@@ -317,6 +319,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                     case State::SerumAnnotations:
                     case State::Projections:
                     case State::Clades:
+                    case State::LabId:
                     case State::TableType:
                     case State::TitersList:
                     case State::TitersList2:
@@ -441,6 +444,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::AntigenAnnotations:
               case State::SerumAnnotations:
               case State::Clades:
+              case State::LabId:
               case State::Projections:
               case State::Sources:
               case State::ColumnBases:
@@ -480,6 +484,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::AntigenAnnotations:
               case State::SerumAnnotations:
               case State::Clades:
+              case State::LabId:
               case State::TitersList:
               case State::TitersList2:
               case State::TitersLayers:
@@ -532,6 +537,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   break;
               case State::Clades:
                   chart->mAntigens.back().mClades.emplace_back(str, length);
+                  break;
+              case State::LabId:
+                  chart->mAntigens.back().mLabId.emplace_back(str, length);
                   break;
               case State::SerumAnnotations:
                   chart->mSera.back().mAnnotations.emplace_back(str, length);

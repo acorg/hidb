@@ -33,9 +33,9 @@ void test_sax(int num_tests, std::string source);
 
 int main()
 {
-    int N = 100;
+    int N = 10;
       // std::string source = "/tmp/a.ace";
-    std::string source = "/tmp/cdc-h3.ace";
+    std::string source = "/Users/eu/ac/results/ssm/2016-0926-ssm-sh-2016/maps/merges/ace/all-h1pdm.ace";
     test_rj(N, source);
     test_rj_sax(N, source);
     test_sax(N, source);

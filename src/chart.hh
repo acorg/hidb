@@ -28,20 +28,20 @@ class AntigenSerum
     std::string mPassage; // "P"
     std::string mReassortant; // "R"
     std::vector<std::string> mAnnotations; // "a"
+    std::string mSemanticAttributes;       // string of single letter semantic boolean attributes: R - reference, V - current vaccine, v - previous vaccine, S - vaccine surrogate
 
 };
 
 class Antigen : public AntigenSerum
 {
  public:
-    inline Antigen(Chart& aChart) : AntigenSerum(aChart), mReference(false) {}
+    inline Antigen(Chart& aChart) : AntigenSerum(aChart) {}
     inline std::string date() const { return mDate; }
 
  private:
     friend class ChartReaderEventHandler;
     std::string mDate; // "D"
-    std::string mLabId; // "l"
-    bool mReference; // "r"
+    std::vector<std::string> mLabId; // "l"
     std::vector<std::string> mClades; // "c"
 };
 
