@@ -13,7 +13,7 @@ class ChartReaderEventHandler;
 class AntigenSerumMatch
 {
  public:
-    enum Level : size_t { Perfect=0, SerumSpeciesMismatch, PassageMismatch=10, PassageWithoutDateMismatch, EggCellMismatch=100,
+    enum Level : size_t { Perfect=0, SerumSpeciesMismatch, PassageMismatch=10, PassageWithoutDateMismatch, EggCellUnknown=30, EggCellMismatch=100,
                           Mismatch=1000, ReassortantMismatch, NameMismatch, SerumIdMismatch, AnnotationMismatch };
 
     inline bool operator < (AntigenSerumMatch m) const { return mLevel < m.mLevel; }
@@ -45,17 +45,21 @@ class Annotations : public std::vector<std::string>
     inline bool has(std::string anno) const { return std::find(begin(), end(), anno) != end(); }
     inline bool distinct() const { return has("DISTINCT"); }
 
+    inline void sort() { std::sort(begin(), end()); }
+    inline void sort() const { const_cast<Annotations*>(this)->sort(); }
+
       // note annotations has to be sorted (regardless of const) to compare
     inline bool operator == (const Annotations& aNother) const
         {
             bool equal = size() == aNother.size();
             if (equal) {
-                std::sort(const_cast<Annotations*>(this)->begin(), const_cast<Annotations*>(this)->end());
-                std::sort(const_cast<Annotations&>(aNother).begin(), const_cast<Annotations&>(aNother).end());
+                sort();
+                aNother.sort();
                 equal = std::mismatch(begin(), end(), aNother.begin()).first == end();
             }
             return equal;
         }
+
 };
 
 // ----------------------------------------------------------------------
@@ -68,6 +72,7 @@ class AntigenSerum
 
     inline std::string name() const { return mName; }
     inline std::string passage() const { return mPassage; }
+    inline bool has_passage() const { return !mPassage.empty(); }
     std::string passage_without_date() const;
     inline std::string reassortant() const { return mReassortant; }
     bool is_egg() const;

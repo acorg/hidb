@@ -2,6 +2,7 @@
 #include <cctype>
 #include <stack>
 #include <cassert>
+#include <regex>
 
 #include "rapidjson/reader.h"
 #include "rapidjson/error/en.h"
@@ -763,7 +764,7 @@ bool AntigenSerum::is_egg() const
 AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
 {
       // fields not used for matching
-      // lineage, semantic-attributes, annotations (if antigen vs. serum matched)
+      // lineage, semantic-attributes, annotations
 
     AntigenSerumMatch match;
     if (!distinct() && !aNother.distinct() && name() == aNother.name()) {
@@ -777,19 +778,10 @@ AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
             }
             else {
                   // antigen vs. serum
-                  // ignore serum specific annotations (CONC*, BOOSTED*, *BLEED, FOOTPAD, LYOPHILIZED, *INTRANASAL, CENTRIFUGED)
+                  // ignore serum specific annotations (CONC*, BOOSTED*, *BLEED)
                 Annotations self_filtered, another_filtered;
-                static const std::vector<std::string> serum_specific {"CONC", "BOOSTED", "BLEED", "FOOTPAD", "LYOPHILIZED", "INTRANASAL", "CENTRIFUGED"};
-                auto filter = [](const auto& anno) -> bool {
-                    bool r = true;
-                    for (const auto& ss: serum_specific) {
-                        if (anno.find(ss) != std::string::npos) {
-                            r = false;
-                            break;
-                        }
-                    }
-                    return r;
-                };
+                static std::regex serum_specific {"(CONC|BOOSTED|BLEED)"};
+                static auto filter = [](const auto& anno) -> bool { return !std::regex_search(anno, serum_specific); };
                 std::copy_if(annotations().begin(), annotations().end(), std::back_inserter(self_filtered), filter);
                 std::copy_if(aNother.annotations().begin(), aNother.annotations().end(), std::back_inserter(another_filtered), filter);
                 if (self_filtered != another_filtered) {
@@ -797,14 +789,19 @@ AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
                 }
             }
 
-            if (passage() != aNother.passage()) {
-                match.add(AntigenSerumMatch::PassageMismatch);
-                if (passage_without_date() != aNother.passage_without_date()) {
-                    match.add(AntigenSerumMatch::PassageWithoutDateMismatch);
-                    if (is_egg() != aNother.is_egg()) {
-                        match.add(AntigenSerumMatch::EggCellMismatch);
+            if (has_passage() && aNother.has_passage()) {
+                if (passage() != aNother.passage()) {
+                    match.add(AntigenSerumMatch::PassageMismatch);
+                    if (passage_without_date() != aNother.passage_without_date()) {
+                        match.add(AntigenSerumMatch::PassageWithoutDateMismatch);
+                        if (is_egg() != aNother.is_egg()) {
+                            match.add(AntigenSerumMatch::EggCellMismatch);
+                        }
                     }
                 }
+            }
+            else {
+                match.add(AntigenSerumMatch::EggCellUnknown);
             }
         }
         else {
@@ -866,7 +863,7 @@ void Chart::find_homologous_antigen_for_sera()
         if (antigen_match.front().second.homologous_match()) {
             serum.set_homologous(antigen_match.front().first);
             if (antigen_match.size() > 1 && antigen_match[0].second == antigen_match[1].second) {
-                std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << " (the first one was chosen)" << std::endl;
+                std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << " (the first one chosen)" << std::endl;
                 for (const auto ag: antigen_match) {
                     if (ag.second != antigen_match.front().second)
                         break;
