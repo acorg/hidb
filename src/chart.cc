@@ -747,7 +747,7 @@ bool AntigenSerum::is_egg() const
         size_t pos = mPassage.size() - 1;
         if (mPassage.size() > 14 && mPassage[pos] == ')' && mPassage[pos - 11] == '(' && mPassage[pos - 12] == ' ')
             pos -= 13;
-        while (pos && std::isdigit(mPassage[pos]))
+        while (pos && (std::isdigit(mPassage[pos]) || mPassage[pos] == '?'))
             --pos;
         egg = mPassage[pos] == 'E';
     }
@@ -794,6 +794,8 @@ AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
                     match.add(AntigenSerumMatch::PassageMismatch);
                     if (passage_without_date() != aNother.passage_without_date()) {
                         match.add(AntigenSerumMatch::PassageWithoutDateMismatch);
+                        // std::cerr << "  ?egg " << is_egg() << "  " << full_name() << std::endl;
+                        // std::cerr << "  ?egg " << aNother.is_egg() << "  " << aNother.full_name() << std::endl;
                         if (is_egg() != aNother.is_egg()) {
                             match.add(AntigenSerumMatch::EggCellMismatch);
                         }
@@ -878,6 +880,7 @@ void Chart::find_homologous_antigen_for_sera()
         }
         else {
             std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
+            std::cerr << "    best match: " << mAntigens[antigen_match.front().first].full_name() << " Level:" << antigen_match.front().second << std::endl;
         }
     }
 
