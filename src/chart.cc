@@ -740,19 +740,23 @@ std::string Serum::full_name() const
 
 // ----------------------------------------------------------------------
 
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#endif
+
 bool AntigenSerum::is_egg() const
 {
-    bool egg = false;
-    if (mPassage.size() > 1) {
-        size_t pos = mPassage.size() - 1;
-        if (mPassage.size() > 14 && mPassage[pos] == ')' && mPassage[pos - 11] == '(' && mPassage[pos - 12] == ' ')
-            pos -= 13;
-        while (pos && (std::isdigit(mPassage[pos]) || mPassage[pos] == '?'))
-            --pos;
-        egg = mPassage[pos] == 'E';
-    }
-    return egg;
+    static std::regex egg_passage{
+        R"#(E(\?|[0-9][0-9]?))#"  // passage
+        R"#(( (ISOLATE|CLONE) [0-9]+)*)#"         // NIMR isolate and/or clone
+        R"#(( *\+[1-9])?)#"         // NIID has +1 at the end of passage
+        R"#(( \([12][0129][0-9][0-9]-[01][0-9]-[0-3][0-9]\))?$)#" // passage date
+       };
+    return std::regex_search(mPassage, egg_passage);
 }
+
+#pragma GCC diagnostic pop
 
 // ----------------------------------------------------------------------
 
@@ -907,33 +911,35 @@ AntigenSerumMatch Serum::match_passage(const AntigenSerum& aNother) const
 void Chart::find_homologous_antigen_for_sera()
 {
     for (auto& serum: mSera) {
-          // std::cout << serum.full_name() << std::endl;
-        std::vector<std::pair<size_t, AntigenSerumMatch>> antigen_match;
-        for (auto antigen = mAntigens.begin(); antigen != mAntigens.end(); ++antigen) {
-            antigen_match.emplace_back(static_cast<size_t>(antigen - mAntigens.begin()), serum.match(*antigen));
-        }
-          // sort by AntigenSerumMatch but prefer reference antigens if matches are equal
-        std::sort(antigen_match.begin(), antigen_match.end(), [this](const auto& a, const auto& b) -> bool { return a.second == b.second ? mAntigens[a.first].reference() > mAntigens[b.first].reference() : a.second < b.second; });
-        assert(!antigen_match.empty());
-        if (antigen_match.front().second.homologous_match()) {
-            serum.set_homologous(antigen_match.front().first);
-            if (antigen_match.size() > 1 && antigen_match[0].second == antigen_match[1].second) {
-                std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << " (the first one chosen)" << std::endl;
-                for (const auto ag: antigen_match) {
-                    if (ag.second != antigen_match.front().second)
-                        break;
-                    std::cerr << "    " << mAntigens[ag.first].full_name() << " Ref:" << mAntigens[ag.first].reference() << " Level:" << ag.second << std::endl;
-                }
-
+        if (!serum.has_homologous()) { // it can be already set in .ace, e.g. manually during source excel sheet parsing
+              // std::cout << serum.full_name() << std::endl;
+            std::vector<std::pair<size_t, AntigenSerumMatch>> antigen_match;
+            for (auto antigen = mAntigens.begin(); antigen != mAntigens.end(); ++antigen) {
+                antigen_match.emplace_back(static_cast<size_t>(antigen - mAntigens.begin()), serum.match(*antigen));
             }
-            // else if (!antigen_match.front().second.perfect()) {
-            //     std::cerr << "Info: Not a perfect match for " << serum.full_name() << " chosen" << std::endl;
-            //     std::cerr << "    " << mAntigens[antigen_match.front().first].full_name() << " Ref:" << mAntigens[antigen_match.front().first].reference() << " Level:" << antigen_match.front().second << std::endl;
-            // }
-        }
-        else {
-            std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
-            std::cerr << "    best match: " << mAntigens[antigen_match.front().first].full_name() << " Level:" << antigen_match.front().second << std::endl;
+              // sort by AntigenSerumMatch but prefer reference antigens if matches are equal
+            std::sort(antigen_match.begin(), antigen_match.end(), [this](const auto& a, const auto& b) -> bool { return a.second == b.second ? mAntigens[a.first].reference() > mAntigens[b.first].reference() : a.second < b.second; });
+            assert(!antigen_match.empty());
+            if (antigen_match.front().second.homologous_match()) {
+                serum.set_homologous(antigen_match.front().first);
+                if (antigen_match.size() > 1 && antigen_match[0].second == antigen_match[1].second) {
+                    std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << " (the first one chosen)" << std::endl;
+                    for (const auto ag: antigen_match) {
+                        if (ag.second != antigen_match.front().second)
+                            break;
+                        std::cerr << "    " << mAntigens[ag.first].full_name() << " Ref:" << mAntigens[ag.first].reference() << " Level:" << ag.second << std::endl;
+                    }
+
+                }
+                  // else if (!antigen_match.front().second.perfect()) {
+                  //     std::cerr << "Info: Not a perfect match for " << serum.full_name() << " chosen" << std::endl;
+                  //     std::cerr << "    " << mAntigens[antigen_match.front().first].full_name() << " Ref:" << mAntigens[antigen_match.front().first].reference() << " Level:" << antigen_match.front().second << std::endl;
+                  // }
+            }
+            else {
+                std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
+                std::cerr << "    best match: " << mAntigens[antigen_match.front().first].full_name() << " Level:" << antigen_match.front().second << std::endl;
+            }
         }
     }
 
