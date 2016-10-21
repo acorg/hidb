@@ -756,10 +756,16 @@ bool AntigenSerum::is_egg() const
 
 // ----------------------------------------------------------------------
 
-#pragma GCC diagnostic push
-#ifdef __clang__
-#pragma GCC diagnostic ignored "-Wexit-time-destructors"
-#endif
+bool Serum::is_egg() const
+{
+    bool egg = AntigenSerum::is_egg();
+    if (!egg && !mSerumId.empty())
+        egg = mSerumId.find("EGG") != std::string::npos; // NIID has EGG inside serum_id instead of passage
+    return egg;
+
+} // Serum::is_egg
+
+// ----------------------------------------------------------------------
 
 AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
 {
@@ -769,42 +775,7 @@ AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
     AntigenSerumMatch match;
     if (!distinct() && !aNother.distinct() && name() == aNother.name()) {
         if (reassortant() == aNother.reassortant()) {
-            if (typeid(*this) == typeid(aNother)) {
-                  // antigens vs. antigens or serum vs.serum
-                  // annotations must match completely
-                if (annotations() != aNother.annotations()) {
-                    match.add(AntigenSerumMatch::AnnotationMismatch);
-                }
-            }
-            else {
-                  // antigen vs. serum
-                  // ignore serum specific annotations (CONC*, BOOSTED*, *BLEED)
-                Annotations self_filtered, another_filtered;
-                static std::regex serum_specific {"(CONC|BOOSTED|BLEED)"};
-                static auto filter = [](const auto& anno) -> bool { return !std::regex_search(anno, serum_specific); };
-                std::copy_if(annotations().begin(), annotations().end(), std::back_inserter(self_filtered), filter);
-                std::copy_if(aNother.annotations().begin(), aNother.annotations().end(), std::back_inserter(another_filtered), filter);
-                if (self_filtered != another_filtered) {
-                    match.add(AntigenSerumMatch::AnnotationMismatch);
-                }
-            }
-
-            if (has_passage() && aNother.has_passage()) {
-                if (passage() != aNother.passage()) {
-                    match.add(AntigenSerumMatch::PassageMismatch);
-                    if (passage_without_date() != aNother.passage_without_date()) {
-                        match.add(AntigenSerumMatch::PassageWithoutDateMismatch);
-                        // std::cerr << "  ?egg " << is_egg() << "  " << full_name() << std::endl;
-                        // std::cerr << "  ?egg " << aNother.is_egg() << "  " << aNother.full_name() << std::endl;
-                        if (is_egg() != aNother.is_egg()) {
-                            match.add(AntigenSerumMatch::EggCellMismatch);
-                        }
-                    }
-                }
-            }
-            else {
-                match.add(AntigenSerumMatch::EggCellUnknown);
-            }
+            match.add(match_passage(aNother));
         }
         else {
             match.add(AntigenSerumMatch::ReassortantMismatch);
@@ -817,19 +788,53 @@ AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
 
 } // AntigenSerum::match
 
-#pragma GCC diagnostic pop
+// ----------------------------------------------------------------------
+
+AntigenSerumMatch AntigenSerum::match_passage(const AntigenSerum& aNother) const
+{
+    AntigenSerumMatch match;
+    if (has_passage() && aNother.has_passage()) {
+        if (passage() != aNother.passage()) {
+            match.add(AntigenSerumMatch::PassageMismatch);
+            if (passage_without_date() != aNother.passage_without_date()) {
+                match.add(AntigenSerumMatch::PassageWithoutDateMismatch);
+                  // std::cerr << "  ?egg " << is_egg() << "  " << full_name() << std::endl;
+                  // std::cerr << "  ?egg " << aNother.is_egg() << "  " << aNother.full_name() << std::endl;
+                if (is_egg() != aNother.is_egg()) {
+                    match.add(AntigenSerumMatch::EggCellMismatch);
+                }
+            }
+        }
+    }
+    else {
+        match.add(AntigenSerumMatch::EggCellUnknown);
+    }
+    return match;
+
+} // AntigenSerum::match_passage
 
 // ----------------------------------------------------------------------
 
-// AntigenSerumMatch Antigen::match(const Antigen& aNother) const
-// {
-//       // fields not used for matching
-//       // date, clades, lab_id
+AntigenSerumMatch Antigen::match(const Antigen& aNother) const
+{
+      // fields not used for matching
+      // date, clades, lab_id
 
-//     AntigenSerumMatch m = AntigenSerum::match(aNother);
-//     return m;
+    AntigenSerumMatch m = AntigenSerum::match(aNother);
+    if (annotations() != aNother.annotations()) {
+        m.add(AntigenSerumMatch::AnnotationMismatch);
+    }
+    return m;
 
-// } // Antigen::match
+} // Antigen::match
+
+// ----------------------------------------------------------------------
+
+AntigenSerumMatch Antigen::match(const Serum& aNother) const
+{
+    return aNother.match(*this);
+
+} // Antigen::match
 
 // ----------------------------------------------------------------------
 
@@ -840,14 +845,62 @@ AntigenSerumMatch Serum::match(const Serum& aNother) const
 
     AntigenSerumMatch m = AntigenSerum::match(aNother);
     if (m < AntigenSerumMatch::Mismatch) {
-        if (serum_id() != aNother.serum_id())
-            m.add(AntigenSerumMatch::SerumIdMismatch);
-        if (serum_species() != aNother.serum_species())
-            m.add(AntigenSerumMatch::SerumSpeciesMismatch);
+        if (annotations() != aNother.annotations()) {
+            m.add(AntigenSerumMatch::AnnotationMismatch);
+        }
+        else {
+            if (serum_id() != aNother.serum_id())
+                m.add(AntigenSerumMatch::SerumIdMismatch);
+            if (serum_species() != aNother.serum_species())
+                m.add(AntigenSerumMatch::SerumSpeciesMismatch);
+        }
     }
     return m;
 
 } // Serum::match
+
+// ----------------------------------------------------------------------
+
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#endif
+
+AntigenSerumMatch Serum::match(const Antigen& aNother) const
+{
+    AntigenSerumMatch m = AntigenSerum::match(aNother);
+    if (m < AntigenSerumMatch::Mismatch) {
+                  // ignore serum specific annotations (CONC*, BOOSTED*, *BLEED)
+        Annotations self_filtered;
+        static std::regex serum_specific {"(CONC|BOOSTED|BLEED)"};
+        static auto filter = [](const auto& anno) -> bool { return !std::regex_search(anno, serum_specific); };
+        std::copy_if(annotations().begin(), annotations().end(), std::back_inserter(self_filtered), filter);
+        if (self_filtered != aNother.annotations()) {
+            m.add(AntigenSerumMatch::AnnotationMismatch);
+        }
+    }
+    return m;
+
+} // Serum::match
+
+#pragma GCC diagnostic pop
+
+// ----------------------------------------------------------------------
+
+AntigenSerumMatch Serum::match_passage(const AntigenSerum& aNother) const
+{
+    AntigenSerumMatch match;
+    if (!has_passage() && aNother.has_passage()) {
+        if (is_egg() != aNother.is_egg()) {
+            match.add(AntigenSerumMatch::EggCellMismatch);
+        }
+    }
+    else {
+        match = AntigenSerum::match_passage(aNother);
+    }
+    return match;
+
+} // Serum::match_passage
 
 // ----------------------------------------------------------------------
 

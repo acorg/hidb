@@ -13,8 +13,8 @@ class ChartReaderEventHandler;
 class AntigenSerumMatch
 {
  public:
-    enum Level : size_t { Perfect=0, SerumSpeciesMismatch, PassageMismatch=10, PassageWithoutDateMismatch, EggCellUnknown=30, EggCellMismatch=100,
-                          Mismatch=1000, ReassortantMismatch, NameMismatch, SerumIdMismatch, AnnotationMismatch };
+    enum Level : size_t { Perfect=0, SerumSpeciesMismatch=0x1, PassageMismatch=0x2, PassageWithoutDateMismatch=0x4, EggCellUnknown=0x8, EggCellMismatch=0x10,
+                          Mismatch=0x20, ReassortantMismatch=0x40, SerumIdMismatch=0x80, AnnotationMismatch=0x100, NameMismatch=0x200 };
 
     inline bool operator < (AntigenSerumMatch m) const { return mLevel < m.mLevel; }
     inline bool operator < (Level l) const { return mLevel < l; }
@@ -22,6 +22,7 @@ class AntigenSerumMatch
     inline bool operator != (AntigenSerumMatch m) const { return ! operator==(m); }
 
     inline void add(Level toAdd) { mLevel += toAdd; }
+    inline void add(AntigenSerumMatch toAdd) { mLevel += toAdd.mLevel; }
     inline bool mismatch() const { return mLevel > Mismatch; }
     inline bool homologous_match() const { return mLevel < EggCellMismatch; }
     inline bool perfect() const { return mLevel == Perfect; }
@@ -31,8 +32,9 @@ class AntigenSerumMatch
     inline AntigenSerumMatch() : mLevel(Perfect) {}
 
     friend class AntigenSerum;
+    friend class Serum;
 
-    friend inline std::ostream& operator << (std::ostream& out, const AntigenSerumMatch& m) { return out << m.mLevel; }
+    friend inline std::ostream& operator << (std::ostream& out, const AntigenSerumMatch& m) { return out << "0x" << std::hex << m.mLevel << std::dec; }
 };
 
 // ----------------------------------------------------------------------
@@ -75,7 +77,7 @@ class AntigenSerum
     inline bool has_passage() const { return !mPassage.empty(); }
     std::string passage_without_date() const;
     inline std::string reassortant() const { return mReassortant; }
-    bool is_egg() const;
+    virtual bool is_egg() const;
     inline bool is_reassortant() const { return !mReassortant.empty(); }
     inline bool distinct() const { return mAnnotations.distinct(); }
     inline const Annotations& annotations() const { return mAnnotations; }
@@ -88,6 +90,7 @@ class AntigenSerum
       //inline AntigenSerum(Chart& aChart) : mChart(aChart) {}
 
     inline bool has_semantic(char c) const { return mSemanticAttributes.find(c) != std::string::npos; }
+    virtual AntigenSerumMatch match_passage(const AntigenSerum& aNother) const;
 
  private:
     friend class ChartReaderEventHandler;
@@ -103,6 +106,8 @@ class AntigenSerum
 
 // ----------------------------------------------------------------------
 
+class Serum;
+
 class Antigen : public AntigenSerum
 {
  public:
@@ -115,7 +120,8 @@ class Antigen : public AntigenSerum
     inline const std::vector<std::string> lab_id() const { return mLabId; }
 
     using AntigenSerum::match;
-      // virtual AntigenSerumMatch match(const Antigen& aNother) const;
+    virtual AntigenSerumMatch match(const Serum& aNother) const;
+    virtual AntigenSerumMatch match(const Antigen& aNother) const;
 
  private:
     friend class ChartReaderEventHandler;
@@ -138,9 +144,14 @@ class Serum : public AntigenSerum
 
     template <typename No> inline void set_homologous(No ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
     inline bool has_homologous() const { return mHomologous >= 0; }
+    virtual bool is_egg() const;
 
     using AntigenSerum::match;
     virtual AntigenSerumMatch match(const Serum& aNother) const;
+    virtual AntigenSerumMatch match(const Antigen& aNother) const;
+
+ protected:
+    virtual AntigenSerumMatch match_passage(const AntigenSerum& aNother) const;
 
  private:
     friend class ChartReaderEventHandler;
