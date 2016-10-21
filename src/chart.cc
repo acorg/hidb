@@ -749,7 +749,7 @@ bool AntigenSerum::is_egg() const
 {
     static std::regex egg_passage{
         R"#(E(\?|[0-9][0-9]?))#"  // passage
-        R"#(( (ISOLATE|CLONE) [0-9]+)*)#"         // NIMR isolate and/or clone
+        R"#(( (ISOLATE|CLONE) [0-9\-]+)*)#"         // NIMR isolate and/or clone, NIMR H1pdm has CLONE 38-32
         R"#(( *\+[1-9])?)#"         // NIID has +1 at the end of passage
         R"#(( \([12][0129][0-9][0-9]-[01][0-9]-[0-3][0-9]\))?$)#" // passage date
        };
