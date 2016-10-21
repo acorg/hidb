@@ -22,8 +22,8 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
  private:
     enum class State { Ignore, Init, Root, Version, Chart, Info, TableType, Antigen, Serum, Titers, Projections, PlotSpec,
                        TitersList, TitersList2, TitersDict, TitersLayers,
-                       LabId, Clades, StringField, BoolField, IntField, DoubleField,
-                       AntigenAnnotations, SerumAnnotations, Sources, ColumnBases };
+                       StringField, BoolField, IntField, DoubleField, VectorStringField,
+                       Sources, ColumnBases };
 
                     // case State::Ignore:
                     // case State::Init:
@@ -37,8 +37,6 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                     // case State::StringField:
                     // case State::BoolField:
                     // case State::IntField:
-                    // case State::AntigenAnnotations:
-                    // case State::SerumAnnotations:
                     // case State::Projections:
                     // case State::PlotSpec:
                     // case State::Clades:
@@ -58,7 +56,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
  public:
     inline ChartReaderEventHandler(Chart* aChart)
         : chart(aChart), ignore_compound(0),
-          string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr), layer_to_fill(nullptr)
+          string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr), vector_string_to_fill(nullptr), layer_to_fill(nullptr)
         { state.push(State::Init); }
 
     inline bool StartObject()
@@ -227,13 +225,16 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                               string_to_fill = &chart->mAntigens.back().mSemanticAttributes;
                               break;
                           case AceKey::LabId:
-                              push_state = State::LabId;
+                              vector_string_to_fill = &chart->mAntigens.back().mLabId;
+                              push_state = State::VectorStringField;
                               break;
                           case AceKey::Annotations:
-                              push_state = State::AntigenAnnotations;
+                              vector_string_to_fill = &chart->mAntigens.back().mAnnotations;
+                              push_state = State::VectorStringField;
                               break;
                           case AceKey::Clades:
-                              push_state = State::Clades;
+                              vector_string_to_fill = &chart->mAntigens.back().mClades;
+                              push_state = State::VectorStringField;
                               break;
                           default:
                               r = false;
@@ -261,7 +262,8 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                               string_to_fill = &chart->mSera.back().mReassortant;
                               break;
                           case AceKey::Annotations:
-                              push_state = State::AntigenAnnotations;
+                              vector_string_to_fill = &chart->mSera.back().mAnnotations;
+                              push_state = State::VectorStringField;
                               break;
                           case AceKey::SemanticAttributes:
                               string_to_fill = &chart->mSera.back().mSemanticAttributes;
@@ -313,14 +315,11 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         layer_to_fill->back().emplace_back(std::string(str, length), std::string());
                         break;
                     case State::StringField:
+                    case State::VectorStringField:
                     case State::BoolField:
                     case State::IntField:
                     case State::DoubleField:
-                    case State::AntigenAnnotations:
-                    case State::SerumAnnotations:
                     case State::Projections:
-                    case State::Clades:
-                    case State::LabId:
                     case State::TableType:
                     case State::TitersList:
                     case State::TitersList2:
@@ -442,13 +441,10 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
             switch (state.top()) {
               case State::Antigen:
               case State::Serum:
-              case State::AntigenAnnotations:
-              case State::SerumAnnotations:
-              case State::Clades:
-              case State::LabId:
               case State::Projections:
               case State::Sources:
               case State::ColumnBases:
+              case State::VectorStringField:
                   break;
               case State::TitersList:
                   state.push(State::TitersList2);
@@ -482,10 +478,6 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
             switch (state.top()) {
               case State::Antigen:
               case State::Serum:
-              case State::AntigenAnnotations:
-              case State::SerumAnnotations:
-              case State::Clades:
-              case State::LabId:
               case State::TitersList:
               case State::TitersList2:
               case State::TitersLayers:
@@ -493,6 +485,10 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Sources:
               case State::ColumnBases:
                   state.pop();
+                  break;
+              case State::VectorStringField:
+                  state.pop();
+                  vector_string_to_fill = nullptr;
                   break;
               case State::TitersDict:
                   layer_to_fill = nullptr;
@@ -533,17 +529,8 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   string_to_fill = nullptr;
                   state.pop();
                   break;
-              case State::AntigenAnnotations:
-                  chart->mAntigens.back().mAnnotations.emplace_back(str, length);
-                  break;
-              case State::Clades:
-                  chart->mAntigens.back().mClades.emplace_back(str, length);
-                  break;
-              case State::LabId:
-                  chart->mAntigens.back().mLabId.emplace_back(str, length);
-                  break;
-              case State::SerumAnnotations:
-                  chart->mSera.back().mAnnotations.emplace_back(str, length);
+              case State::VectorStringField:
+                  vector_string_to_fill->emplace_back(str, length);
                   break;
               case State::TableType:
                   switch (str[0]) {
@@ -654,6 +641,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
     bool* bool_to_fill;
     int* int_to_fill;
     double* double_to_fill;
+    std::vector<std::string>* vector_string_to_fill;
     ChartTiters::Dict* layer_to_fill;
 };
 
@@ -767,6 +755,11 @@ bool AntigenSerum::is_egg() const
 
 // ----------------------------------------------------------------------
 
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#endif
+
 AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
 {
       // fields not used for matching
@@ -775,6 +768,35 @@ AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
     AntigenSerumMatch match;
     if (!distinct() && !aNother.distinct() && name() == aNother.name()) {
         if (reassortant() == aNother.reassortant()) {
+            if (typeid(*this) == typeid(aNother)) {
+                  // antigens vs. antigens or serum vs.serum
+                  // annotations must match completely
+                if (annotations() != aNother.annotations()) {
+                    match.add(AntigenSerumMatch::AnnotationMismatch);
+                }
+            }
+            else {
+                  // antigen vs. serum
+                  // ignore serum specific annotations (CONC*, BOOSTED*, *BLEED, FOOTPAD, LYOPHILIZED, *INTRANASAL, CENTRIFUGED)
+                Annotations self_filtered, another_filtered;
+                static const std::vector<std::string> serum_specific {"CONC", "BOOSTED", "BLEED", "FOOTPAD", "LYOPHILIZED", "INTRANASAL", "CENTRIFUGED"};
+                auto filter = [](const auto& anno) -> bool {
+                    bool r = true;
+                    for (const auto& ss: serum_specific) {
+                        if (anno.find(ss) != std::string::npos) {
+                            r = false;
+                            break;
+                        }
+                    }
+                    return r;
+                };
+                std::copy_if(annotations().begin(), annotations().end(), std::back_inserter(self_filtered), filter);
+                std::copy_if(aNother.annotations().begin(), aNother.annotations().end(), std::back_inserter(another_filtered), filter);
+                if (self_filtered != another_filtered) {
+                    match.add(AntigenSerumMatch::AnnotationMismatch);
+                }
+            }
+
             if (passage() != aNother.passage()) {
                 match.add(AntigenSerumMatch::PassageMismatch);
                 if (passage_without_date() != aNother.passage_without_date()) {
@@ -796,22 +818,19 @@ AntigenSerumMatch AntigenSerum::match(const AntigenSerum& aNother) const
 
 } // AntigenSerum::match
 
+#pragma GCC diagnostic pop
+
 // ----------------------------------------------------------------------
 
-AntigenSerumMatch Antigen::match(const Antigen& aNother) const
-{
-      // fields not used for matching
-      // date, clades, lab_id
+// AntigenSerumMatch Antigen::match(const Antigen& aNother) const
+// {
+//       // fields not used for matching
+//       // date, clades, lab_id
 
-    AntigenSerumMatch m = AntigenSerum::match(aNother);
-    if (m < AntigenSerumMatch::Mismatch) {
-        if (annotations() != aNother.annotations()) {
-            m.add(AntigenSerumMatch::AnnotationMismatch);
-        }
-    }
-    return m;
+//     AntigenSerumMatch m = AntigenSerum::match(aNother);
+//     return m;
 
-} // Antigen::match
+// } // Antigen::match
 
 // ----------------------------------------------------------------------
 
@@ -822,15 +841,10 @@ AntigenSerumMatch Serum::match(const Serum& aNother) const
 
     AntigenSerumMatch m = AntigenSerum::match(aNother);
     if (m < AntigenSerumMatch::Mismatch) {
-        if (annotations() != aNother.annotations()) {
-            m.add(AntigenSerumMatch::AnnotationMismatch);
-        }
-        else {
-            if (serum_id() != aNother.serum_id())
+        if (serum_id() != aNother.serum_id())
             m.add(AntigenSerumMatch::SerumIdMismatch);
         if (serum_species() != aNother.serum_species())
             m.add(AntigenSerumMatch::SerumSpeciesMismatch);
-        }
     }
     return m;
 

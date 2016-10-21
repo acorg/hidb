@@ -107,9 +107,10 @@ class Antigen : public AntigenSerum
 
     inline std::string date() const { return mDate; }
     inline bool reference() const { return has_semantic('R'); }
+    inline const std::vector<std::string> lab_id() const { return mLabId; }
 
     using AntigenSerum::match;
-    virtual AntigenSerumMatch match(const Antigen& aNother) const;
+      // virtual AntigenSerumMatch match(const Antigen& aNother) const;
 
  private:
     friend class ChartReaderEventHandler;

@@ -31,9 +31,13 @@ def main(args):
 def process(source):
     chart = hidb.import_chart(str(source))
     chart.find_homologous_antigen_for_sera()
+
+    # print("----------------------------------------------------------------------");
+    # for ag_no in range(chart.number_of_antigens()):
+    #     print(ag_no, chart.antigen(ag_no).full_name(), chart.antigen(ag_no).annotations(), chart.antigen(ag_no).lab_id())
+    # print("----------------------------------------------------------------------");
     # for sr_no in range(chart.number_of_sera()):
-    #     print(sr_no, chart.serum(sr_no).full_name())
-    # print(chart)
+    #     print(sr_no, chart.serum(sr_no).full_name(), list(chart.serum(sr_no).annotations()))
 
 # ----------------------------------------------------------------------
 

@@ -38,9 +38,11 @@ PYBIND11_PLUGIN(hidb_backend)
 
     py::class_<AntigenSerum>(m, "AntigenSerum")
             .def("full_name", &AntigenSerum::full_name)
+            .def("annotations", [](const AntigenSerum &as) { py::list list; for (const auto& anno: as.annotations()) { list.append(py::str(anno)); } return list; }, py::doc("returns a copy of the annotation list, modifications to the returned list are not applied"))
             ;
 
     py::class_<Antigen, AntigenSerum>(m, "Antigen")
+            .def("lab_id", [](const Antigen &a) { py::list list; for (const auto& li: a.lab_id()) { list.append(py::str(li)); } return list; }, py::doc("returns a copy of the lab_id list, modifications to the returned list are not applied"))
             ;
 
     py::class_<Serum, AntigenSerum>(m, "Serum")
