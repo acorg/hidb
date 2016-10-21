@@ -753,7 +753,7 @@ bool AntigenSerum::is_egg() const
         R"#(( *\+[1-9])?)#"         // NIID has +1 at the end of passage
         R"#(( \([12][0129][0-9][0-9]-[01][0-9]-[0-3][0-9]\))?$)#" // passage date
        };
-    return std::regex_search(mPassage, egg_passage);
+    return std::regex_search(mPassage, egg_passage) || is_reassortant(); // reassortant is always egg (2016-10-21)
 }
 
 #pragma GCC diagnostic pop

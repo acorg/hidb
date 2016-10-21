@@ -41,15 +41,16 @@ def process(source):
 
 # ----------------------------------------------------------------------
 
+sAcmacsSuffixes = {".acd1", ".acp1", ".acmacs-txt"}
 def get_ace(temp_dir, source1):
-    if source1.suffixes[0] in [".acd1", ".acp1", ".acmacs-txt"]:
+    if set(source1.suffixes) & sAcmacsSuffixes:
         source2 = temp_dir.joinpath(source1.stem + ".ace")
         subprocess.run("env ACMACS_ROOT=$HOME/ac/acmacs PYTHONPATH=$HOME/ac/acmacs:$HOME/ac/acmacs/build $HOME/c2r/bin/python3 $HOME/ac/acmacs/bin/convert.py -q '{}' '{}'".format(source1, source2), shell=True, check=True)
-    elif source1.suffixes[0] == ".ace":
+    elif source1.suffixes[-1] == ".ace":
         source2 = source1
     else:
         source2 = None
-        module_logger.warning('Unsupported {}'.format(source1))
+        module_logger.warning('Unsupported suffix in {}'.format(source1))
     return source2
 
 # ----------------------------------------------------------------------
