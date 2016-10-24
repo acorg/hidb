@@ -9,7 +9,7 @@ MAKEFLAGS = -w
 
 # ----------------------------------------------------------------------
 
-HIDB_SOURCES = hidb-py.cc chart.cc read-file.cc xz.cc
+HIDB_SOURCES = hidb-py.cc chart.cc ace.cc read-file.cc xz.cc
 
 # ----------------------------------------------------------------------
 
@@ -48,7 +48,7 @@ all: $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(DIST)/test-rapidjson
 
 # ----------------------------------------------------------------------
 
-$(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
+$(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
 	g++ $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
 
 $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST)

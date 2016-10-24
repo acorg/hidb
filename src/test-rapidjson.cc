@@ -8,6 +8,7 @@
 #include "rapidjson/document.h"
 
 #include "chart-rj.hh"
+#include "ace.hh"
 #include "chart.hh"
 
 // ----------------------------------------------------------------------

@@ -30,6 +30,7 @@ def main(args):
 
 def process(source):
     chart = hidb.import_chart(str(source))
+    print(chart.table_id())
     chart.find_homologous_antigen_for_sera()
 
     # print("----------------------------------------------------------------------");

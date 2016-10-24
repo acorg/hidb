@@ -1,12 +1,8 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include <vector>
-
-// ----------------------------------------------------------------------
-
-// class Chart;
-class ChartReaderEventHandler;
 
 // ----------------------------------------------------------------------
 
@@ -168,6 +164,7 @@ class ChartInfo
     enum TableType {Antigenic, Genetic};
     inline ChartInfo() : mType(Antigenic) {}
     inline std::string virus_type() const { return mVirusType; }
+    std::string table_id() const;
 
  private:
     friend class ChartReaderEventHandler;
@@ -211,6 +208,7 @@ class Chart
 
     inline size_t number_of_antigens() const { return mAntigens.size(); }
     inline size_t number_of_sera() const { return mSera.size(); }
+    inline std::string table_id() const { return mInfo.table_id(); }
 
     inline Antigen& antigen(size_t ag_no) { return mAntigens[ag_no]; }
     inline Serum& serum(size_t sr_no) { return mSera[sr_no]; }
@@ -227,10 +225,6 @@ class Chart
 
     inline Chart(const Chart&) = default;
 };
-
-// ----------------------------------------------------------------------
-
-Chart* import_chart(std::string data);
 
 // ----------------------------------------------------------------------
 /// Local Variables:

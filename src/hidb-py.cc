@@ -18,6 +18,7 @@
 namespace py = pybind11;
 
 #include "chart.hh"
+#include "ace.hh"
 
 // ----------------------------------------------------------------------
 
@@ -57,6 +58,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("number_of_sera", &Chart::number_of_sera)
             .def("antigen", &Chart::antigen, py::arg("no"))
             .def("serum", &Chart::serum, py::arg("no"))
+            .def("table_id", &Chart::table_id)
             .def("find_homologous_antigen_for_sera", &Chart::find_homologous_antigen_for_sera)
             ;
 
