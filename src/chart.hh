@@ -66,6 +66,8 @@ class AntigenSerum
 {
  public:
     virtual ~AntigenSerum();
+    inline AntigenSerum& operator=(const AntigenSerum&) = default;
+
     virtual std::string full_name() const = 0;
 
     inline std::string name() const { return mName; }
@@ -117,7 +119,7 @@ class Antigen : public AntigenSerum
 
     inline std::string date() const { return mDate; }
     inline bool reference() const { return has_semantic('R'); }
-    inline const std::vector<std::string> lab_id() const { return mLabId; }
+    inline const std::vector<std::string>& lab_id() const { return mLabId; }
     virtual std::string variant_id() const;
 
     using AntigenSerum::match;
@@ -209,6 +211,8 @@ class Chart
 {
  public:
     inline Chart() {}
+    inline Chart(const Chart&) = default;
+    inline Chart& operator=(const Chart&) = default;
 
     inline std::string virus_type() const { return mInfo.virus_type(); }
 
@@ -216,7 +220,9 @@ class Chart
     inline size_t number_of_sera() const { return mSera.size(); }
     inline std::string table_id() const { return mInfo.table_id(); }
 
+    inline const std::vector<Antigen>& antigens() const { return mAntigens; }
     inline Antigen& antigen(size_t ag_no) { return mAntigens[ag_no]; }
+    inline const std::vector<Serum>& sera() const { return mSera; }
     inline Serum& serum(size_t sr_no) { return mSera[sr_no]; }
 
     void find_homologous_antigen_for_sera();
@@ -231,7 +237,6 @@ class Chart
     ChartTiters mTiters;
     std::vector <double> mColumnBases;
 
-    inline Chart(const Chart&) = default;
 };
 
 // ----------------------------------------------------------------------

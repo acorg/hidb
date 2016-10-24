@@ -12,11 +12,12 @@
 class PerTable
 {
  public:
-    inline PerTable() {}
+    inline PerTable(const Antigen& aAntigen) : mDate(aAntigen.date()), mLabId(aAntigen.lab_id()) {}
+    inline PerTable(const Serum& /*aSerum*/) {}
 
  private:
     std::string mDate;
-    std::string mLabId;
+    std::vector<std::string> mLabId;
 };
 
 // ----------------------------------------------------------------------
@@ -24,7 +25,21 @@ class PerTable
 template <typename AS> class AntigenSerumData
 {
  public:
-    inline AntigenSerumData() {}
+    inline AntigenSerumData(const AS& aAS) : mAS(aAS) {}
+
+    inline void update(std::string aTableId, const AS& aAS)
+        {
+            auto exisiting = mTableIds.find(aTableId);
+            if (exisiting == mTableIds.end()) {
+                mTableIds.insert(std::make_pair(aTableId, PerTable(aAS)));
+            }
+            else {
+                throw std::runtime_error("AntigenSerumData::update");
+            }
+        }
+
+    inline bool operator < (const AntigenSerumData& aNother) const { return mAS < aNother.mAS; }
+    inline bool operator == (const AntigenSerumData& aNother) const { return mAS == aNother.mAS; }
 
  private:
     AS mAS;
@@ -47,6 +62,9 @@ class HiDb
     std::vector<AntigenData> mAntigens;
     std::vector<SerumData> mSera;
     std::vector<Chart> mTables;
+
+    void add_antigen(const Antigen& aAntigen, std::string aTableId);
+    void add_serum(const Serum& aSerum, std::string aTableId);
 };
 
 // ----------------------------------------------------------------------

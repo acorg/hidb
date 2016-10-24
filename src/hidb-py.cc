@@ -64,7 +64,6 @@ PYBIND11_PLUGIN(hidb_backend)
 
     m.def("import_chart", &import_chart, py::arg("data"), py::doc("Imports chart from a buffer or file in the ace format."));
 
-
       // ----------------------------------------------------------------------
       // HiDb
       // ----------------------------------------------------------------------
