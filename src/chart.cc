@@ -6,6 +6,9 @@
 #include "rapidjson/error/en.h"
 
 #include "chart.hh"
+
+// ----------------------------------------------------------------------
+
 AntigenSerum::~AntigenSerum()
 {
 
@@ -13,26 +16,52 @@ AntigenSerum::~AntigenSerum()
 
 // ----------------------------------------------------------------------
 
-std::string AntigenSerum::full_name() const
+std::string Antigen::variant_id() const
 {
-    std::string n = mName;
-    if (!mReassortant.empty()) {
-        n.append(1, ' ');
-        n.append(mReassortant);
+    std::string n;
+    if (is_reassortant()) {
+        n.append(reassortant());
     }
-    if (!mAnnotations.empty()) {
-        for (const auto& ann: mAnnotations) {
-            n.append(1, ' ');
+    if (!annotations().empty()) {
+        for (const auto& ann: annotations()) {
+            if (!n.empty())
+                n.append(1, ' ');
             n.append(ann);
         }
     }
-    if (!mPassage.empty()) {
-        n.append(1, ' ');
-        n.append(mPassage);
+    if (has_passage()) {
+        if (!n.empty())
+            n.append(1, ' ');
+        n.append(passage());
+    }
+
+    return n;
+
+} // Antigen::variant_id
+
+// ----------------------------------------------------------------------
+
+std::string Serum::variant_id() const
+{
+    std::string n;
+    if (is_reassortant()) {
+        n.append(reassortant());
+    }
+    if (!mSerumId.empty()) {
+        if (!n.empty())
+            n.append(1, ' ');
+        n.append(mSerumId);
+    }
+    if (!annotations().empty()) {
+        for (const auto& ann: annotations()) {
+            if (!n.empty())
+                n.append(1, ' ');
+            n.append(ann);
+        }
     }
     return n;
 
-} // AntigenSerum::full_name
+} // Serum::variant_id
 
 // ----------------------------------------------------------------------
 
@@ -47,21 +76,17 @@ std::string AntigenSerum::passage_without_date() const
 
 // ----------------------------------------------------------------------
 
-std::string Antigen::full_name() const
-{
-    std::string n = AntigenSerum::full_name();
-    return n;
-
-} // Antigen::full_name
-
-// ----------------------------------------------------------------------
-
 std::string Serum::full_name() const
 {
-    std::string n = AntigenSerum::full_name();
-    if (!mSerumId.empty()) {
+    std::string n = name();
+    const auto vi = variant_id();
+    if (!vi.empty()) {
         n.append(1, ' ');
-        n.append(mSerumId);
+        n.append(vi);
+    }
+    if (has_passage()) {
+        n.append(1, ' ');
+        n.append(passage());
     }
     if (!mSerumSpecies.empty()) {
         n.append(1, ' ');
@@ -289,7 +314,7 @@ std::string ChartInfo::table_id() const
     else {
         date = mSources.front().mDate + "-" + mSources.back().mDate;
     }
-    std::string r = mVirusType + ":" + mLab + ":" + date + ":" + mRbc + ":" + mName;
+    std::string r = date + ":" + mRbc + ":" + mName + ":" + mVirusType + ":" + mLab;
     return r;
 
 } // ChartInfo::table_id

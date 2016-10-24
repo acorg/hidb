@@ -66,7 +66,7 @@ class AntigenSerum
 {
  public:
     virtual ~AntigenSerum();
-    virtual std::string full_name() const;
+    virtual std::string full_name() const = 0;
 
     inline std::string name() const { return mName; }
     inline std::string passage() const { return mPassage; }
@@ -78,7 +78,11 @@ class AntigenSerum
     inline bool distinct() const { return mAnnotations.distinct(); }
     inline const Annotations& annotations() const { return mAnnotations; }
 
+    virtual std::string variant_id() const = 0;
     virtual AntigenSerumMatch match(const AntigenSerum& aNother) const;
+
+    inline bool operator == (const AntigenSerum& aNother) const { return name() == aNother.name() && variant_id() == aNother.variant_id(); }
+    inline bool operator < (const AntigenSerum& aNother) const { return name() == aNother.name() ? variant_id() < aNother.variant_id() : name() < aNother.name(); }
 
  protected:
     inline AntigenSerum() = default;
@@ -109,11 +113,12 @@ class Antigen : public AntigenSerum
  public:
       // inline Antigen(Chart& aChart) : AntigenSerum(aChart) {}
     inline Antigen() = default;
-    virtual std::string full_name() const;
+    virtual inline std::string full_name() const { const auto vi = variant_id(); std::string n = name(); if (!vi.empty()) { n.append(1, ' '); n.append(vi); } return n; }
 
     inline std::string date() const { return mDate; }
     inline bool reference() const { return has_semantic('R'); }
     inline const std::vector<std::string> lab_id() const { return mLabId; }
+    virtual std::string variant_id() const;
 
     using AntigenSerum::match;
     virtual AntigenSerumMatch match(const Serum& aNother) const;
@@ -137,6 +142,7 @@ class Serum : public AntigenSerum
 
     inline std::string serum_id() const { return mSerumId; }
     inline std::string serum_species() const { return mSerumSpecies; }
+    virtual std::string variant_id() const;
 
     template <typename No> inline void set_homologous(No ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
     inline bool has_homologous() const { return mHomologous >= 0; }
@@ -214,6 +220,8 @@ class Chart
     inline Serum& serum(size_t sr_no) { return mSera[sr_no]; }
 
     void find_homologous_antigen_for_sera();
+
+    inline bool operator < (const Chart& aNother) const { return table_id() < aNother.table_id(); }
 
  private:
     friend class ChartReaderEventHandler;

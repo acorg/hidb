@@ -17,7 +17,7 @@
 
 namespace py = pybind11;
 
-#include "chart.hh"
+#include "hidb.hh"
 #include "ace.hh"
 
 // ----------------------------------------------------------------------
@@ -64,6 +64,15 @@ PYBIND11_PLUGIN(hidb_backend)
 
     m.def("import_chart", &import_chart, py::arg("data"), py::doc("Imports chart from a buffer or file in the ace format."));
 
+
+      // ----------------------------------------------------------------------
+      // HiDb
+      // ----------------------------------------------------------------------
+
+    py::class_<HiDb>(m, "HiDb")
+            .def(py::init<>())
+            .def("add", &HiDb::add, py::arg("chart"))
+            ;
 
       // ----------------------------------------------------------------------
 
