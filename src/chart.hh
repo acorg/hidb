@@ -71,6 +71,7 @@ class AntigenSerum
     virtual std::string full_name() const = 0;
 
     inline std::string name() const { return mName; }
+    inline std::string lineage() const { return mLineage; }
     inline std::string passage() const { return mPassage; }
     inline bool has_passage() const { return !mPassage.empty(); }
     std::string passage_without_date() const;

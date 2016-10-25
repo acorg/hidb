@@ -1,4 +1,10 @@
 #include "hidb.hh"
+#include "hidb-export.hh"
+#include "read-file.hh"
+
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/error/en.h"
+#include "rapidjson/stringbuffer.h"
 
 // ----------------------------------------------------------------------
 
@@ -55,6 +61,26 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId)
     }
 
 } // HiDb::add_serum
+
+// ----------------------------------------------------------------------
+
+void HiDb::exportTo(std::string aFilename) const
+{
+    rapidjson::StringBuffer s;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(s);
+    writer.SetIndent(' ', 1);
+
+    writer.StartObject();
+    writer.Key("  version");
+    writer.String("hidb-v4");
+    // writer.Key("?created");
+    // writer.String("hidb on");
+    writer << mAntigens << mSera;
+    writer.EndObject();
+
+    write_file(aFilename, s.GetString());
+
+} // HiDb::exportTo
 
 // ----------------------------------------------------------------------
 

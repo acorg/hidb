@@ -15,6 +15,9 @@ class PerTable
     inline PerTable(const Antigen& aAntigen) : mDate(aAntigen.date()), mLabId(aAntigen.lab_id()) {}
     inline PerTable(const Serum& /*aSerum*/) {}
 
+    inline std::string date() const { return mDate; }
+    inline const std::vector<std::string>& lab_id() const { return mLabId; }
+
  private:
     std::string mDate;
     std::vector<std::string> mLabId;
@@ -43,6 +46,9 @@ template <typename AS> class AntigenSerumData
     inline bool operator < (const AntigenSerumData& aNother) const { return mAS < aNother.mAS; }
     inline bool operator == (const AntigenSerumData& aNother) const { return mAS == aNother.mAS; }
 
+    inline const AS& as() const { return mAS; }
+    inline const std::map<std::string, PerTable>& per_table() const { return mTableIds; }
+
  private:
     AS mAS;
     std::map<std::string, PerTable> mTableIds;
@@ -59,6 +65,7 @@ class HiDb
     inline HiDb() {}
 
     void add(const Chart& aChart);
+    void exportTo(std::string aFilename) const;
 
  private:
     std::vector<AntigenData> mAntigens;

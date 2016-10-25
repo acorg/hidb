@@ -71,6 +71,7 @@ PYBIND11_PLUGIN(hidb_backend)
     py::class_<HiDb>(m, "HiDb")
             .def(py::init<>())
             .def("add", &HiDb::add, py::arg("chart"))
+            .def("export", &HiDb::exportTo, py::arg("filename"))
             ;
 
       // ----------------------------------------------------------------------
