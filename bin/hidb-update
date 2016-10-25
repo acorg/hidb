@@ -16,12 +16,17 @@ from hidb import utility
 # ----------------------------------------------------------------------
 
 def main(args):
-    with utility.tempdir() as temp_dir:
-        hidb = hidb_m.HiDb()
-        for source in (Path(f).resolve() for f in args.input):
-            print(source)
-            hidb.add(hidb_m.import_chart(str(utility.get_ace(temp_dir, source))))
-            print("------------")
+    hidb = hidb_m.HiDb()
+    for source in (Path(f).resolve() for f in args.input):
+        print(source)
+        hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
+        print("------------")
+    # with utility.tempdir() as temp_dir:
+    #     hidb = hidb_m.HiDb()
+    #     for source in (Path(f).resolve() for f in args.input):
+    #         print(source)
+    #         hidb.add(hidb_m.import_chart(str(utility.get_ace(temp_dir, source))))
+    #         print("------------")
 
 # ----------------------------------------------------------------------
 

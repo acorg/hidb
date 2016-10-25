@@ -39,6 +39,18 @@ def get_ace(temp_dir :Path, source1 :Path):
     return source2
 
 # ----------------------------------------------------------------------
+
+def get_ace_data(source :Path):
+    if set(source.suffixes) & sAcmacsSuffixes:
+        data = subprocess.run("env ACMACS_ROOT=$HOME/ac/acmacs PYTHONPATH=$HOME/ac/acmacs:$HOME/ac/acmacs/build $HOME/c2r/bin/python3 $HOME/ac/acmacs/bin/convert.py -q -f ace '{}' -".format(source), shell=True, stdout=subprocess.PIPE, check=True).stdout
+    elif source.suffixes[-1] == ".ace":
+        data = open(source, "rb").read()
+    else:
+        data = None
+        module_logger.warning('Unsupported suffix in {}'.format(source1))
+    return data
+
+# ----------------------------------------------------------------------
 ### Local Variables:
 ### eval: (if (fboundp 'eu-rename-buffer) (eu-rename-buffer))
 ### End:

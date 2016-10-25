@@ -13,17 +13,22 @@
 std::string read_file(std::string aFilename)
 {
     std::string buffer;
-    int f = open(aFilename.c_str(), O_RDONLY);
-    if (f >= 0) {
-        struct stat st;
-        fstat(f, &st);
-        buffer.resize(static_cast<std::string::size_type>(st.st_size), ' '); // reserve space
-        if (read(f, &*buffer.begin(), static_cast<size_t>(st.st_size)) < 0)
-            throw std::runtime_error(std::string("Cannot read ") + aFilename + ": " + strerror(errno));
-        close(f);
+    if (file_exists(aFilename)) {
+        int f = open(aFilename.c_str(), O_RDONLY);
+        if (f >= 0) {
+            struct stat st;
+            fstat(f, &st);
+            buffer.resize(static_cast<std::string::size_type>(st.st_size), ' '); // reserve space
+            if (read(f, &*buffer.begin(), static_cast<size_t>(st.st_size)) < 0)
+                throw std::runtime_error(std::string("Cannot read ") + aFilename + ": " + strerror(errno));
+            close(f);
+        }
+        else {
+            throw std::runtime_error(std::string("Cannot open ") + aFilename + ": " + strerror(errno));
+        }
     }
     else {
-        throw std::runtime_error(std::string("Cannot open ") + aFilename + ": " + strerror(errno));
+        buffer = aFilename;
     }
     if (xz_compressed(buffer))
         buffer = xz_decompress(buffer);
