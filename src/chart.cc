@@ -273,30 +273,47 @@ void Chart::find_homologous_antigen_for_sera()
               // std::cout << serum.full_name() << std::endl;
             std::vector<std::pair<size_t, AntigenSerumMatch>> antigen_match;
             for (auto antigen = mAntigens.begin(); antigen != mAntigens.end(); ++antigen) {
-                antigen_match.emplace_back(static_cast<size_t>(antigen - mAntigens.begin()), serum.match(*antigen));
+                AntigenSerumMatch match{serum.match(*antigen)};
+                if (match.name_match())
+                    antigen_match.emplace_back(static_cast<size_t>(antigen - mAntigens.begin()), std::move(match));
             }
-              // sort by AntigenSerumMatch but prefer reference antigens if matches are equal
-            std::sort(antigen_match.begin(), antigen_match.end(), [this](const auto& a, const auto& b) -> bool { return a.second == b.second ? mAntigens[a.first].reference() > mAntigens[b.first].reference() : a.second < b.second; });
-            assert(!antigen_match.empty());
-            if (antigen_match.front().second.homologous_match()) {
-                serum.set_homologous(antigen_match.front().first);
-                if (antigen_match.size() > 1 && antigen_match[0].second == antigen_match[1].second) {
-                    std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << " (the first one chosen)" << std::endl;
+            switch (antigen_match.size()) {
+              case 0:
+                  std::cerr << "Warning: No homologous antigen (no name match at all) for " << serum.full_name() << std::endl;
+                  break;
+              case 1:
+                  if (antigen_match.front().second.reassortant_match()) {
+                      serum.set_homologous(antigen_match.front().first);
+                  }
+                  else {
+                      std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
+                      std::cerr << "    the only name match: " << mAntigens[antigen_match.front().first].full_name() << " Level:" << antigen_match.front().second << std::endl;
+                  }
+                  break;
+              default:
+                  // sort by AntigenSerumMatch but prefer reference antigens if matches are equal
+                std::sort(antigen_match.begin(), antigen_match.end(), [this](const auto& a, const auto& b) -> bool { return a.second == b.second ? mAntigens[a.first].reference() > mAntigens[b.first].reference() : a.second < b.second; });
+                if (antigen_match.front().second.homologous_match()) {
+                    serum.set_homologous(antigen_match.front().first);
+                    if (antigen_match.size() > 1 && antigen_match[0].second == antigen_match[1].second && mAntigens[antigen_match[0].first].reference() == mAntigens[antigen_match[1].first].reference()) {
+                        std::cerr << "Warning: Multiple homologous antigen candidates for " << serum.full_name() << " (the first one chosen)" << std::endl;
+                        for (const auto ag: antigen_match) {
+                            if (ag.second != antigen_match.front().second)
+                                break;
+                            std::cerr << "    " << mAntigens[ag.first].full_name() << " Ref:" << mAntigens[ag.first].reference() << " Level:" << ag.second << std::endl;
+                        }
+                    }
+                }
+                else {
+                    std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
+                      // std::cerr << "    best match (of " << antigen_match.size() << "): " << mAntigens[antigen_match.front().first].full_name() << " Level:" << antigen_match.front().second << std::endl;
                     for (const auto ag: antigen_match) {
                         if (ag.second != antigen_match.front().second)
                             break;
                         std::cerr << "    " << mAntigens[ag.first].full_name() << " Ref:" << mAntigens[ag.first].reference() << " Level:" << ag.second << std::endl;
                     }
-
                 }
-                  // else if (!antigen_match.front().second.perfect()) {
-                  //     std::cerr << "Info: Not a perfect match for " << serum.full_name() << " chosen" << std::endl;
-                  //     std::cerr << "    " << mAntigens[antigen_match.front().first].full_name() << " Ref:" << mAntigens[antigen_match.front().first].reference() << " Level:" << antigen_match.front().second << std::endl;
-                  // }
-            }
-            else {
-                std::cerr << "Warning: No homologous antigen for " << serum.full_name() << std::endl;
-                std::cerr << "    best match: " << mAntigens[antigen_match.front().first].full_name() << " Level:" << antigen_match.front().second << std::endl;
+                break;
             }
         }
     }
