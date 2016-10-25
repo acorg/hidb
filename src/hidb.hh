@@ -29,12 +29,14 @@ template <typename AS> class AntigenSerumData
 
     inline void update(std::string aTableId, const AS& aAS)
         {
+              // std::cerr << "add " << aTableId << " " << aAS.full_name() << std::endl;
             auto exisiting = mTableIds.find(aTableId);
             if (exisiting == mTableIds.end()) {
                 mTableIds.insert(std::make_pair(aTableId, PerTable(aAS)));
             }
             else {
-                throw std::runtime_error("AntigenSerumData::update");
+                  // std::cerr << "mTableIds " << mTableIds.size() << std::endl;
+                throw std::runtime_error("AntigenSerumData::update: table_id already present for this antigen/serum: " + aTableId);
             }
         }
 

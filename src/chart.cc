@@ -314,7 +314,7 @@ std::string ChartInfo::table_id() const
     else {
         date = mSources.front().mDate + "-" + mSources.back().mDate;
     }
-    std::string r = date + ":" + mRbc + ":" + mName + ":" + mVirusType + ":" + mLab;
+    std::string r = mAssay + ":" + date + ":" + mRbc + ":" + mName + ":" + mVirusType + ":" + mLab;
     return r;
 
 } // ChartInfo::table_id

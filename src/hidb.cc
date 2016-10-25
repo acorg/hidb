@@ -23,16 +23,18 @@ void HiDb::add(const Chart& aChart)
 
 void HiDb::add_antigen(const Antigen& aAntigen, std::string aTableId)
 {
-    AntigenData antigen_data(aAntigen);
-    auto insert_at = std::lower_bound(mAntigens.begin(), mAntigens.end(), aAntigen);
-    if (insert_at != mAntigens.end() && *insert_at == antigen_data) {
-          // update
-          // std::cout << "Common antigen " << aAntigen.full_name() << std::endl;
+    if (!aAntigen.distinct()) {
+        AntigenData antigen_data(aAntigen);
+        auto insert_at = std::lower_bound(mAntigens.begin(), mAntigens.end(), aAntigen);
+        if (insert_at != mAntigens.end() && *insert_at == antigen_data) {
+              // update
+              // std::cout << "Common antigen " << aAntigen.full_name() << std::endl;
+        }
+        else {
+            insert_at = mAntigens.insert(insert_at, std::move(antigen_data));
+        }
+        insert_at->update(aTableId, aAntigen);
     }
-    else {
-        insert_at = mAntigens.insert(insert_at, std::move(antigen_data));
-    }
-    insert_at->update(aTableId, aAntigen);
 
 } // HiDb::add_antigen
 
@@ -40,15 +42,17 @@ void HiDb::add_antigen(const Antigen& aAntigen, std::string aTableId)
 
 void HiDb::add_serum(const Serum& aSerum, std::string aTableId)
 {
-    SerumData serum_data(aSerum);
-    auto insert_at = std::lower_bound(mSera.begin(), mSera.end(), aSerum);
-    if (insert_at != mSera.end() && *insert_at == serum_data) {
-          // update
+    if (!aSerum.distinct()) {
+        SerumData serum_data(aSerum);
+        auto insert_at = std::lower_bound(mSera.begin(), mSera.end(), aSerum);
+        if (insert_at != mSera.end() && *insert_at == serum_data) {
+              // update
+        }
+        else {
+            insert_at = mSera.insert(insert_at, std::move(serum_data));
+        }
+        insert_at->update(aTableId, aSerum);
     }
-    else {
-        insert_at = mSera.insert(insert_at, std::move(serum_data));
-    }
-    insert_at->update(aTableId, aSerum);
 
 } // HiDb::add_serum
 
