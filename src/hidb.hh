@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
 
 #include "chart.hh"
 
@@ -12,16 +11,21 @@
 class PerTable
 {
  public:
-    inline PerTable(const Antigen& aAntigen) : mDate(aAntigen.date()), mLabId(aAntigen.lab_id()) {}
-    inline PerTable(const Serum& /*aSerum*/) {}
+    inline PerTable(std::string aTableId, const Antigen& aAntigen) : mTableId(aTableId), mDate(aAntigen.date()), mLabId(aAntigen.lab_id()) {}
+    inline PerTable(std::string aTableId, const Serum& /*aSerum*/) : mTableId(aTableId) {}
 
+    inline std::string table_id() const { return mTableId; }
     inline std::string date() const { return mDate; }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
     inline std::string homologous() const { return mHomologous; }
 
     inline void set_homologous(std::string aHomologous) { mHomologous = aHomologous; }
 
+    inline bool operator < (const PerTable& aNother) const { return mTableId < aNother.mTableId; }
+    inline bool operator < (const std::string& aTableId) const { return mTableId < aTableId; }
+
  private:
+    std::string mTableId;
     std::string mDate;
     std::vector<std::string> mLabId;
     std::string mHomologous;    // variant_id of the homologous antigen
@@ -37,9 +41,10 @@ template <typename AS> class AntigenSerumData
     inline void update(std::string aTableId, const AS& aAS)
         {
               // std::cerr << "add " << aTableId << " " << aAS.full_name() << std::endl;
-            auto exisiting = mTableIds.find(aTableId);
-            if (exisiting == mTableIds.end()) {
-                mTableIds.insert(std::make_pair(aTableId, PerTable(aAS)));
+            PerTable pt(aTableId, aAS);
+            auto insert_at = std::lower_bound(mTables.begin(), mTables.end(), pt);
+            if (insert_at == mTables.end() || insert_at->table_id() != aTableId) {
+                mTables.insert(insert_at, std::move(pt));
             }
             else {
                   // std::cerr << "mTableIds " << mTableIds.size() << std::endl;
@@ -49,9 +54,9 @@ template <typename AS> class AntigenSerumData
 
     inline void set_homologous(std::string aTableId, std::string aHomologous)
         {
-            auto exisiting = mTableIds.find(aTableId);
-            if (exisiting != mTableIds.end()) {
-                exisiting->second.set_homologous(aHomologous);
+            auto existing = std::lower_bound(mTables.begin(), mTables.end(), aTableId); //, [](const PerTable& a, const);
+            if (existing->table_id() == aTableId) {
+                existing->set_homologous(aHomologous);
             }
             else {
                 throw std::runtime_error("AntigenSerumData::set_homologous");
@@ -62,11 +67,11 @@ template <typename AS> class AntigenSerumData
     inline bool operator == (const AntigenSerumData& aNother) const { return mAS == aNother.mAS; }
 
     inline const AS& as() const { return mAS; }
-    inline const std::map<std::string, PerTable>& per_table() const { return mTableIds; }
+    inline const std::vector<PerTable>& per_table() const { return mTables; }
 
  private:
     AS mAS;
-    std::map<std::string, PerTable> mTableIds;
+    std::vector<PerTable> mTables;
 };
 
 typedef AntigenSerumData<Antigen> AntigenData;

@@ -21,7 +21,8 @@ def main(args):
         print(source)
         hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
         print("------------")
-    hidb.export("-")
+    with utility.timeit("Writing hidb"):
+        hidb.export("/tmp/hidb.json.xz")
 
 # ----------------------------------------------------------------------
 

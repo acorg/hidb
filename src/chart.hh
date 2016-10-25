@@ -202,9 +202,12 @@ class ChartTiters
 
     inline const List& as_list() const
         {
-            if (mList.empty())
+            if (mList.empty()) {
                 throw std::runtime_error("ChartTiters::as_list");
-            return mList;
+            }
+            else {
+                return mList;
+            }
         }
 
  private:

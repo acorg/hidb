@@ -111,14 +111,13 @@ template <typename Writer> inline Writer& operator <<(Writer& writer, const Seru
 
 // ----------------------------------------------------------------------
 
-template <typename Writer> inline Writer& operator <<(Writer& writer, const std::map<std::string, PerTable>& per_table)
+template <typename Writer> inline Writer& operator <<(Writer& writer, const std::vector<PerTable>& per_table)
 {
-    writer << 'T' << StartObject;
+    writer << 'T' << StartArray;
     for (const auto& table_data: per_table) {
-        writer.Key(table_data.first.c_str(), static_cast<unsigned>(table_data.first.size()));
-        writer << StartObject << if_not_empty('D', table_data.second.date()) << if_not_empty('l', table_data.second.lab_id()) << if_not_empty('h', table_data.second.homologous()) << EndObject;
+        writer << StartObject << 'T' << table_data.table_id() << if_not_empty('D', table_data.date()) << if_not_empty('l', table_data.lab_id()) << if_not_empty('h', table_data.homologous()) << EndObject;
     }
-    return writer << EndObject;
+    return writer << EndArray;
 }
 
 // ----------------------------------------------------------------------

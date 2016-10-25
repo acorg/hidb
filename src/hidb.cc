@@ -11,10 +11,11 @@
 void HiDb::add(const Chart& aChart)
 {
     ChartData chart(aChart);
+    std::cout << chart.table_id().c_str() << std::endl;
     auto chart_insert_at = std::lower_bound(mCharts.begin(), mCharts.end(), chart);
     if (chart_insert_at != mCharts.end() && chart_insert_at->table_id() == chart.table_id())
         throw std::runtime_error("Chart " + chart.table_id() + " already in hidb");
-    mCharts.insert(chart_insert_at, chart);
+    mCharts.insert(chart_insert_at, std::move(chart));
 
     aChart.find_homologous_antigen_for_sera_const();
 
