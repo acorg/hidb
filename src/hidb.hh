@@ -111,6 +111,10 @@ class HiDb
     void add(const Chart& aChart);
     void exportTo(std::string aFilename) const;
 
+    const std::vector<AntigenData>& antigens() const { return mAntigens; }
+    const std::vector<SerumData>& sera() const { return mSera; }
+    const std::vector<ChartData>& charts() const { return mCharts; }
+
  private:
     std::vector<AntigenData> mAntigens;
     std::vector<SerumData> mSera;

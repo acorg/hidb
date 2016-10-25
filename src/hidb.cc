@@ -1,17 +1,12 @@
 #include "hidb.hh"
 #include "hidb-export.hh"
-#include "read-file.hh"
-
-#include "rapidjson/prettywriter.h"
-#include "rapidjson/error/en.h"
-#include "rapidjson/stringbuffer.h"
 
 // ----------------------------------------------------------------------
 
 void HiDb::add(const Chart& aChart)
 {
     ChartData chart(aChart);
-    std::cout << chart.table_id().c_str() << std::endl;
+    std::cout << chart.table_id() << std::endl;
     auto chart_insert_at = std::lower_bound(mCharts.begin(), mCharts.end(), chart);
     if (chart_insert_at != mCharts.end() && chart_insert_at->table_id() == chart.table_id())
         throw std::runtime_error("Chart " + chart.table_id() + " already in hidb");
@@ -75,19 +70,7 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
 
 void HiDb::exportTo(std::string aFilename) const
 {
-    rapidjson::StringBuffer s;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(s);
-    writer.SetIndent(' ', 1);
-
-    writer.StartObject();
-    writer.Key("  version");
-    writer.String("hidb-v4");
-    // writer.Key("?created");
-    // writer.String("hidb on");
-    writer << mAntigens << mSera << mCharts;
-    writer.EndObject();
-
-    write_file(aFilename, s.GetString());
+    hidb_export(aFilename, *this);
 
 } // HiDb::exportTo
 
