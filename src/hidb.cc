@@ -10,18 +10,19 @@
 
 void HiDb::add(const Chart& aChart)
 {
+    aChart.find_homologous_antigen_for_sera_const();
     const auto table_id = aChart.table_id();
     for (const auto& antigen: aChart.antigens()) {
         add_antigen(antigen, table_id);
     }
     for (const auto& serum: aChart.sera()) {
-        add_serum(serum, table_id);
+        add_serum(serum, table_id, aChart.antigens());
     }
     auto insert_at = std::lower_bound(mTables.begin(), mTables.end(), aChart);
     mTables.insert(insert_at, aChart);
 
-    std::cout << "Chart: antigens:" << aChart.number_of_antigens() << " sera:" << aChart.number_of_sera() << std::endl;
-    std::cout << "HDb: antigens:" << mAntigens.size() << " sera:" << mSera.size() << std::endl;
+    // std::cout << "Chart: antigens:" << aChart.number_of_antigens() << " sera:" << aChart.number_of_sera() << std::endl;
+    // std::cout << "HDb: antigens:" << mAntigens.size() << " sera:" << mSera.size() << std::endl;
 
 } // HiDb::add
 
@@ -46,7 +47,7 @@ void HiDb::add_antigen(const Antigen& aAntigen, std::string aTableId)
 
 // ----------------------------------------------------------------------
 
-void HiDb::add_serum(const Serum& aSerum, std::string aTableId)
+void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens)
 {
     if (!aSerum.distinct()) {
         SerumData serum_data(aSerum);
@@ -58,6 +59,8 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId)
             insert_at = mSera.insert(insert_at, std::move(serum_data));
         }
         insert_at->update(aTableId, aSerum);
+        if (aSerum.has_homologous())
+            insert_at->set_homologous(aTableId, aAntigens[static_cast<size_t>(aSerum.homologous())].variant_id());
     }
 
 } // HiDb::add_serum

@@ -86,7 +86,6 @@ template <typename Writer> inline Writer& operator <<(Writer& writer, const Anti
 
 template <typename Writer> inline Writer& operator <<(Writer& writer, const Serum& serum)
 {
-      //   "h": 0,                 // homologous antigen index, >= 0
     return writer << 'N' << serum.name() << if_not_empty('L', serum.lineage())
                   << if_not_empty('P', serum.passage()) << if_not_empty('R', serum.reassortant())
                   << if_not_empty('I', serum.serum_id()) << if_not_empty('a', serum.annotations()) << if_not_empty('s', serum.serum_species());
@@ -99,7 +98,7 @@ template <typename Writer> inline Writer& operator <<(Writer& writer, const std:
     writer << 'T' << StartObject;
     for (const auto& table_data: per_table) {
         writer.Key(table_data.first.c_str(), static_cast<unsigned>(table_data.first.size()));
-        writer << StartObject << 'D' << table_data.second.date() << 'l' << table_data.second.lab_id() << EndObject;
+        writer << StartObject << if_not_empty('D', table_data.second.date()) << if_not_empty('l', table_data.second.lab_id()) << if_not_empty('h', table_data.second.homologous()) << EndObject;
     }
     return writer << EndObject;
 }

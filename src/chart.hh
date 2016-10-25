@@ -149,6 +149,7 @@ class Serum : public AntigenSerum
 
     template <typename No> inline void set_homologous(No ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
     inline bool has_homologous() const { return mHomologous >= 0; }
+    inline int homologous() const { return mHomologous; }
     virtual bool is_egg() const;
 
     using AntigenSerum::match;
@@ -227,6 +228,7 @@ class Chart
     inline Serum& serum(size_t sr_no) { return mSera[sr_no]; }
 
     void find_homologous_antigen_for_sera();
+    inline void find_homologous_antigen_for_sera_const() const { const_cast<Chart*>(this)->find_homologous_antigen_for_sera(); }
 
     inline bool operator < (const Chart& aNother) const { return table_id() < aNother.table_id(); }
 

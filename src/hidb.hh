@@ -17,10 +17,14 @@ class PerTable
 
     inline std::string date() const { return mDate; }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
+    inline std::string homologous() const { return mHomologous; }
+
+    inline void set_homologous(std::string aHomologous) { mHomologous = aHomologous; }
 
  private:
     std::string mDate;
     std::vector<std::string> mLabId;
+    std::string mHomologous;    // variant_id of the homologous antigen
 };
 
 // ----------------------------------------------------------------------
@@ -40,6 +44,17 @@ template <typename AS> class AntigenSerumData
             else {
                   // std::cerr << "mTableIds " << mTableIds.size() << std::endl;
                 throw std::runtime_error("AntigenSerumData::update: table_id already present for this antigen/serum: " + aTableId);
+            }
+        }
+
+    inline void set_homologous(std::string aTableId, std::string aHomologous)
+        {
+            auto exisiting = mTableIds.find(aTableId);
+            if (exisiting != mTableIds.end()) {
+                exisiting->second.set_homologous(aHomologous);
+            }
+            else {
+                throw std::runtime_error("AntigenSerumData::set_homologous");
             }
         }
 
@@ -73,7 +88,7 @@ class HiDb
     std::vector<Chart> mTables;
 
     void add_antigen(const Antigen& aAntigen, std::string aTableId);
-    void add_serum(const Serum& aSerum, std::string aTableId);
+    void add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens);
 };
 
 // ----------------------------------------------------------------------
