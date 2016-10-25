@@ -25,6 +25,14 @@ template <typename Writer> inline Writer& operator <<(Writer& writer, const std:
     return writer << EndArray;
 }
 
+template <typename Writer> inline Writer& operator <<(Writer& writer, const std::vector<std::vector<std::string>>& list_list_strings)
+{
+    writer << StartArray;
+    for (const auto& e: list_list_strings)
+        writer << e;
+    return writer << EndArray;
+}
+
 // ----------------------------------------------------------------------
 
 template <typename Value> class _if_not_empty
@@ -68,6 +76,16 @@ template <typename Writer> inline Writer& operator <<(Writer& writer, const std:
 
 // ----------------------------------------------------------------------
 
+template <typename Writer> inline Writer& operator <<(Writer& writer, const std::vector<ChartData>& charts)
+{
+    writer << 't' << StartArray;
+    for (const auto& data: charts)
+        writer << data;
+    return writer << EndArray;
+}
+
+// ----------------------------------------------------------------------
+
 template <typename Writer, typename AS> inline Writer& operator <<(Writer& writer, const AntigenSerumData<AS>& ag_sr)
 {
     return writer << StartObject << ag_sr.as() << ag_sr.per_table() << EndObject;
@@ -101,6 +119,23 @@ template <typename Writer> inline Writer& operator <<(Writer& writer, const std:
         writer << StartObject << if_not_empty('D', table_data.second.date()) << if_not_empty('l', table_data.second.lab_id()) << if_not_empty('h', table_data.second.homologous()) << EndObject;
     }
     return writer << EndObject;
+}
+
+// ----------------------------------------------------------------------
+
+template <typename Writer> inline Writer& operator <<(Writer& writer, const std::vector<ChartData::AgSrRef>& refs)
+{
+    writer << StartArray;
+    for (const auto& ref: refs)
+        writer << StartArray << ref.first << ref.second << EndArray;
+    return writer << EndArray;
+}
+
+// ----------------------------------------------------------------------
+
+template <typename Writer> inline Writer& operator <<(Writer& writer, const ChartData& chart)
+{
+    return writer << StartObject << 'T' << chart.table_id() << 'a' << chart.antigens() << 's' << chart.sera() << 't' << chart.titers() << EndObject;
 }
 
 // ----------------------------------------------------------------------

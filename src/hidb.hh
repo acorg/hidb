@@ -74,6 +74,30 @@ typedef AntigenSerumData<Serum> SerumData;
 
 // ----------------------------------------------------------------------
 
+class ChartData
+{
+ public:
+    typedef std::pair<std::string, std::string> AgSrRef;
+    typedef std::vector<std::vector<std::string>> Titers;
+
+    ChartData(const Chart& aChart);
+
+    inline std::string table_id() const { return mTableId; }
+    inline const std::vector<AgSrRef>& antigens() const { return mAntigens; }
+    inline const std::vector<AgSrRef>& sera() const { return mSera; }
+    inline const Titers& titers() const { return mTiters; }
+
+    inline bool operator <(const ChartData& aNother) const { return table_id() < aNother.table_id(); }
+
+ private:
+    std::string mTableId;
+    std::vector<AgSrRef> mAntigens;
+    std::vector<AgSrRef> mSera;
+    Titers mTiters;
+};
+
+// ----------------------------------------------------------------------
+
 class HiDb
 {
  public:
@@ -85,7 +109,7 @@ class HiDb
  private:
     std::vector<AntigenData> mAntigens;
     std::vector<SerumData> mSera;
-    std::vector<Chart> mTables;
+    std::vector<ChartData> mCharts;
 
     void add_antigen(const Antigen& aAntigen, std::string aTableId);
     void add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens);

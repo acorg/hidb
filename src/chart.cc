@@ -1,4 +1,4 @@
-// #include <cctype>
+#include <cctype>
 #include <cassert>
 #include <regex>
 
@@ -314,7 +314,28 @@ std::string ChartInfo::table_id() const
     else {
         date = mSources.front().mDate + "-" + mSources.back().mDate;
     }
-    std::string r = mAssay + ":" + date + ":" + mRbc + ":" + mName + ":" + mVirusType + ":" + mLab;
+    std::string assay = mAssay;
+    if (assay == "FOCUS REDUCTION")
+        assay = "FR";
+    else if (assay == "PLAQUE REDUCTION NEUTRALISATION")
+        assay = "PRN";
+    std::string r = assay + ":" + mVirusType + ":" + mLab;
+    if (!mRbc.empty()) {
+        r.append(1, ':');
+        if (mRbc == "guinea-pig")
+            r.append("gp");
+        else if (mRbc == "turkey")
+            r.append("tu");
+        else if (mRbc == "chicken")
+            r.append("ch");
+        else
+            r.append(mRbc);
+    }
+    if (!mName.empty())
+        r += ":" + mName;
+    if (!mDate.empty())
+        r += ":" + mDate;
+    std::transform(r.begin(), r.end(), r.begin(), [](auto c) { return std::tolower(c); });
     return r;
 
 } // ChartInfo::table_id

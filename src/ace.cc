@@ -128,6 +128,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   break;
               default:
                     // std::cerr << "EndObject " << static_cast<int>(state.top()) << std::endl;
+                  std::cerr << "Error: EndObject " << static_cast<int>(state.top()) << std::endl;
                   r = false;
                   break;
             }
@@ -451,6 +452,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   state.push(State::TitersList2);
                   break;
               case State::TitersList2:
+                  state.push(State::TitersList2);
                   chart->mTiters.mList.emplace_back();
                   break;
               case State::TitersLayers:
@@ -480,12 +482,16 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
               case State::Antigen:
               case State::Serum:
               case State::TitersList:
-              case State::TitersList2:
               case State::TitersLayers:
               case State::Projections:
               case State::Sources:
               case State::ColumnBases:
                   state.pop();
+                  break;
+              case State::TitersList2:
+                  state.pop();
+                  if (state.top() == State::TitersList)
+                      state.pop();
                   break;
               case State::VectorStringField:
                   state.pop();
@@ -505,6 +511,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   }
                   break;
               default:
+                  std::cerr << "Error: EndArray " << static_cast<int>(state.top()) << std::endl;
                   r = false;
                   break;
             }

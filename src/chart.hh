@@ -200,6 +200,13 @@ class ChartTiters
 
     inline ChartTiters() {}
 
+    inline const List& as_list() const
+        {
+            if (mList.empty())
+                throw std::runtime_error("ChartTiters::as_list");
+            return mList;
+        }
+
  private:
     friend class ChartReaderEventHandler;
     List mList;
@@ -226,6 +233,7 @@ class Chart
     inline Antigen& antigen(size_t ag_no) { return mAntigens[ag_no]; }
     inline const std::vector<Serum>& sera() const { return mSera; }
     inline Serum& serum(size_t sr_no) { return mSera[sr_no]; }
+    inline const ChartTiters& titers() const { return mTiters; }
 
     void find_homologous_antigen_for_sera();
     inline void find_homologous_antigen_for_sera_const() const { const_cast<Chart*>(this)->find_homologous_antigen_for_sera(); }

@@ -10,7 +10,14 @@
 
 void HiDb::add(const Chart& aChart)
 {
+    ChartData chart(aChart);
+    auto chart_insert_at = std::lower_bound(mCharts.begin(), mCharts.end(), chart);
+    if (chart_insert_at != mCharts.end() && chart_insert_at->table_id() == chart.table_id())
+        throw std::runtime_error("Chart " + chart.table_id() + " already in hidb");
+    mCharts.insert(chart_insert_at, chart);
+
     aChart.find_homologous_antigen_for_sera_const();
+
     const auto table_id = aChart.table_id();
     for (const auto& antigen: aChart.antigens()) {
         add_antigen(antigen, table_id);
@@ -18,8 +25,6 @@ void HiDb::add(const Chart& aChart)
     for (const auto& serum: aChart.sera()) {
         add_serum(serum, table_id, aChart.antigens());
     }
-    auto insert_at = std::lower_bound(mTables.begin(), mTables.end(), aChart);
-    mTables.insert(insert_at, aChart);
 
     // std::cout << "Chart: antigens:" << aChart.number_of_antigens() << " sera:" << aChart.number_of_sera() << std::endl;
     // std::cout << "HDb: antigens:" << mAntigens.size() << " sera:" << mSera.size() << std::endl;
@@ -78,7 +83,7 @@ void HiDb::exportTo(std::string aFilename) const
     writer.String("hidb-v4");
     // writer.Key("?created");
     // writer.String("hidb on");
-    writer << mAntigens << mSera;
+    writer << mAntigens << mSera << mCharts;
     writer.EndObject();
 
     write_file(aFilename, s.GetString());
@@ -87,6 +92,16 @@ void HiDb::exportTo(std::string aFilename) const
 
 // ----------------------------------------------------------------------
 
+ChartData::ChartData(const Chart& aChart)
+    : mTableId(aChart.table_id()), mTiters(aChart.titers().as_list())
+{
+    for (const auto& antigen: aChart.antigens()) {
+        mAntigens.emplace_back(antigen.name(), antigen.variant_id());
+    }
+    for (const auto& serum: aChart.sera()) {
+        mSera.emplace_back(serum.name(), serum.variant_id());
+    }
+}
 
 // ----------------------------------------------------------------------
 /// Local Variables:
