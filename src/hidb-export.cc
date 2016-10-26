@@ -1,3 +1,5 @@
+#include "rapidjson/reader.h"
+
 #include "hidb-export.hh"
 #include "chart-export.hh"
 #include "hidb.hh"
@@ -49,6 +51,93 @@ void hidb_export(std::string aFilename, const HiDb& aHiDb)
 
     write_file(aFilename, writer);
 }
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+
+class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, HiDbReaderEventHandler>
+{
+ public:
+    inline HiDbReaderEventHandler(HiDb& aHiDb) : mHiDb(aHiDb) {}
+
+    inline bool StartObject()
+        {
+            return false;
+        }
+
+    inline bool EndObject(rapidjson::SizeType /*memberCount*/)
+        {
+            return false;
+        }
+
+    inline bool Key(const char* str, rapidjson::SizeType length, bool /*copy*/)
+        {
+            return false;
+        }
+
+    inline bool StartArray()
+        {
+            return false;
+        }
+
+    inline bool EndArray(rapidjson::SizeType /*elementCount*/)
+        {
+            return false;
+        }
+
+    inline bool String(const char* str, rapidjson::SizeType length, bool /*copy*/)
+        {
+            return false;
+        }
+
+    inline bool Bool(bool b)
+        {
+            return false;
+        }
+
+    inline bool Int(int i)
+        {
+            return false;
+        }
+
+    bool Double(double d)
+        {
+            return false;
+        }
+
+    bool Uint(unsigned u)
+        {
+            return Int(static_cast<int>(u));
+        }
+
+    inline bool Null() { std::cout << "Null()" << std::endl; return false; }
+    bool Int64(int64_t i) { std::cout << "Int64(" << i << ")" << std::endl; return false; }
+    bool Uint64(uint64_t u) { std::cout << "Uint64(" << u << ")" << std::endl; return false; }
+
+ private:
+    HiDb& mHiDb;
+};
+
+// ----------------------------------------------------------------------
+
+void hidb_import(std::string buffer, HiDb& aHiDb)
+{
+    if (buffer == "-")
+        buffer = read_stdin();
+    else
+        buffer = read_file(buffer);
+    if (buffer[0] == '{') { // && buffer.find("\"  version\": \"hidb-v4\"") != std::string::npos) {
+        HiDbReaderEventHandler handler{aHiDb};
+        rapidjson::Reader reader;
+        rapidjson::StringStream ss(buffer.c_str());
+        reader.Parse(ss, handler);
+        if (reader.HasParseError())
+            throw std::runtime_error("cannot import hidb: data parsing failed at " + std::to_string(reader.GetErrorOffset()) + ": " +  GetParseError_En(reader.GetParseErrorCode()) + "\n" + buffer.substr(reader.GetErrorOffset(), 50));
+    }
+    else
+        throw std::runtime_error("cannot import hidb: unrecognized source format");
+
+} // hidb_import
 
 // ----------------------------------------------------------------------
 /// Local Variables:

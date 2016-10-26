@@ -76,6 +76,14 @@ void HiDb::exportTo(std::string aFilename) const
 
 // ----------------------------------------------------------------------
 
+void HiDb::importFrom(std::string aFilename)
+{
+    hidb_import(aFilename, *this);
+
+} // HiDb::importFrom
+
+// ----------------------------------------------------------------------
+
 ChartData::ChartData(const Chart& aChart)
     : mTableId(aChart.table_id()), mTiters(aChart.titers().as_list())
 {

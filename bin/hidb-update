@@ -17,12 +17,15 @@ from hidb import utility
 
 def main(args):
     hidb = hidb_m.HiDb()
+    if Path(args.path_to_hidb).exists():
+        with utility.timeit("Reading hidb"):
+            hidb.import_from(args.path_to_hidb)
     for source in (Path(f).resolve() for f in args.input):
         print(source)
         hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
         print("------------")
     with utility.timeit("Writing hidb"):
-        hidb.export("/tmp/hidb.json.xz")
+        hidb.export_to(args.path_to_hidb)
 
 # ----------------------------------------------------------------------
 
@@ -32,7 +35,7 @@ try:
     parser.add_argument('-d', '--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging output.')
 
     parser.add_argument('input', nargs="+", help='Source files to process.')
-    # parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
+    parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()
