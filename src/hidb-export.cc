@@ -57,6 +57,13 @@ void hidb_export(std::string aFilename, const HiDb& aHiDb)
 
 class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, HiDbReaderEventHandler>
 {
+ private:
+    enum class State : unsigned
+    {
+        Ignore, Init, Root, Version,
+        Antigens, Sera, Tables,
+    };
+
  public:
     inline HiDbReaderEventHandler(HiDb& aHiDb) : mHiDb(aHiDb) {}
 
@@ -116,6 +123,19 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
 
  private:
     HiDb& mHiDb;
+
+    typedef State (HiDbReaderEventHandler::*Ptr)();
+
+    static constexpr const Ptr N = nullptr;
+    static constexpr Ptr transition[][58] = { // A - }: StartArray: [, EndArray: ], StartObject: {, EndObject: }, String: _, Bool: ^, Int: \\, Double: |
+        {},                                  // Ignore
+        {},                     // Init
+        {},                     // Root
+        {},                     // Version
+        {},                     // Antigens
+        {},                     // Sera
+        {},                     // Tables
+    };
 };
 
 // ----------------------------------------------------------------------
