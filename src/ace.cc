@@ -4,12 +4,10 @@
 #include "rapidjson/error/en.h"
 
 #include "ace.hh"
+#include "json-keys.hh"
 #include "chart.hh"
 #include "read-file.hh"
 #include "xz.hh"
-
-// ----------------------------------------------------------------------
-
 
 // ----------------------------------------------------------------------
 
@@ -26,33 +24,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                        StringField, BoolField, IntField, DoubleField, VectorStringField,
                        Sources, ColumnBases };
 
-                    // case State::Ignore:
-                    // case State::Init:
-                    // case State::Root:
-                    // case State::Version:
-                    // case State::Chart:
-                    // case State::Info:
-                    // case State::Antigen:
-                    // case State::Serum:
-                    // case State::Titers:
-                    // case State::StringField:
-                    // case State::BoolField:
-                    // case State::IntField:
-                    // case State::Projections:
-                    // case State::PlotSpec:
-                    // case State::Clades:
-                    // case State::TableType:
-
-    enum class AceKey : char {
-        Comment='?', Comment_='_',
-        Chart='c', Antigens='a', Sera='s', Info='i', Projections='P', PlotSpec='p', Titers='t',
-        Assay='A', Virus='v', VirusType='V', Date='D', Name='N', Lab='l', Rbc='r', VirusSubset='s', TableType='T', Sources='S',
-        Lineage='L', Passage='P', Reassortant='R', LabId='l', Annotations='a', Clades='c', SemanticAttributes='S',
-        SerumId='I', HomologousAntigen='h', SerumSpecies='s',
-        TitersList='l', TitersDict='d', TitersLayers='L',
-        DrawingOrder='d', ErrorLinePositive='E', ErrorLineNegative='e', Grid='g', PointIndex='p', PointStyles='P', ProcrustesIndex='l', ProcrustesStyle='L', ShownOnAll='s', Title='t',
-        ColumnBases='C',
-    };
+    typedef JsonKey AceKey;
 
  public:
     inline ChartReaderEventHandler(Chart* aChart)

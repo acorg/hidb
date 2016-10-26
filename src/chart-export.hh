@@ -5,25 +5,38 @@
 
 // ----------------------------------------------------------------------
 
+inline void JsonWriter_output(JsonWriter& writer, const AntigenSerum& ag_sr)
+{
+    writer << JsonKey::Name << ag_sr.name() << if_not_empty(JsonKey::Lineage, ag_sr.lineage())
+           << if_not_empty(JsonKey::Passage, ag_sr.passage()) << if_not_empty(JsonKey::Reassortant, ag_sr.reassortant())
+           << if_not_empty(JsonKey::Annotations, ag_sr.annotations());
+    if (writer.keyword() == "chart")
+        writer << if_not_empty(JsonKey::SemanticAttributes, ag_sr.semantic());
+}
+
+// ----------------------------------------------------------------------
+
 inline JsonWriter& operator <<(JsonWriter& writer, const Antigen& antigen)
 {
-    return writer << 'N' << antigen.name() << if_not_empty('L', antigen.lineage())
-                  << if_not_empty('P', antigen.passage()) << if_not_empty('R', antigen.reassortant())
-                  << if_not_empty('a', antigen.annotations()); // << if_not_empty('S', antigen.semantic());
+    JsonWriter_output(writer, antigen);
+    if (writer.keyword() == "chart")
+        writer << if_not_empty(JsonKey::Date, antigen.date()) << if_not_empty(JsonKey::LabId, antigen.lab_id())
+               << if_not_empty(JsonKey::Clades, antigen.clades());
+    return writer;
 }
 
 // ----------------------------------------------------------------------
 
 inline JsonWriter& operator <<(JsonWriter& writer, const Serum& serum)
 {
-    return writer << 'N' << serum.name() << if_not_empty('L', serum.lineage())
-                  << if_not_empty('P', serum.passage()) << if_not_empty('R', serum.reassortant())
-                  << if_not_empty('I', serum.serum_id()) << if_not_empty('a', serum.annotations()) // << if_not_empty('S', antigen.semantic())
-                  << if_not_empty('s', serum.serum_species());
+    JsonWriter_output(writer, serum);
+    writer << if_not_empty(JsonKey::SerumId, serum.serum_id()) << if_not_empty(JsonKey::SerumSpecies, serum.serum_species());
+    if (writer.keyword() == "chart") {
+        if (serum.has_homologous())
+            writer << JsonKey::HomologousAntigen << serum.homologous();
+    }
+    return writer;
 }
-
-// ----------------------------------------------------------------------
-
 
 // ----------------------------------------------------------------------
 /// Local Variables:

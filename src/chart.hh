@@ -125,6 +125,7 @@ class Antigen : public AntigenSerum
     inline bool reference() const { return has_semantic('R'); }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
     virtual std::string variant_id() const;
+    inline const std::vector<std::string>& clades() const { return mClades; }
 
     using AntigenSerum::match;
     virtual AntigenSerumMatch match(const Serum& aNother) const;
