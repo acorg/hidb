@@ -1,0 +1,55 @@
+{"_":"-*- js-indent-level: 1 -*-",
+ "  version": "hidb-v4",
+ "a": [                         // antigens
+  "N": "name",
+  "L": "lineage",
+  "P": "passage",
+  "R": "reassortant",
+  "a": ["annotation"],
+  "T": [                        // for each table this antigen found in
+   {
+    "T": "table_id",
+    "D": "antigen date in that table",
+    "l": ["lab_id"],
+    }
+   ]
+ ],
+ "s": [                         // sera
+  "N": "name",
+  "L": "lineage",
+  "P": "passage",
+  "R": "reassortant",
+  "a": ["annotation"],
+  "I": "serum_id",
+  "s": "serum species",
+  "T": [                        // for each table this serum found in
+   {
+    "T": "table_id",
+    "h": "variant_id of the homologous antigen",
+   }
+  ]
+ ],
+ "t": [                         // tables
+  {
+   "T": "table_id",
+   "a": [                       // antigens, actual antigen data is in antigens table above
+    [
+     "B/FLORIDA/4/2006",        // name
+     "E7/E1"                    // variant_id
+    ],
+   ],
+   "s": [                       // sera, actual serum data is in sera table above
+    [
+     "B/FLORIDA/4/2006",        // name
+     "E7/E1"                    // variant_id
+    ],
+   ],
+   "t": [                       // titers, list of lists of strings
+    [
+     "2560",
+     "320"
+    ],
+   ],
+  },
+ ],
+}
