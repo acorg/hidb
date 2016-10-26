@@ -82,6 +82,8 @@ class AntigenSerum
     inline bool is_reassortant() const { return !mReassortant.empty(); }
     inline bool distinct() const { return mAnnotations.distinct(); }
     inline const Annotations& annotations() const { return mAnnotations; }
+    inline bool has_semantic(char c) const { return mSemanticAttributes.find(c) != std::string::npos; }
+    inline std::string semantic() const { return mSemanticAttributes; }
 
     virtual std::string variant_id() const = 0;
     virtual AntigenSerumMatch match(const AntigenSerum& aNother) const;
@@ -94,7 +96,6 @@ class AntigenSerum
     inline AntigenSerum(const AntigenSerum&) = default;
       //inline AntigenSerum(Chart& aChart) : mChart(aChart) {}
 
-    inline bool has_semantic(char c) const { return mSemanticAttributes.find(c) != std::string::npos; }
     virtual AntigenSerumMatch match_passage(const AntigenSerum& aNother) const;
 
  private:

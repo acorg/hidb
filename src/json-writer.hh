@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/error/en.h"
 #include "rapidjson/stringbuffer.h"
