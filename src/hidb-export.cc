@@ -94,7 +94,9 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
  public:
     inline HiDbReaderEventHandler(HiDb& aHiDb)
         : mHiDb(aHiDb), ignore_compound(0),
-          string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr), ag_sr_ref_to_fill(nullptr),
+          string_to_fill(nullptr),
+            // bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr),
+          ag_sr_ref_to_fill(nullptr),
           vector_string_to_fill(nullptr), antigen_to_fill(nullptr), serum_to_fill(nullptr), per_table_list(nullptr)
         { state.push(State::Init); }
 
@@ -109,7 +111,7 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     inline bool transit(Tr input, Arg arg = Arg())
         {
               // std::cerr << "transit.Tr " << static_cast<char>(static_cast<char>(input) + input_base) << ' ' << static_cast<unsigned>(state.top()) << std::endl;
-            return (this->*transition[static_cast<unsigned>(state.top())][static_cast<char>(input)])(arg);
+            return (this->*transition[static_cast<unsigned>(state.top())][static_cast<unsigned>(input)])(arg);
         }
 
     inline bool StartObject() { return transit(Tr::StartObject); }
@@ -138,20 +140,9 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     inline bool String(const char* str, rapidjson::SizeType length, bool /*copy*/) { return transit(Tr::String, {str, length}); }
     inline bool Bool(bool b) { return transit(Tr::Bool, b); }
 
-    inline bool Int(int i)
-        {
-            return false;
-        }
-
-    bool Double(double d)
-        {
-            return false;
-        }
-
-    bool Uint(unsigned u)
-        {
-            return Int(static_cast<int>(u));
-        }
+    inline bool Int(int /*i*/) { return false; }
+    bool Double(double /*d*/) { return false; }
+    // bool Uint(unsigned u) { return Int(static_cast<int>(u)); }
 
     inline bool Null() { std::cout << "Null()" << std::endl; return false; }
     bool Int64(int64_t i) { std::cout << "Int64(" << i << ")" << std::endl; return false; }
@@ -167,9 +158,9 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     std::stack<State> state;
     size_t ignore_compound;
     std::string* string_to_fill;
-    bool* bool_to_fill;
-    int* int_to_fill;
-    double* double_to_fill;
+    // bool* bool_to_fill;
+    // int* int_to_fill;
+    // double* double_to_fill;
     ChartData::AgSrRef* ag_sr_ref_to_fill;
     std::vector<std::string>* vector_string_to_fill;
     AntigenData* antigen_to_fill;
@@ -232,10 +223,10 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     bool serum_per_table(Arg) { state.push(State::PerTableList); per_table_list = &serum_to_fill->per_table(); return true; }
 
     bool per_table(Arg) { state.push(State::PerTable); per_table_list->emplace_back(); return true; }
-    bool per_table_id(Arg arg) { state.push(State::StringField); string_to_fill = &per_table_list->back().table_id(); return true; } // T
-    bool per_table_date(Arg arg) { state.push(State::StringField); string_to_fill = &per_table_list->back().date(); return true; } // D
-    bool per_table_lab(Arg arg) { state.push(State::StringListField); vector_string_to_fill = &per_table_list->back().lab_id(); return true; } // l
-    bool per_table_homologous(Arg arg) { state.push(State::StringField); string_to_fill = &per_table_list->back().homologous(); return true; } // h
+    bool per_table_id(Arg) { state.push(State::StringField); string_to_fill = &per_table_list->back().table_id(); return true; } // T
+    bool per_table_date(Arg) { state.push(State::StringField); string_to_fill = &per_table_list->back().date(); return true; } // D
+    bool per_table_lab(Arg) { state.push(State::StringListField); vector_string_to_fill = &per_table_list->back().lab_id(); return true; } // l
+    bool per_table_homologous(Arg) { state.push(State::StringField); string_to_fill = &per_table_list->back().homologous(); return true; } // h
 
       // ----------------------------------------------------------------------
 
