@@ -11,13 +11,18 @@
 class PerTable
 {
  public:
+    inline PerTable() = default;
     inline PerTable(std::string aTableId, const Antigen& aAntigen) : mTableId(aTableId), mDate(aAntigen.date()), mLabId(aAntigen.lab_id()) {}
     inline PerTable(std::string aTableId, const Serum& /*aSerum*/) : mTableId(aTableId) {}
 
     inline std::string table_id() const { return mTableId; }
+    inline std::string& table_id() { return mTableId; }
     inline std::string date() const { return mDate; }
+    inline std::string& date() { return mDate; }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
+    inline std::vector<std::string>& lab_id() { return mLabId; }
     inline std::string homologous() const { return mHomologous; }
+    inline std::string& homologous() { return mHomologous; }
 
     inline void set_homologous(std::string aHomologous) { mHomologous = aHomologous; }
 
@@ -36,6 +41,7 @@ class PerTable
 template <typename AS> class AntigenSerumData
 {
  public:
+    inline AntigenSerumData() = default;
     inline AntigenSerumData(const AS& aAS) : mAS(aAS) {}
 
     inline void update(std::string aTableId, const AS& aAS)
@@ -67,7 +73,9 @@ template <typename AS> class AntigenSerumData
     inline bool operator == (const AntigenSerumData& aNother) const { return mAS == aNother.mAS; }
 
     inline const AS& as() const { return mAS; }
+    inline AS& as() { return mAS; }
     inline const std::vector<PerTable>& per_table() const { return mTables; }
+    inline std::vector<PerTable>& per_table() { return mTables; }
 
  private:
     AS mAS;

@@ -73,17 +73,23 @@ class AntigenSerum
     virtual std::string full_name() const = 0;
 
     inline std::string name() const { return mName; }
+    inline std::string& name() { return mName; }
     inline std::string lineage() const { return mLineage; }
+    inline std::string& lineage() { return mLineage; }
     inline std::string passage() const { return mPassage; }
+    inline std::string& passage() { return mPassage; }
     inline bool has_passage() const { return !mPassage.empty(); }
     std::string passage_without_date() const;
     inline std::string reassortant() const { return mReassortant; }
+    inline std::string& reassortant() { return mReassortant; }
     virtual bool is_egg() const;
     inline bool is_reassortant() const { return !mReassortant.empty(); }
     inline bool distinct() const { return mAnnotations.distinct(); }
     inline const Annotations& annotations() const { return mAnnotations; }
+    inline Annotations& annotations() { return mAnnotations; }
     inline bool has_semantic(char c) const { return mSemanticAttributes.find(c) != std::string::npos; }
     inline std::string semantic() const { return mSemanticAttributes; }
+    inline std::string& semantic() { return mSemanticAttributes; }
 
     virtual std::string variant_id() const = 0;
     virtual AntigenSerumMatch match(const AntigenSerum& aNother) const;
@@ -148,7 +154,9 @@ class Serum : public AntigenSerum
     virtual std::string full_name() const;
 
     inline std::string serum_id() const { return mSerumId; }
+    inline std::string& serum_id() { return mSerumId; }
     inline std::string serum_species() const { return mSerumSpecies; }
+    inline std::string& serum_species() { return mSerumSpecies; }
     virtual std::string variant_id() const;
 
     template <typename No> inline void set_homologous(No ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
