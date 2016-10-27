@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <algorithm>
 
 #include "rapidjson/document.h"
 
