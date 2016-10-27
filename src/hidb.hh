@@ -85,12 +85,18 @@ class ChartData
     typedef std::pair<std::string, std::string> AgSrRef;
     typedef std::vector<std::vector<std::string>> Titers;
 
+    inline ChartData() = default;
     ChartData(const Chart& aChart);
 
     inline std::string table_id() const { return mTableId; }
     inline const std::vector<AgSrRef>& antigens() const { return mAntigens; }
     inline const std::vector<AgSrRef>& sera() const { return mSera; }
     inline const Titers& titers() const { return mTiters; }
+
+    inline std::string& table_id() { return mTableId; }
+    inline std::vector<AgSrRef>& antigens() { return mAntigens; }
+    inline std::vector<AgSrRef>& sera() { return mSera; }
+    inline Titers& titers() { return mTiters; }
 
     inline bool operator <(const ChartData& aNother) const { return table_id() < aNother.table_id(); }
 
@@ -113,8 +119,11 @@ class HiDb
     void exportTo(std::string aFilename) const;
 
     const std::vector<AntigenData>& antigens() const { return mAntigens; }
+    std::vector<AntigenData>& antigens() { return mAntigens; }
     const std::vector<SerumData>& sera() const { return mSera; }
+    std::vector<SerumData>& sera() { return mSera; }
     const std::vector<ChartData>& charts() const { return mCharts; }
+    std::vector<ChartData>& charts() { return mCharts; }
 
  private:
     std::vector<AntigenData> mAntigens;

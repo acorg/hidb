@@ -64,8 +64,10 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
  private:
     enum class State : unsigned
     {
-        Ignore, Init, Root, Version,
-        Antigens, Sera, Tables,
+        Ignore, Init, Root, Version, // 0-3
+        Antigens, Sera, // 4-5
+        Tables, Table, TableAntigens, TableAntigenList, TableSera, TableSerumList, TableAntigenSerumRef, // 6-12
+        StringField,
     };
 
     union Arg
@@ -90,7 +92,10 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     enum class Tr : char { StartArray='['-input_base, EndArray=']'-input_base, StartObject='{'-input_base, EndObject='}'-input_base, String='_'-input_base, Bool='^'-input_base, Int='\\'-input_base, Double='|'-input_base, Version='~'-input_base };
 
  public:
-    inline HiDbReaderEventHandler(HiDb& aHiDb) : mHiDb(aHiDb), ignore_compound(0) { state.push(State::Init); }
+    inline HiDbReaderEventHandler(HiDb& aHiDb)
+        : mHiDb(aHiDb), ignore_compound(0),
+          string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr), ag_sr_ref_to_fill(nullptr)
+        { state.push(State::Init); }
 
     inline bool transit(char input, Arg arg = Arg())
         {
@@ -102,7 +107,7 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
 
     inline bool transit(Tr input, Arg arg = Arg())
         {
-              // std::cerr << "transit.Tr " << static_cast<unsigned>(input) << ' ' << static_cast<unsigned>(state.top()) << std::endl;
+              // std::cerr << "transit.Tr " << static_cast<char>(static_cast<char>(input) + input_base) << ' ' << static_cast<unsigned>(state.top()) << std::endl;
             return (this->*transition[static_cast<unsigned>(state.top())][static_cast<char>(input)])(arg);
         }
 
@@ -130,11 +135,7 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
         }
 
     inline bool String(const char* str, rapidjson::SizeType length, bool /*copy*/) { return transit(Tr::String, {str, length}); }
-
-    inline bool Bool(bool b)
-        {
-            return false;
-        }
+    inline bool Bool(bool b) { return transit(Tr::Bool, b); }
 
     inline bool Int(int i)
         {
@@ -164,13 +165,22 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     HiDb& mHiDb;
     std::stack<State> state;
     size_t ignore_compound;
+    std::string* string_to_fill;
+    bool* bool_to_fill;
+    int* int_to_fill;
+    double* double_to_fill;
+    ChartData::AgSrRef* ag_sr_ref_to_fill;
 
       // ----------------------------------------------------------------------
 
     bool start_hidb(Arg=Arg()) { state.push(State::Root); return true; }
     bool start_ignore(Arg=Arg()) { state.push(State::Ignore); return true; }
     bool start_version(Arg=Arg()) { state.push(State::Version); return true; }
+    bool start_antigens(Arg=Arg()) { state.push(State::Antigens); return true; }
+    bool start_sera(Arg=Arg()) { state.push(State::Sera); return true; }
     bool pop(Arg=Arg()) { state.pop(); return true; }
+
+      // ----------------------------------------------------------------------
 
     bool push_ignore(Arg=Arg())
         {
@@ -197,6 +207,33 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
 
       // ----------------------------------------------------------------------
 
+    bool start_tables(Arg) { state.push(State::Tables); return true; }
+    bool start_table(Arg) { mHiDb.charts().emplace_back(); state.push(State::Table); return true; }
+    bool table_table_id(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().table_id(); return true; }
+    bool start_table_antigens(Arg) { state.push(State::TableAntigens); return true; }
+    bool start_table_sera(Arg) { state.push(State::TableSera); return true; }
+    bool start_table_antigen_list(Arg) { state.pop(); state.push(State::TableAntigenList); return true; }
+    bool start_table_serum_list(Arg) { state.pop(); state.push(State::TableSerumList); return true; }
+    bool start_table_antigen(Arg) { state.push(State::TableAntigenSerumRef); auto ags = mHiDb.charts().back().antigens(); ags.emplace_back(); ag_sr_ref_to_fill = &ags.back(); return true; }
+    bool start_table_serum(Arg) { state.push(State::TableAntigenSerumRef); auto srs = mHiDb.charts().back().sera(); srs.emplace_back(); ag_sr_ref_to_fill = &srs.back(); return true; }
+
+    bool table_ag_sr(Arg arg)
+        {
+            bool r = true;
+            if (ag_sr_ref_to_fill->first.empty()) {
+                ag_sr_ref_to_fill->first.assign(arg.mStr.str, arg.mStr.length);
+            }
+            else if (ag_sr_ref_to_fill->second.empty()) {
+                ag_sr_ref_to_fill->second.assign(arg.mStr.str, arg.mStr.length);
+            }
+            else {
+                r = false;
+            }
+            return r;
+        }
+
+      // ----------------------------------------------------------------------
+
     bool version(Arg arg)
         {
             if (std::memcmp(arg.mStr.str, "hidb-v4", arg.mStr.length))
@@ -205,9 +242,20 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
             return true;
         }
 
+    bool str_assign(Arg arg)
+        {
+            string_to_fill->assign(arg.mStr.str, arg.mStr.length);
+            string_to_fill = nullptr;
+            state.pop();
+            return true;
+        }
+
       // ----------------------------------------------------------------------
 
     static const Ptr transition[][62];
+
+    friend void hidb_import(std::string, HiDb&);
+
 };
 
 // ----------------------------------------------------------------------
@@ -217,14 +265,25 @@ constexpr static H::Ptr N = &H::nope;
 constexpr static H::Ptr F = &H::fail;
 
 const HiDbReaderEventHandler::Ptr HiDbReaderEventHandler::transition[][62] = {
-  // A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, [,               \ (int),    ],              ^ (bool),   _ (str),     `, a,                b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s,                t,                u, v, w, x, y, z, {,               | (double), },              ~ (version)
-    {N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, &H::push_ignore, &H::ignore, &H::pop_ignore, &H::ignore, &H::ignore,  F, N,                N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N,                N,                N, N, N, N, N, N, &H::push_ignore, &H::ignore, &H::pop_ignore, N}, // Ignore
-    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,               F,          F,              F,          F,           F, F,                F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                F,                F, F, F, F, F, F, &H::start_hidb,  F,          F,              F}, // Init
-    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,               F,          F,              F,          F,           F, &H::start_ignore, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, &H::start_ignore, &H::start_ignore, F, F, F, F, F, F, F,               F,          &H::pop,        &H::start_version}, // Root
-    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,               F,          F,              F,          &H::version, F, F,                F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                F,                F, F, F, F, F, F, F,               F,          F,              F}, // Version
-    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,               F,          F,              F,          F,           F, F,                F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                F,                F, F, F, F, F, F, F,               F,          F,              F}, // Antigens
-    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,               F,          F,              F,          F,           F, F,                F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                F,                F, F, F, F, F, F, F,               F,          F,              F}, // Sera
-    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,               F,          F,              F,          F,           F, F,                F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                F,                F, F, F, F, F, F, F,               F,          F,              F}, // Tables
+  // A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T,                  U, V, W, X, Y, Z, [,                            \ (int),    ],              ^ (bool),   _ (str),         `, a,                        b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s,                    t,                u, v, w, x, y, z, {,               | (double), },              ~ (version)
+    {N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N,                  N, N, N, N, N, N, &H::push_ignore,              &H::ignore, &H::pop_ignore, &H::ignore, &H::ignore,      F, N,                        N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N, N,                    N,                N, N, N, N, N, N, &H::push_ignore, &H::ignore, &H::pop_ignore, N}, // Ignore
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          F,              F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, &H::start_hidb,  F,          F,              F}, // Init
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          F,              F,          F,               F, &H::start_ignore,         F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, &H::start_ignore,     &H::start_tables, F, F, F, F, F, F, F,               F,          &H::pop,        &H::start_version}, // Root
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          F,              F,          &H::version,     F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // Version
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          F,              F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // Antigens
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          F,              F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // Sera
+
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, N,                            F,          F,              F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, &H::start_table, F,          F,              F}, // Tables
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, &H::table_table_id, F, F, F, F, F, F, F,                            F,          F,              F,          F,               F, &H::start_table_antigens, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, &H::start_table_sera, F,                F, F, F, F, F, F, F,               F,          F,              F}, // Table
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, &H::start_table_antigen_list, F,          F,              F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // TableAntigens
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, &H::start_table_antigen,      F,          &H::pop,        F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // TableAntigenList
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, &H::start_table_serum_list,   F,          F,              F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // TableSera
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, &H::start_table_serum,        F,          &H::pop,        F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // TableSerumList
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          &H::pop,        F,          &H::table_ag_sr, F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // TableAntigenSerumRef
+
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          F,              F,          &H::str_assign,  F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // StringField
+
+    {F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                  F, F, F, F, F, F, F,                            F,          F,              F,          F,               F, F,                        F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F,                    F,                F, F, F, F, F, F, F,               F,          F,              F}, // Last
 };
 
 // ----------------------------------------------------------------------
@@ -241,7 +300,7 @@ void hidb_import(std::string buffer, HiDb& aHiDb)
         rapidjson::StringStream ss(buffer.c_str());
         reader.Parse(ss, handler);
         if (reader.HasParseError())
-            throw Error("cannot import hidb: data parsing failed at " + std::to_string(reader.GetErrorOffset()) + ": " +  GetParseError_En(reader.GetParseErrorCode()) + "\n" + buffer.substr(reader.GetErrorOffset(), 50));
+            throw Error("cannot import hidb: data parsing failed at state " + std::to_string(static_cast<unsigned>(handler.state.top())) + " at pos " + std::to_string(reader.GetErrorOffset()) + ": " +  GetParseError_En(reader.GetParseErrorCode()) + "\n" + buffer.substr(reader.GetErrorOffset(), 50));
         if (!handler.in_init_state())
             throw Error("internal: not in init state on parsing completion");
     }
