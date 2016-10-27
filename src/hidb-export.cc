@@ -10,21 +10,21 @@
 
 // ----------------------------------------------------------------------
 
-template <typename AS> inline JsonWriter& operator <<(JsonWriter& writer, const AntigenSerumData<AS>& ag_sr)
+template <typename RW, typename AS> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const AntigenSerumData<AS>& ag_sr)
 {
     return writer << StartObject << ag_sr.as() << JsonKey::PerTable << ag_sr.per_table() << EndObject;
 }
 
 // ----------------------------------------------------------------------
 
-inline JsonWriter& operator <<(JsonWriter& writer, const ChartData::AgSrRef& ref)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData::AgSrRef& ref)
 {
     return writer << StartArray << ref.first << ref.second << EndArray;
 }
 
 // ----------------------------------------------------------------------
 
-inline JsonWriter& operator <<(JsonWriter& writer, const ChartData& chart)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData& chart)
 {
     return writer << StartObject << JsonKey::TableId << chart.table_id() << JsonKey::Antigens << chart.antigens()
                   << JsonKey::Sera << chart.sera() << JsonKey::Titers << chart.titers() << EndObject;
@@ -32,7 +32,7 @@ inline JsonWriter& operator <<(JsonWriter& writer, const ChartData& chart)
 
 // ----------------------------------------------------------------------
 
-inline JsonWriter& operator <<(JsonWriter& writer, const PerTable& per_table)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const PerTable& per_table)
 {
     return writer << StartObject << JsonKey::TableId << per_table.table_id() << if_not_empty(JsonKey::Date, per_table.date())
                   << if_not_empty(JsonKey::LabId, per_table.lab_id()) << if_not_empty(JsonKey::HomologousAntigen, per_table.homologous()) << EndObject;
@@ -43,6 +43,18 @@ inline JsonWriter& operator <<(JsonWriter& writer, const PerTable& per_table)
 void hidb_export(std::string aFilename, const HiDb& aHiDb)
 {
     JsonWriter writer("hidb");
+    writer.StartObject();
+    writer.Key("  version");
+    writer.String("hidb-v4");
+    writer << JsonKey::Antigens << aHiDb.antigens() << JsonKey::Sera << aHiDb.sera() << JsonKey::Tables << aHiDb.charts() << EndObject;
+    write_file(aFilename, writer);
+}
+
+// ----------------------------------------------------------------------
+
+void hidb_export_pretty(std::string aFilename, const HiDb& aHiDb)
+{
+    JsonPrettyWriter writer("hidb");
 
     writer.StartObject();
     writer.Key("  version");
@@ -52,7 +64,8 @@ void hidb_export(std::string aFilename, const HiDb& aHiDb)
     writer << JsonKey::Antigens << aHiDb.antigens() << JsonKey::Sera << aHiDb.sera() << JsonKey::Tables << aHiDb.charts() << EndObject;
 
     write_file(aFilename, writer);
-}
+
+} // hidb_export_pretty
 
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------

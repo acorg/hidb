@@ -18,9 +18,9 @@ from hidb import utility
 def main(args):
     hidb = hidb_m.HiDb()
     with utility.timeit("Reading hidb"):
-        hidb.import_from(args.input[0])
-    with utility.timeit("Writing hidb"):
-        hidb.export_to(args.output[0], pretty=args.pretty)
+        hidb.import_from(args.path_to_hidb)
+    r = hidb.find_antigens(args.name[0])
+    print(r)
 
 # ----------------------------------------------------------------------
 
@@ -29,9 +29,9 @@ try:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-d', '--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging output.')
 
-    parser.add_argument('input', nargs=1, help='Source hidb file to process.')
-    parser.add_argument('output', nargs=1, help='Output hidb file to generate.')
-    parser.add_argument('-p', '--pretty', action='store_true', dest='pretty', default=False, help='Use pretty writer for output.')
+    parser.add_argument('name', nargs=1, help='Name to look for.')
+    parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
+    # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")

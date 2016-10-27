@@ -124,7 +124,7 @@ class HiDb
 
     void add(const Chart& aChart);
     void importFrom(std::string aFilename);
-    void exportTo(std::string aFilename) const;
+    void exportTo(std::string aFilename, bool aPretty) const;
 
     const std::vector<AntigenData>& antigens() const { return mAntigens; }
     std::vector<AntigenData>& antigens() { return mAntigens; }
@@ -132,6 +132,8 @@ class HiDb
     std::vector<SerumData>& sera() { return mSera; }
     const std::vector<ChartData>& charts() const { return mCharts; }
     std::vector<ChartData>& charts() { return mCharts; }
+
+    std::vector<const AntigenData*> find_antigens(std::string name) const;
 
  private:
     std::vector<AntigenData> mAntigens;

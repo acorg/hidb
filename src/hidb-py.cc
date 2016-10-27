@@ -68,11 +68,18 @@ PYBIND11_PLUGIN(hidb_backend)
       // HiDb
       // ----------------------------------------------------------------------
 
+    py::class_<AntigenData>(m, "AntigenData")
+            ;
+
+    py::class_<SerumData>(m, "SerumData")
+            ;
+
     py::class_<HiDb>(m, "HiDb")
             .def(py::init<>())
             .def("add", &HiDb::add, py::arg("chart"))
-            .def("export_to", &HiDb::exportTo, py::arg("filename"))
+            .def("export_to", &HiDb::exportTo, py::arg("filename"), py::arg("pretty") = false)
             .def("import_from", &HiDb::importFrom, py::arg("filename"))
+            .def("find_antigens", &HiDb::find_antigens, py::arg("name"), py::return_value_policy::reference)
             ;
 
       // ----------------------------------------------------------------------

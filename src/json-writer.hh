@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "rapidjson/writer.h"
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/error/en.h"
 #include "rapidjson/stringbuffer.h"
@@ -11,14 +12,10 @@
 
 // ----------------------------------------------------------------------
 
-class JsonWriter : public rapidjson::PrettyWriter<rapidjson::StringBuffer>
+template <typename RW> class JsonWriterT : public RW
 {
  public:
-    inline JsonWriter(std::string aKeyword) : rapidjson::PrettyWriter<rapidjson::StringBuffer>(mBuffer), mKeyword(aKeyword)
-        {
-            SetIndent(' ', 1);
-        }
-
+    inline JsonWriterT(std::string aKeyword) : RW(mBuffer), mKeyword(aKeyword) {}
     inline operator std::string() const { return mBuffer.GetString(); }
     inline std::string keyword() const { return mKeyword; }
 
@@ -27,6 +24,15 @@ class JsonWriter : public rapidjson::PrettyWriter<rapidjson::StringBuffer>
     std::string mKeyword;
 };
 
+template <> inline JsonWriterT<rapidjson::PrettyWriter<rapidjson::StringBuffer>>::JsonWriterT(std::string aKeyword)
+    : rapidjson::PrettyWriter<rapidjson::StringBuffer>(mBuffer), mKeyword(aKeyword)
+{
+    SetIndent(' ', 1);
+}
+
+typedef JsonWriterT<rapidjson::Writer<rapidjson::StringBuffer>> JsonWriter;
+typedef JsonWriterT<rapidjson::PrettyWriter<rapidjson::StringBuffer>> JsonPrettyWriter;
+
 // ----------------------------------------------------------------------
 
 enum _StartArray { StartArray };
@@ -34,17 +40,17 @@ enum _EndArray { EndArray };
 enum _StartObject { StartObject };
 enum _EndObject { EndObject };
 
-inline JsonWriter& operator <<(JsonWriter& writer, _StartArray) { writer.StartArray(); return writer; }
-inline JsonWriter& operator <<(JsonWriter& writer, _EndArray) { writer.EndArray(); return writer; }
-inline JsonWriter& operator <<(JsonWriter& writer, _StartObject) { writer.StartObject(); return writer; }
-inline JsonWriter& operator <<(JsonWriter& writer, _EndObject) { writer.EndObject(); return writer; }
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, _StartArray) { writer.StartArray(); return writer; }
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, _EndArray) { writer.EndArray(); return writer; }
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, _StartObject) { writer.StartObject(); return writer; }
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, _EndObject) { writer.EndObject(); return writer; }
 
-// inline JsonWriter& operator <<(JsonWriter& writer, char key) { writer.Key(&key, 1, false); return writer; }
-inline JsonWriter& operator <<(JsonWriter& writer, JsonKey key) { const char k = static_cast<char>(key); writer.Key(&k, 1, false); return writer; }
-inline JsonWriter& operator <<(JsonWriter& writer, std::string s) { writer.String(s.c_str(), static_cast<unsigned>(s.size())); return writer; }
-inline JsonWriter& operator <<(JsonWriter& writer, int value) { writer.Int(value); return writer; }
+// template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, char key) { writer.Key(&key, 1, false); return writer; }
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, JsonKey key) { const char k = static_cast<char>(key); writer.Key(&k, 1, false); return writer; }
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, std::string s) { writer.String(s.c_str(), static_cast<unsigned>(s.size())); return writer; }
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, int value) { writer.Int(value); return writer; }
 
-template <typename T> inline JsonWriter& operator <<(JsonWriter& writer, const std::vector<T>& list)
+template <typename RW, typename T> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const std::vector<T>& list)
 {
     writer << StartArray;
     for (const auto& e: list)
@@ -54,7 +60,7 @@ template <typename T> inline JsonWriter& operator <<(JsonWriter& writer, const s
 
 // ----------------------------------------------------------------------
 
-inline JsonWriter& operator <<(JsonWriter& writer, const std::vector<std::vector<std::string>>& list_list_strings)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const std::vector<std::vector<std::string>>& list_list_strings)
 {
     writer << StartArray;
     for (const auto& e: list_list_strings)
@@ -69,7 +75,7 @@ template <typename Value> class _if_not_empty
  public:
     inline _if_not_empty(JsonKey key, Value value) : mKey(key), mValue(value) {}
 
-    friend inline JsonWriter& operator <<(JsonWriter& writer, const _if_not_empty<Value>& data)
+    template <typename RW> friend inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const _if_not_empty<Value>& data)
         {
             if (!data.mValue.empty())
                 writer << data.mKey << data.mValue;

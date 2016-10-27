@@ -3,6 +3,19 @@
 
 // ----------------------------------------------------------------------
 
+ChartData::ChartData(const Chart& aChart)
+    : mTableId(aChart.table_id()), mTiters(aChart.titers().as_list())
+{
+    for (const auto& antigen: aChart.antigens()) {
+        mAntigens.emplace_back(antigen.name(), antigen.variant_id());
+    }
+    for (const auto& serum: aChart.sera()) {
+        mSera.emplace_back(serum.name(), serum.variant_id());
+    }
+}
+
+// ----------------------------------------------------------------------
+
 void HiDb::add(const Chart& aChart)
 {
     ChartData chart(aChart);
@@ -68,9 +81,12 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
 
 // ----------------------------------------------------------------------
 
-void HiDb::exportTo(std::string aFilename) const
+void HiDb::exportTo(std::string aFilename, bool aPretty) const
 {
-    hidb_export(aFilename, *this);
+    if (aPretty)
+        hidb_export_pretty(aFilename, *this);
+    else
+        hidb_export(aFilename, *this);
 
 } // HiDb::exportTo
 
@@ -84,16 +100,17 @@ void HiDb::importFrom(std::string aFilename)
 
 // ----------------------------------------------------------------------
 
-ChartData::ChartData(const Chart& aChart)
-    : mTableId(aChart.table_id()), mTiters(aChart.titers().as_list())
+std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 {
-    for (const auto& antigen: aChart.antigens()) {
-        mAntigens.emplace_back(antigen.name(), antigen.variant_id());
-    }
-    for (const auto& serum: aChart.sera()) {
-        mSera.emplace_back(serum.name(), serum.variant_id());
-    }
-}
+    std::vector<const AntigenData*> result;
+    if (!antigens().empty())
+        result.push_back(&antigens().front());
+    return result;
+
+} // HiDb::find_antigens
+
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 /// Local Variables:
