@@ -2,15 +2,44 @@
 
 #include <string>
 
-// ----------------------------------------------------------------------
-
-class HiDb;
+#include "hidb.hh"
+#include "chart-export.hh"
 
 // ----------------------------------------------------------------------
 
 void hidb_export(std::string aFilename, const HiDb& aHiDb);
 void hidb_export_pretty(std::string aFilename, const HiDb& aHiDb);
 void hidb_import(std::string aFilename, HiDb& aHiDb);
+
+// ----------------------------------------------------------------------
+
+template <typename RW, typename AS> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const AntigenSerumData<AS>& ag_sr)
+{
+    return writer << StartObject << ag_sr.data() << JsonKey::PerTable << ag_sr.per_table() << EndObject;
+}
+
+// ----------------------------------------------------------------------
+
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData::AgSrRef& ref)
+{
+    return writer << StartArray << ref.first << ref.second << EndArray;
+}
+
+// ----------------------------------------------------------------------
+
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData& chart)
+{
+    return writer << StartObject << JsonKey::TableId << chart.table_id() << JsonKey::Antigens << chart.antigens()
+                  << JsonKey::Sera << chart.sera() << JsonKey::Titers << chart.titers() << EndObject;
+}
+
+// ----------------------------------------------------------------------
+
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const PerTable& per_table)
+{
+    return writer << StartObject << JsonKey::TableId << per_table.table_id() << if_not_empty(JsonKey::Date, per_table.date())
+                  << if_not_empty(JsonKey::LabId, per_table.lab_id()) << if_not_empty(JsonKey::HomologousAntigen, per_table.homologous()) << EndObject;
+}
 
 // ----------------------------------------------------------------------
 /// Local Variables:

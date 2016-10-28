@@ -17,7 +17,8 @@
 
 namespace py = pybind11;
 
-#include "hidb.hh"
+#include "chart-export.hh"
+#include "hidb-export.hh"
 #include "ace.hh"
 
 // ----------------------------------------------------------------------
@@ -39,6 +40,8 @@ PYBIND11_PLUGIN(hidb_backend)
 
     py::class_<AntigenSerum>(m, "AntigenSerum")
             .def("full_name", &AntigenSerum::full_name)
+            .def("variant_id", &AntigenSerum::variant_id)
+            .def("name", static_cast<std::string (AntigenSerum::*)() const>(&AntigenSerum::name))
             .def("annotations", [](const AntigenSerum &as) { py::list list; for (const auto& anno: as.annotations()) { list.append(py::str(anno)); } return list; }, py::doc("returns a copy of the annotation list, modifications to the returned list are not applied"))
             ;
 
@@ -69,9 +72,11 @@ PYBIND11_PLUGIN(hidb_backend)
       // ----------------------------------------------------------------------
 
     py::class_<AntigenData>(m, "AntigenData")
+            .def("data", static_cast<const Antigen& (AntigenData::*)() const>(&AntigenData::data))
             ;
 
     py::class_<SerumData>(m, "SerumData")
+            .def("data", static_cast<const Serum& (SerumData::*)() const>(&SerumData::data))
             ;
 
     py::class_<HiDb>(m, "HiDb")
@@ -79,8 +84,16 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("add", &HiDb::add, py::arg("chart"))
             .def("export_to", &HiDb::exportTo, py::arg("filename"), py::arg("pretty") = false)
             .def("import_from", &HiDb::importFrom, py::arg("filename"))
+            .def("list_antigens", &HiDb::list_antigens)
             .def("find_antigens", &HiDb::find_antigens, py::arg("name"), py::return_value_policy::reference)
             ;
+
+      // ----------------------------------------------------------------------
+
+    m.def("json", &json<Antigen>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
+    m.def("json", &json<AntigenData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
+    m.def("json", &json<Serum>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
+    m.def("json", &json<SerumData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
 
       // ----------------------------------------------------------------------
 

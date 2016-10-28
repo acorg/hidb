@@ -102,12 +102,31 @@ void HiDb::importFrom(std::string aFilename)
 
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 {
+    std::vector<std::string> full_names;
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(full_names), [](const auto& ag) -> std::string { return ag.data().full_name(); });
+
     std::vector<const AntigenData*> result;
-    if (!antigens().empty())
-        result.push_back(&antigens().front());
+    for (auto fn = full_names.cbegin(); fn != full_names.cend(); ++fn) {
+        if (fn->find(name) != std::string::npos)
+            result.push_back(&antigens()[static_cast<size_t>(fn - full_names.cbegin())]);
+    }
+
+    // if (!antigens().empty())
+    //     result.push_back(&antigens().front());
     return result;
 
 } // HiDb::find_antigens
+
+// ----------------------------------------------------------------------
+
+std::vector<std::string> HiDb::list_antigens() const
+{
+    std::vector<std::string> result;
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return ag.data().name(); });
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+    return result;
+
+} // HiDb::list_antigens
 
 // ----------------------------------------------------------------------
 

@@ -42,12 +42,12 @@ template <typename AS> class AntigenSerumData
 {
  public:
     inline AntigenSerumData() = default;
-    inline AntigenSerumData(const AS& aAS) : mAS(aAS) {}
+    inline AntigenSerumData(const AS& aData) : mData(aData) {}
 
-    inline void update(std::string aTableId, const AS& aAS)
+    inline void update(std::string aTableId, const AS& aData)
         {
               // std::cerr << "add " << aTableId << " " << aAS.full_name() << std::endl;
-            PerTable pt(aTableId, aAS);
+            PerTable pt(aTableId, aData);
             auto insert_at = std::lower_bound(mTables.begin(), mTables.end(), pt);
             if (insert_at == mTables.end() || insert_at->table_id() != aTableId) {
                 mTables.insert(insert_at, std::move(pt));
@@ -69,16 +69,16 @@ template <typename AS> class AntigenSerumData
             }
         }
 
-    inline bool operator < (const AntigenSerumData& aNother) const { return mAS < aNother.mAS; }
-    inline bool operator == (const AntigenSerumData& aNother) const { return mAS == aNother.mAS; }
+    inline bool operator < (const AntigenSerumData& aNother) const { return mData < aNother.mData; }
+    inline bool operator == (const AntigenSerumData& aNother) const { return mData == aNother.mData; }
 
-    inline const AS& as() const { return mAS; }
-    inline AS& as() { return mAS; }
+    inline const AS& data() const { return mData; }
+    inline AS& data() { return mData; }
     inline const std::vector<PerTable>& per_table() const { return mTables; }
     inline std::vector<PerTable>& per_table() { return mTables; }
 
  private:
-    AS mAS;
+    AS mData;
     std::vector<PerTable> mTables;
 };
 
@@ -134,6 +134,7 @@ class HiDb
     std::vector<ChartData>& charts() { return mCharts; }
 
     std::vector<const AntigenData*> find_antigens(std::string name) const;
+    std::vector<std::string> list_antigens() const;
 
  private:
     std::vector<AntigenData> mAntigens;

@@ -90,6 +90,28 @@ template <typename Value> class _if_not_empty
 template <typename Value> _if_not_empty<Value> if_not_empty(JsonKey key, Value value) { return _if_not_empty<Value>(key, value); }
 
 // ----------------------------------------------------------------------
+
+template <typename V> inline std::string pretty_json(const V& value, std::string keyword="chart")
+{
+    JsonPrettyWriter writer(keyword);
+    return writer << value;
+}
+
+template <typename V> inline std::string compact_json(const V& value, std::string keyword="chart")
+{
+    JsonWriter writer(keyword);
+    return writer << value;
+}
+
+template <typename V> inline std::string json(const V& value, std::string keyword="chart", bool pretty=true)
+{
+    if (pretty)
+        return pretty_json(value, keyword);
+    else
+        return compact_json(value, keyword);
+}
+
+// ----------------------------------------------------------------------
 /// Local Variables:
 /// eval: (if (fboundp 'eu-rename-buffer) (eu-rename-buffer))
 /// End:

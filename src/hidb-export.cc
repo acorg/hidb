@@ -3,40 +3,7 @@
 #include "rapidjson/reader.h"
 
 #include "hidb-export.hh"
-#include "chart-export.hh"
-#include "hidb.hh"
-#include "json-writer.hh"
 #include "read-file.hh"
-
-// ----------------------------------------------------------------------
-
-template <typename RW, typename AS> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const AntigenSerumData<AS>& ag_sr)
-{
-    return writer << StartObject << ag_sr.as() << JsonKey::PerTable << ag_sr.per_table() << EndObject;
-}
-
-// ----------------------------------------------------------------------
-
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData::AgSrRef& ref)
-{
-    return writer << StartArray << ref.first << ref.second << EndArray;
-}
-
-// ----------------------------------------------------------------------
-
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData& chart)
-{
-    return writer << StartObject << JsonKey::TableId << chart.table_id() << JsonKey::Antigens << chart.antigens()
-                  << JsonKey::Sera << chart.sera() << JsonKey::Titers << chart.titers() << EndObject;
-}
-
-// ----------------------------------------------------------------------
-
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const PerTable& per_table)
-{
-    return writer << StartObject << JsonKey::TableId << per_table.table_id() << if_not_empty(JsonKey::Date, per_table.date())
-                  << if_not_empty(JsonKey::LabId, per_table.lab_id()) << if_not_empty(JsonKey::HomologousAntigen, per_table.homologous()) << EndObject;
-}
 
 // ----------------------------------------------------------------------
 
@@ -219,20 +186,20 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     bool start_antigen(Arg) { state.push(State::Antigen); auto& antigens = mHiDb.antigens(); antigens.emplace_back(); antigen_to_fill = &antigens.back(); return true; }
     bool start_serum(Arg) { state.push(State::Serum); auto& sera = mHiDb.sera(); sera.emplace_back(); serum_to_fill = &sera.back(); return true; }
 
-    bool antigen_name(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->as().name(); return true; }
-    bool antigen_lineage(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->as().lineage(); return true; }
-    bool antigen_passage(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->as().passage(); return true; }
-    bool antigen_reassortant(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->as().reassortant(); return true; }
-    bool antigen_annotations(Arg) { state.push(State::StringListField); vector_string_to_fill = &antigen_to_fill->as().annotations(); return true; }
+    bool antigen_name(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->data().name(); return true; }
+    bool antigen_lineage(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->data().lineage(); return true; }
+    bool antigen_passage(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->data().passage(); return true; }
+    bool antigen_reassortant(Arg) { state.push(State::StringField); string_to_fill = &antigen_to_fill->data().reassortant(); return true; }
+    bool antigen_annotations(Arg) { state.push(State::StringListField); vector_string_to_fill = &antigen_to_fill->data().annotations(); return true; }
     bool antigen_per_table(Arg) { state.push(State::PerTableList); per_table_list = &antigen_to_fill->per_table(); return true; }
 
-    bool serum_name(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->as().name(); return true; }
-    bool serum_lineage(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->as().lineage(); return true; }
-    bool serum_passage(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->as().passage(); return true; }
-    bool serum_reassortant(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->as().reassortant(); return true; }
-    bool serum_annotations(Arg) { state.push(State::StringListField); vector_string_to_fill = &serum_to_fill->as().annotations(); return true; }
-    bool serum_id(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->as().serum_id(); return true; }
-    bool serum_species(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->as().serum_species(); return true; }
+    bool serum_name(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->data().name(); return true; }
+    bool serum_lineage(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->data().lineage(); return true; }
+    bool serum_passage(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->data().passage(); return true; }
+    bool serum_reassortant(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->data().reassortant(); return true; }
+    bool serum_annotations(Arg) { state.push(State::StringListField); vector_string_to_fill = &serum_to_fill->data().annotations(); return true; }
+    bool serum_id(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->data().serum_id(); return true; }
+    bool serum_species(Arg) { state.push(State::StringField); string_to_fill = &serum_to_fill->data().serum_species(); return true; }
     bool serum_per_table(Arg) { state.push(State::PerTableList); per_table_list = &serum_to_fill->per_table(); return true; }
 
     bool per_table(Arg) { state.push(State::PerTable); per_table_list->emplace_back(); return true; }
