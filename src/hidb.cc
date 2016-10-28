@@ -1,3 +1,5 @@
+#include <iomanip>
+
 #include "hidb.hh"
 #include "hidb-export.hh"
 #include "string-matcher.hh"
@@ -113,6 +115,14 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
             levels.push_back(std::make_pair(&antigens()[static_cast<size_t>(fn - full_names.cbegin())], level));
     }
     std::sort(levels.begin(), levels.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
+
+    size_t n = 0;
+    for (const auto& e: levels) {
+        std::cout << std::setw(4) << n << " " << std::setw(3) << e.second << " " << e.first->data().full_name() << std::endl;
+        ++n;
+        // if (n >= 200)
+        //     break;
+    }
 
     std::vector<const AntigenData*> result;
     std::transform(levels.begin(), levels.end(), std::back_inserter(result), [](const auto& a) { return a.first; });
