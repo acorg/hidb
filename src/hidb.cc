@@ -1,5 +1,6 @@
 #include "hidb.hh"
 #include "hidb-export.hh"
+#include "string-matcher.hh"
 
 // ----------------------------------------------------------------------
 
@@ -107,8 +108,10 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 
     std::vector<const AntigenData*> result;
     for (auto fn = full_names.cbegin(); fn != full_names.cend(); ++fn) {
-        if (fn->find(name) != std::string::npos)
+        const auto level = string_match(*fn, name);
+        if (level)
             result.push_back(&antigens()[static_cast<size_t>(fn - full_names.cbegin())]);
+        break;
     }
 
     // if (!antigens().empty())
