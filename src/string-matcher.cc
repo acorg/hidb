@@ -1,35 +1,44 @@
 #include <iostream>
+#include <vector>
+#include <numeric>
 
 #include "string-matcher.hh"
 
 // ----------------------------------------------------------------------
 
-inline std::pair<size_t, size_t> string_match(std::string master, size_t master_pos, std::string input, size_t input_pos, size_t input_size)
+typedef std::string::const_iterator SP;
+
+inline void substring_match(SP master_b, SP master_e, SP input_b, SP input_e, std::vector<size_t>& match_len)
 {
-    size_t level = 0;
-    size_t pos = master.find(input.substr(input_pos, input_size), master_pos);
-    std::cout << master.substr(master_pos) << " -- " << input.substr(input_pos) << " -- " << pos << std::endl;
-    if (pos != std::string::npos)
-        ++level;
-    return std::make_pair(level, pos);
+    while (master_b != master_e && input_b != input_e) {
+        auto found = std::find(master_b, master_e, *input_b);
+        if (found != master_e) {
+            ++input_b;
+            for (master_b = found + 1; master_b != master_e && input_b != input_e && *master_b == *input_b; ++master_b, ++input_b)
+                ;
+            const size_t len = static_cast<size_t>(master_b - found);
+            if (len > 1)
+                match_len.push_back(len);
+        }
+        else {
+            ++input_b;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------
 
 size_t string_match(std::string master, std::string input)
 {
-    size_t level = 0;
-    auto lp = string_match(master, 0, input, 0, 2);
-    if (lp.first) {
-        level += lp.first;
-        lp = string_match(master, lp.second + 2, input, 2, 2);
-        if (lp.first) {
-            level += lp.first;
-        }
-        std::cout << master << " " << lp.second << std::endl;
-    }
-    if (level > 1)
-        std::cout << master << std::endl;
+    std::vector<size_t> match_len;
+    substring_match(master.begin(), master.end(), input.begin(), input.end(), match_len);
+    const size_t mult = input.size();
+    const size_t level = std::accumulate(match_len.begin(), match_len.end(), 0U, [mult](auto a, auto b) { return a + (b - 2) * mult + b; });
+    // if (level > mult) {
+    //     std::cout << master << " [";
+    //     std::copy(match_len.begin(), match_len.end(), std::ostream_iterator<decltype(match_len)::value_type>(std::cout, " "));
+    //     std::cout << "] " << level << std::endl;
+    // }
     return level;
 
 } // string_match

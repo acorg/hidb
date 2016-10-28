@@ -106,16 +106,17 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
     std::vector<std::string> full_names;
     std::transform(antigens().begin(), antigens().end(), std::back_inserter(full_names), [](const auto& ag) -> std::string { return ag.data().full_name(); });
 
-    std::vector<const AntigenData*> result;
+    std::vector<std::pair<const AntigenData*, size_t>> levels;
     for (auto fn = full_names.cbegin(); fn != full_names.cend(); ++fn) {
         const auto level = string_match(*fn, name);
-        if (level)
-            result.push_back(&antigens()[static_cast<size_t>(fn - full_names.cbegin())]);
-        break;
+        if (level > name.size())
+            levels.push_back(std::make_pair(&antigens()[static_cast<size_t>(fn - full_names.cbegin())], level));
     }
+    std::sort(levels.begin(), levels.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
 
-    // if (!antigens().empty())
-    //     result.push_back(&antigens().front());
+    std::vector<const AntigenData*> result;
+    std::transform(levels.begin(), levels.end(), std::back_inserter(result), [](const auto& a) { return a.first; });
+
     return result;
 
 } // HiDb::find_antigens
