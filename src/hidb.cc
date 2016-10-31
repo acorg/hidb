@@ -111,7 +111,7 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
     std::vector<std::pair<const AntigenData*, size_t>> levels;
     for (auto fn = full_names.cbegin(); fn != full_names.cend(); ++fn) {
         const auto level = string_match(*fn, name);
-        if (level > name.size())
+        if (level > 0) // name.size())
             levels.push_back(std::make_pair(&antigens()[static_cast<size_t>(fn - full_names.cbegin())], level));
     }
     std::sort(levels.begin(), levels.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
@@ -120,8 +120,8 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
     for (const auto& e: levels) {
         std::cout << std::setw(4) << n << " " << std::setw(3) << e.second << " " << e.first->data().full_name() << std::endl;
         ++n;
-        // if (n >= 200)
-        //     break;
+        if (n >= 200)
+            break;
     }
 
     std::vector<const AntigenData*> result;
