@@ -216,11 +216,10 @@ class ChartTiters
     inline const List& as_list() const
         {
             if (mList.empty()) {
-                throw std::runtime_error("ChartTiters::as_list");
+                std::cerr << "Warning: sparse matrix of titers ignored" << std::endl;
+                  //throw std::runtime_error("ChartTiters::as_list");
             }
-            else {
-                return mList;
-            }
+            return mList;
         }
 
  private:
