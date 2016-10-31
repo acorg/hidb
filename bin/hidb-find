@@ -22,10 +22,10 @@ def main(args):
     if args.name:
         antigens = hidb.find_antigens(args.name.upper())
         print(len(antigens))
-        # if args.output_json:
-        #     print("\n".join(hidb_m.json(e) for e in antigens))
-        # else:
-        #     print("\n".join(e.data().full_name() for e in antigens))
+        if args.output_json:
+            print("\n".join(hidb_m.json(e) for e in antigens))
+        else:
+            print("\n".join(e.data().full_name() for e in antigens))
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))

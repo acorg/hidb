@@ -103,31 +103,30 @@ void HiDb::importFrom(std::string aFilename)
 
 // ----------------------------------------------------------------------
 
+class FindAntigenScore
+{
+ public:
+      // inline FindAntigenScore(string_match::score_t aName, string_match::score_t aFull) : mName(aName), mFull(aFull) {}
+    inline FindAntigenScore(std::string name, const AntigenData& aAntigen)
+        : mAntigen(&aAntigen), mName(string_match::match(aAntigen.data().name(), name)), mFull(string_match::match(aAntigen.data().full_name(), name)) {}
+    inline bool operator < (const FindAntigenScore& aNother) const { return mName == aNother.mName ? mFull > aNother.mFull : mName > aNother.mName; }
+    inline bool operator == (const FindAntigenScore& aNother) const { return mName == aNother.mName; }
+    inline operator const AntigenData*() const { return mAntigen; }
+    inline operator bool() const { return mName > 0; }
+
+ private:
+    const AntigenData* mAntigen;
+    string_match::score_t mName, mFull;
+};
+
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 {
-    std::vector<std::string> full_names;
-    std::transform(antigens().begin(), antigens().end(), std::back_inserter(full_names), [](const auto& ag) -> std::string { return ag.data().full_name(); });
-
-    std::vector<std::pair<const AntigenData*, size_t>> levels;
-    for (auto fn = full_names.cbegin(); fn != full_names.cend(); ++fn) {
-        const auto level = string_match(*fn, name);
-        if (level > 0) // name.size())
-            levels.push_back(std::make_pair(&antigens()[static_cast<size_t>(fn - full_names.cbegin())], level));
-    }
-    std::sort(levels.begin(), levels.end(), [](const auto& a, const auto& b) { return a.second > b.second; });
-
-    size_t n = 0;
-    for (const auto& e: levels) {
-        std::cout << std::setw(4) << n << " " << std::setw(3) << e.second << " " << e.first->data().full_name() << std::endl;
-        ++n;
-        if (n >= 200)
-            break;
-    }
-
-    std::vector<const AntigenData*> result;
-    std::transform(levels.begin(), levels.end(), std::back_inserter(result), [](const auto& a) { return a.first; });
-
-    return result;
+    std::vector<FindAntigenScore> scores;
+    for (const auto& antigen: antigens())
+        scores.emplace_back(name, antigen);
+    std::sort(scores.begin(), scores.end());
+    const auto end = std::find_if_not(scores.begin(), scores.end(), [&scores](const auto& e) { return e == scores.front(); });
+    return {scores.begin(), end};
 
 } // HiDb::find_antigens
 
