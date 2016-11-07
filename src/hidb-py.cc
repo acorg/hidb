@@ -86,6 +86,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("import_from", &HiDb::importFrom, py::arg("filename"))
             .def("list_antigens", &HiDb::list_antigens)
             .def("find_antigens", &HiDb::find_antigens, py::arg("name"), py::return_value_policy::reference)
+            .def("find_antigens_with_score", &HiDb::find_antigens_with_score, py::arg("name"), py::return_value_policy::reference)
             ;
 
       // ----------------------------------------------------------------------

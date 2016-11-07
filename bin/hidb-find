@@ -20,12 +20,17 @@ def main(args):
     with utility.timeit("Reading hidb"):
         hidb.import_from(args.path_to_hidb)
     if args.name:
-        antigens = hidb.find_antigens(args.name.upper())
-        print(len(antigens))
-        if args.output_json:
-            print("\n".join(hidb_m.json(e) for e in antigens))
+        if args.report_score:
+            antigen_scores = hidb.find_antigens_with_score(args.name.upper())
+            print(len(antigen_scores))
+            print("\n".join("{:4d} {}".format(e[1], e[0].data().full_name()) for e in antigen_scores))
         else:
-            print("\n".join(e.data().full_name() for e in antigens))
+            antigens = hidb.find_antigens(args.name.upper())
+            print(len(antigens))
+            if args.output_json:
+                print("\n".join(hidb_m.json(e) for e in antigens))
+            else:
+                print("\n".join(e.data().full_name() for e in antigens))
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))
@@ -42,6 +47,7 @@ try:
     parser.add_argument('-n', '--name', dest="name", default=None, help='Name to look for.')
     parser.add_argument('-a', '--list-antigens', dest="list_antigens", action="store_true", default=False, help='List all antigen names.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
+    parser.add_argument('--score', dest="report_score", action="store_true", default=False)
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()

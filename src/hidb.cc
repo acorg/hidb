@@ -105,30 +105,108 @@ void HiDb::importFrom(std::string aFilename)
 
 class FindAntigenScore
 {
+ private:
+    static const string_match::score_t keyword_in_lookup = 1;
+
  public:
       // inline FindAntigenScore(string_match::score_t aName, string_match::score_t aFull) : mName(aName), mFull(aFull) {}
-    inline FindAntigenScore(std::string name, const AntigenData& aAntigen)
-        : mAntigen(&aAntigen), mName(string_match::match(aAntigen.data().name(), name)), mFull(string_match::match(aAntigen.data().full_name(), name)) {}
-    inline bool operator < (const FindAntigenScore& aNother) const { return mName == aNother.mName ? mFull > aNother.mFull : mName > aNother.mName; }
+    inline FindAntigenScore(std::string name, const AntigenData& aAntigen, string_match::score_t aNameScoreThreshold)
+        : mAntigen(&aAntigen), mName(0), mFull(0)
+        {
+            const auto antigen_name = aAntigen.data().name();
+            mName = string_match::match(antigen_name, name);
+            if (aNameScoreThreshold == 0)
+                aNameScoreThreshold = static_cast<string_match::score_t>(name.length() * name.length() * 0.05);
+            if (mName >= aNameScoreThreshold) {
+                const auto full_name = aAntigen.data().full_name();
+                mFull = std::max({
+                    for_subst(full_name, antigen_name.size(), name, " CELL", " MDCK"),
+                    for_subst(full_name, antigen_name.size(), name, " CELL", " SIAT"),
+                    for_subst(full_name, antigen_name.size(), name, " EGG", " E"),
+                    for_subst(full_name, antigen_name.size(), name, " REASSORTANT", " NYMC")
+                    });
+                if (mFull == 0)
+                    mFull = string_match::match(full_name, name);
+            }
+        }
+
+    inline bool operator < (const FindAntigenScore& aNother) const
+        {
+              // if mFull == keyword_in_lookup, move it to the end of the sorting list regardless of mName
+            bool result;
+            if (mFull == keyword_in_lookup)
+                result = false;
+            else if (aNother.mFull == keyword_in_lookup)
+                result = true;
+            else
+                result = mName == aNother.mName ? mFull > aNother.mFull : mName > aNother.mName;
+            return result;
+        }
+
     inline bool operator == (const FindAntigenScore& aNother) const { return mName == aNother.mName; }
     inline operator const AntigenData*() const { return mAntigen; }
     inline operator bool() const { return mName > 0; }
+    inline string_match::score_t name_score() const { return mName; }
+    inline std::pair<const AntigenData*, size_t> antigen_score() const { return std::make_pair(mAntigen, mFull); }
 
  private:
     const AntigenData* mAntigen;
     string_match::score_t mName, mFull;
+
+    inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::string subst)
+    {
+        string_match::score_t score = 0;
+        const auto pos = name.find(keyword);
+        if (pos != std::string::npos) { // keyword is in the lookup name
+            if (full_name.find(subst, name_part_size) != std::string::npos) { // subst must be present in full_name in the passage part
+                std::string substituted(name, 0, pos);
+                substituted.append(subst);
+                score = string_match::match(full_name, substituted);
+            }
+            else
+                score = keyword_in_lookup;      // to avoid using name-with-keyword-not-replaced for matching
+        }
+        return score;
+    }
 };
+
+// ----------------------------------------------------------------------
+
+inline static void find_scores(std::string name, const std::vector<AntigenData>& antigens, std::vector<FindAntigenScore>& scores, std::vector<FindAntigenScore>::iterator& scores_end)
+{
+    string_match::score_t score_threshold = 0;
+    for (const auto& antigen: antigens) {
+        scores.emplace_back(name, antigen, score_threshold);
+        score_threshold = std::max(scores.back().name_score(), score_threshold);
+    }
+    std::sort(scores.begin(), scores.end());
+    scores_end = std::find_if_not(scores.begin(), scores.end(), [&scores](const auto& e) { return e == scores.front(); }); // just use entries with maximal name score
+
+} // HiDb::find_scores
+
+// ----------------------------------------------------------------------
 
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 {
     std::vector<FindAntigenScore> scores;
-    for (const auto& antigen: antigens())
-        scores.emplace_back(name, antigen);
-    std::sort(scores.begin(), scores.end());
-    const auto end = std::find_if_not(scores.begin(), scores.end(), [&scores](const auto& e) { return e == scores.front(); });
-    return {scores.begin(), end};
+    std::vector<FindAntigenScore>::iterator scores_end;
+    find_scores(name, antigens(), scores, scores_end);
+    return {scores.begin(), scores_end};
 
 } // HiDb::find_antigens
+
+// ----------------------------------------------------------------------
+
+std::vector<std::pair<const AntigenData*, size_t>> HiDb::find_antigens_with_score(std::string name) const
+{
+    std::vector<FindAntigenScore> scores;
+    std::vector<FindAntigenScore>::iterator scores_end;
+    find_scores(name, antigens(), scores, scores_end);
+    std::vector<std::pair<const AntigenData*, size_t>> result;
+    std::transform(scores.begin(), scores_end, std::back_inserter(result), [](const auto& e) { return e.antigen_score(); });
+    return result;
+
+} // HiDb::find_antigens_with_score
 
 // ----------------------------------------------------------------------
 

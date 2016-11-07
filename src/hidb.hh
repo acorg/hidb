@@ -134,6 +134,7 @@ class HiDb
     std::vector<ChartData>& charts() { return mCharts; }
 
     std::vector<const AntigenData*> find_antigens(std::string name) const;
+    std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
     std::vector<std::string> list_antigens() const;
 
  private:
