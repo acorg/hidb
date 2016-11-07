@@ -106,7 +106,7 @@ void HiDb::importFrom(std::string aFilename)
 class FindAntigenScore
 {
  private:
-    static const string_match::score_t keyword_in_lookup = 1;
+    static constexpr const string_match::score_t keyword_in_lookup = 1;
 
  public:
       // inline FindAntigenScore(string_match::score_t aName, string_match::score_t aFull) : mName(aName), mFull(aFull) {}
@@ -120,10 +120,9 @@ class FindAntigenScore
             if (mName >= aNameScoreThreshold) {
                 const auto full_name = aAntigen.data().full_name();
                 mFull = std::max({
-                    for_subst(full_name, antigen_name.size(), name, " CELL", " MDCK"),
-                    for_subst(full_name, antigen_name.size(), name, " CELL", " SIAT"),
-                    for_subst(full_name, antigen_name.size(), name, " EGG", " E"),
-                    for_subst(full_name, antigen_name.size(), name, " REASSORTANT", " NYMC")
+                        for_subst(full_name, antigen_name.size(), name, " CELL", {" MDCK", " SIAT"}),
+                                for_subst(full_name, antigen_name.size(), name, " EGG", {" E"}),
+                                for_subst(full_name, antigen_name.size(), name, " REASSORTANT", {" NYMC", " IVR", " NIB", " RESVIR", " RG", " VI", " REASSORTANT"})
                     });
                 if (mFull == 0)
                     mFull = string_match::match(full_name, name);
@@ -153,21 +152,39 @@ class FindAntigenScore
     const AntigenData* mAntigen;
     string_match::score_t mName, mFull;
 
-    inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::string subst)
+    inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::initializer_list<std::string>&& subst_list)
     {
         string_match::score_t score = 0;
         const auto pos = name.find(keyword);
         if (pos != std::string::npos) { // keyword is in the lookup name
-            if (full_name.find(subst, name_part_size) != std::string::npos) { // subst must be present in full_name in the passage part
-                std::string substituted(name, 0, pos);
-                substituted.append(subst);
-                score = string_match::match(full_name, substituted);
+            for (const auto& subst: subst_list) {
+                if (full_name.find(subst.c_str() + 1, name_part_size) != std::string::npos) { // subst (without leading space) must be present in full_name in the passage part
+                    std::string substituted(name, 0, pos);
+                    substituted.append(subst);
+                    score = std::max(score, string_match::match(full_name, substituted));
+                }
+                else if (score == 0)
+                    score = keyword_in_lookup; // to avoid using name-with-keyword-not-replaced for matching
             }
-            else
-                score = keyword_in_lookup;      // to avoid using name-with-keyword-not-replaced for matching
         }
         return score;
     }
+
+    // inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::string subst)
+    // {
+    //     string_match::score_t score = 0;
+    //     const auto pos = name.find(keyword);
+    //     if (pos != std::string::npos) { // keyword is in the lookup name
+    //         if (full_name.find(subst, name_part_size) != std::string::npos) { // subst must be present in full_name in the passage part
+    //             std::string substituted(name, 0, pos);
+    //             substituted.append(subst);
+    //             score = string_match::match(full_name, substituted);
+    //         }
+    //         else
+    //             score = keyword_in_lookup;      // to avoid using name-with-keyword-not-replaced for matching
+    //     }
+    //     return score;
+    // }
 };
 
 // ----------------------------------------------------------------------
