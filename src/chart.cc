@@ -1,5 +1,6 @@
 #include <cctype>
 #include <cassert>
+#include <map>
 #include <regex>
 
 #include "rapidjson/reader.h"
@@ -266,6 +267,31 @@ AntigenSerumMatch Serum::match_passage(const AntigenSerum& aNother) const
 
 // ----------------------------------------------------------------------
 
+std::string Chart::lineage() const
+{
+    std::string lineage;
+    if (mInfo.virus_type() == "B") {
+        std::map<std::string, size_t> lineages;
+        for (const auto& antigen: mAntigens)
+            ++lineages[antigen.lineage()];
+        if (lineages.size() == 1) {
+            lineage = lineages.begin()->first;
+        }
+        else if (lineages.size() == 2) {
+            auto e2 = lineages.begin();
+            ++e2;
+            auto cmp = [](const auto& a, const auto& b) { return a->second < b->second; };
+            const auto minor_count = std::min(lineages.begin(), e2, cmp)->second;
+            if (minor_count <= 3 && mAntigens.size() > 10)
+                lineage = std::max(lineages.begin(), e2, cmp)->first;
+        }
+    }
+    return lineage;
+
+} // Chart::lineage
+
+// ----------------------------------------------------------------------
+
 void Chart::find_homologous_antigen_for_sera()
 {
     for (auto& serum: mSera) {
@@ -322,7 +348,7 @@ void Chart::find_homologous_antigen_for_sera()
 
 // ----------------------------------------------------------------------
 
-std::string ChartInfo::table_id() const
+std::string ChartInfo::table_id(std::string lineage) const
 {
     std::string date;
     if (mSources.empty()) {
@@ -336,7 +362,11 @@ std::string ChartInfo::table_id() const
         assay = "FR";
     else if (assay == "PLAQUE REDUCTION NEUTRALISATION")
         assay = "PRN";
-    std::string r = assay + ":" + mVirusType + ":" + mLab;
+    std::string r = assay + ":" + mVirusType;
+    if (!lineage.empty()) {
+        r += ":" + lineage;
+    }
+    r += ":" + mLab;
     if (!mRbc.empty()) {
         r.append(1, ':');
         if (mRbc == "guinea-pig")
