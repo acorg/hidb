@@ -21,20 +21,33 @@ def main(args):
         hidb.import_from(args.path_to_hidb)
     if args.name:
         if args.report_score:
-            antigen_scores = hidb.find_antigens_with_score(args.name.upper())
-            print(len(antigen_scores))
-            print("\n".join("{:4d} {}".format(e[1], e[0].data().full_name()) for e in antigen_scores))
-        else:
-            antigens = hidb.find_antigens(args.name.upper())
-            print(len(antigens))
-            if args.output_json:
-                print("\n".join(hidb_m.json(e) for e in antigens))
+            if args.find_antigens:
+                scores = hidb.find_antigens_with_score(args.name.upper())
             else:
-                print("\n".join(e.data().full_name() for e in antigens))
+                scores = hidb.find_sera_with_score(args.name.upper())
+            print(len(scores))
+            print("\n".join("{:4d} {}".format(e[1], e[0].data().full_name()) for e in scores))
+        else:
+            if args.find_antigens:
+                ag_sr = hidb.find_antigens(args.name.upper())
+            else:
+                ag_sr = hidb.find_sera(args.name.upper())
+            print(len(ag_sr))
+            if args.output_json:
+                print("\n".join(hidb_m.json(e) for e in ag_sr))
+            else:
+                if args.report_tables:
+                    print("\n".join("{} tables:{} most-recent:{} all-tables:{}".format(e.data().full_name(), e.number_of_tables(), e.most_recent_table().table_id(), [t.table_id() for t in e.tables()]) for e in ag_sr))
+                else:
+                    print("\n".join(e.data().full_name() for e in ag_sr))
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))
         print("\n".join(antigens))
+    elif args.list_sera:
+        sera = hidb.list_sera()
+        print(len(sera))
+        print("\n".join(sera))
 
 # ----------------------------------------------------------------------
 
@@ -45,9 +58,12 @@ try:
 
     parser.add_argument('--json', dest="output_json", action="store_true", default=False, help='Output full records in json.')
     parser.add_argument('-n', '--name', dest="name", default=None, help='Name to look for.')
-    parser.add_argument('-a', '--list-antigens', dest="list_antigens", action="store_true", default=False, help='List all antigen names.')
+    parser.add_argument('--list-antigens', dest="list_antigens", action="store_true", default=False, help='List all antigen names.')
+    parser.add_argument('--list-sera', dest="list_sera", action="store_true", default=False, help='List all serum names.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
     parser.add_argument('--score', dest="report_score", action="store_true", default=False)
+    parser.add_argument('--tables', dest="report_tables", action="store_true", default=False)
+    parser.add_argument('-s', '--sera', dest="find_antigens", action="store_false", default=True)
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()

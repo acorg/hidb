@@ -103,13 +103,13 @@ void HiDb::importFrom(std::string aFilename)
 
 // ----------------------------------------------------------------------
 
-class FindAntigenScore
+template <typename Data> class FindScore
 {
  private:
     static constexpr const string_match::score_t keyword_in_lookup = 1;
 
  public:
-    inline FindAntigenScore(std::string name, const AntigenData& aAntigen, string_match::score_t aNameScoreThreshold)
+    inline FindScore(std::string name, const Data& aAntigen, string_match::score_t aNameScoreThreshold)
         : mAntigen(&aAntigen), mName(0), mFull(0)
         {
             const auto antigen_name = aAntigen.data().name();
@@ -128,7 +128,7 @@ class FindAntigenScore
             }
         }
 
-    inline bool operator < (const FindAntigenScore& aNother) const
+    inline bool operator < (const FindScore<Data>& aNother) const
         {
               // if mFull == keyword_in_lookup, move it to the end of the sorting list regardless of mName
             bool result;
@@ -141,14 +141,14 @@ class FindAntigenScore
             return result;
         }
 
-    inline bool operator == (const FindAntigenScore& aNother) const { return mName == aNother.mName; }
-    inline operator const AntigenData*() const { return mAntigen; }
+    inline bool operator == (const FindScore<Data>& aNother) const { return mName == aNother.mName; }
+    inline operator const Data*() const { return mAntigen; }
     inline operator bool() const { return mName > 0; }
     inline string_match::score_t name_score() const { return mName; }
-    inline std::pair<const AntigenData*, size_t> antigen_score() const { return std::make_pair(mAntigen, mFull); }
+    inline std::pair<const Data*, size_t> score() const { return std::make_pair(mAntigen, mFull); }
 
  private:
-    const AntigenData* mAntigen;
+    const Data* mAntigen;
     string_match::score_t mName, mFull;
 
     inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::initializer_list<const char*>&& subst_list, std::initializer_list<const char*>&& negative_list)
@@ -174,9 +174,12 @@ class FindAntigenScore
     }
 };
 
+typedef FindScore<AntigenData> FindAntigenScore;
+typedef FindScore<SerumData> FindSerumScore;
+
 // ----------------------------------------------------------------------
 
-inline static void find_scores(std::string name, const std::vector<AntigenData>& antigens, std::vector<FindAntigenScore>& scores, std::vector<FindAntigenScore>::iterator& scores_end)
+template <typename Data> inline static void find_scores(std::string name, const std::vector<Data>& antigens, std::vector<FindScore<Data>>& scores, typename std::vector<FindScore<Data>>::iterator& scores_end)
 {
     string_match::score_t score_threshold = 0;
     for (const auto& antigen: antigens) {
@@ -207,7 +210,7 @@ std::vector<std::pair<const AntigenData*, size_t>> HiDb::find_antigens_with_scor
     std::vector<FindAntigenScore>::iterator scores_end;
     find_scores(name, antigens(), scores, scores_end);
     std::vector<std::pair<const AntigenData*, size_t>> result;
-    std::transform(scores.begin(), scores_end, std::back_inserter(result), [](const auto& e) { return e.antigen_score(); });
+    std::transform(scores.begin(), scores_end, std::back_inserter(result), [](const auto& e) { return e.score(); });
     return result;
 
 } // HiDb::find_antigens_with_score
@@ -222,6 +225,41 @@ std::vector<std::string> HiDb::list_antigens() const
     return result;
 
 } // HiDb::list_antigens
+
+// ----------------------------------------------------------------------
+
+std::vector<const SerumData*> HiDb::find_sera(std::string name) const
+{
+    std::vector<FindSerumScore> scores;
+    std::vector<FindSerumScore>::iterator scores_end;
+    find_scores(name, sera(), scores, scores_end);
+    return {scores.begin(), scores_end};
+
+} // HiDb::find_sera
+
+// ----------------------------------------------------------------------
+
+std::vector<std::pair<const SerumData*, size_t>> HiDb::find_sera_with_score(std::string name) const
+{
+    std::vector<FindSerumScore> scores;
+    std::vector<FindSerumScore>::iterator scores_end;
+    find_scores(name, sera(), scores, scores_end);
+    std::vector<std::pair<const SerumData*, size_t>> result;
+    std::transform(scores.begin(), scores_end, std::back_inserter(result), [](const auto& e) { return e.score(); });
+    return result;
+
+} // HiDb::find_sera_with_score
+
+// ----------------------------------------------------------------------
+
+std::vector<std::string> HiDb::list_sera() const
+{
+    std::vector<std::string> result;
+    std::transform(sera().begin(), sera().end(), std::back_inserter(result), [](const auto& sr) -> std::string { return sr.data().name(); });
+    result.erase(std::unique(result.begin(), result.end()), result.end());
+    return result;
+
+} // HiDb::list_sera
 
 // ----------------------------------------------------------------------
 

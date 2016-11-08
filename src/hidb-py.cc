@@ -71,12 +71,22 @@ PYBIND11_PLUGIN(hidb_backend)
       // HiDb
       // ----------------------------------------------------------------------
 
+    py::class_<PerTable>(m, "PerTable")
+            .def("table_id", static_cast<std::string (PerTable::*)() const>(&PerTable::table_id))
+            ;
+
     py::class_<AntigenData>(m, "AntigenData")
             .def("data", static_cast<const Antigen& (AntigenData::*)() const>(&AntigenData::data))
+            .def("number_of_tables", &AntigenData::number_of_tables)
+            .def("most_recent_table", &AntigenData::most_recent_table)
+            .def("tables", static_cast<const std::vector<PerTable>& (AntigenData::*)() const>(&AntigenData::per_table))
             ;
 
     py::class_<SerumData>(m, "SerumData")
             .def("data", static_cast<const Serum& (SerumData::*)() const>(&SerumData::data))
+            .def("number_of_tables", &SerumData::number_of_tables)
+            .def("most_recent_table", &SerumData::most_recent_table)
+            .def("tables", static_cast<const std::vector<PerTable>& (SerumData::*)() const>(&SerumData::per_table))
             ;
 
     py::class_<HiDb>(m, "HiDb")
@@ -87,6 +97,9 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("list_antigens", &HiDb::list_antigens)
             .def("find_antigens", &HiDb::find_antigens, py::arg("name"), py::return_value_policy::reference)
             .def("find_antigens_with_score", &HiDb::find_antigens_with_score, py::arg("name"), py::return_value_policy::reference)
+            .def("list_sera", &HiDb::list_sera)
+            .def("find_sera", &HiDb::find_sera, py::arg("name"), py::return_value_policy::reference)
+            .def("find_sera_with_score", &HiDb::find_sera_with_score, py::arg("name"), py::return_value_policy::reference)
             ;
 
       // ----------------------------------------------------------------------

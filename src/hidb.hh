@@ -76,6 +76,8 @@ template <typename AS> class AntigenSerumData
     inline AS& data() { return mData; }
     inline const std::vector<PerTable>& per_table() const { return mTables; }
     inline std::vector<PerTable>& per_table() { return mTables; }
+    inline size_t number_of_tables() const { return mTables.size(); }
+    inline const PerTable& most_recent_table() const { return *std::max_element(mTables.begin(), mTables.end()); }
 
  private:
     AS mData;
@@ -136,6 +138,9 @@ class HiDb
     std::vector<const AntigenData*> find_antigens(std::string name) const;
     std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
     std::vector<std::string> list_antigens() const;
+    std::vector<const SerumData*> find_sera(std::string name) const;
+    std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
+    std::vector<std::string> list_sera() const;
 
  private:
     std::vector<AntigenData> mAntigens;
