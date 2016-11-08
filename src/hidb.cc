@@ -119,9 +119,9 @@ class FindAntigenScore
             if (mName >= aNameScoreThreshold) {
                 const auto full_name = aAntigen.data().full_name();
                 mFull = std::max({
-                    for_subst(full_name, antigen_name.size(), name, " CELL", {" MDCK", " SIAT"}),
-                    for_subst(full_name, antigen_name.size(), name, " EGG", {" E"}),
-                    for_subst(full_name, antigen_name.size(), name, " REASSORTANT", {" NYMC", " IVR", " NIB", " RESVIR", " RG", " VI", " REASSORTANT"})
+                    for_subst(full_name, antigen_name.size(), name, " CELL", {" MDCK", " SIAT"}, {}),
+                    for_subst(full_name, antigen_name.size(), name, " EGG", {" E"}, {"NYMC", "IVR", "NIB", "RESVIR", "RG", "VI", "REASSORTANT"}),
+                    for_subst(full_name, antigen_name.size(), name, " REASSORTANT", {" NYMC", " IVR", " NIB", " RESVIR", " RG", " VI", " REASSORTANT"}, {})
                     });
                 if (mFull == 0)
                     mFull = string_match::match(full_name, name);
@@ -151,20 +151,24 @@ class FindAntigenScore
     const AntigenData* mAntigen;
     string_match::score_t mName, mFull;
 
-    inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::initializer_list<std::string>&& subst_list)
+    inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::initializer_list<const char*>&& subst_list, std::initializer_list<const char*>&& negative_list)
     {
         string_match::score_t score = 0;
         const auto pos = name.find(keyword);
         if (pos != std::string::npos) { // keyword is in the lookup name
-            for (const auto& subst: subst_list) {
-                if (full_name.find(subst.c_str() + 1, name_part_size) != std::string::npos) { // subst (without leading space) must be present in full_name in the passage part
-                    std::string substituted(name, 0, pos);
-                    substituted.append(subst);
-                    score = std::max(score, string_match::match(full_name, substituted));
+            if (!std::any_of(negative_list.begin(), negative_list.end(), [&full_name,name_part_size](const auto& e) -> bool { return full_name.find(e, name_part_size) != std::string::npos; })) {
+                for (const auto& subst: subst_list) {
+                    if (full_name.find(subst + 1, name_part_size) != std::string::npos) { // subst (without leading space) must be present in full_name in the passage part
+                        std::string substituted(name, 0, pos);
+                        substituted.append(subst);
+                        score = std::max(score, string_match::match(full_name, substituted));
+                    }
+                    else if (score == 0)
+                        score = keyword_in_lookup; // to avoid using name-with-keyword-not-replaced for matching
                 }
-                else if (score == 0)
-                    score = keyword_in_lookup; // to avoid using name-with-keyword-not-replaced for matching
             }
+            else                // string from negative_list present in full_name, ignore this name
+                score = keyword_in_lookup;
         }
         return score;
     }
