@@ -79,6 +79,16 @@ template <typename AS> class AntigenSerumData
     inline size_t number_of_tables() const { return mTables.size(); }
     inline const PerTable& most_recent_table() const { return *std::max_element(mTables.begin(), mTables.end()); }
 
+    inline std::vector<std::pair<std::string, std::string>> homologous() const
+        {
+            std::vector<std::pair<std::string, std::string>> result;
+            for (const auto& t: mTables) {
+                if (!t.homologous().empty())
+                    result.emplace_back(t.table_id(), t.homologous());
+            }
+            return result;
+        }
+
  private:
     AS mData;
     std::vector<PerTable> mTables;

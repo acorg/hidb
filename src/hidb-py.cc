@@ -87,6 +87,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("number_of_tables", &SerumData::number_of_tables)
             .def("most_recent_table", &SerumData::most_recent_table)
             .def("tables", static_cast<const std::vector<PerTable>& (SerumData::*)() const>(&SerumData::per_table))
+            .def("homologous", &SerumData::homologous)
             ;
 
     py::class_<HiDb>(m, "HiDb")
