@@ -30,16 +30,29 @@ def main(args):
         else:
             if args.find_antigens:
                 ag_sr = hidb.find_antigens(args.name.upper())
+                if args.report_tables:
+                    fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+                else:
+                    fmt = "{full_name}"
             else:
                 ag_sr = hidb.find_sera(args.name.upper())
+                if args.report_tables:
+                    if args.report_homologous:
+                        fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}\n  Homologous:\n    {homologous}"
+                    else:
+                        fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+                else:
+                    if args.report_homologous:
+                        fmt = "{full_name}\n  Homologous:\n    {homologous}"
+                    else:
+                        fmt = "{full_name}"
             print(len(ag_sr))
             if args.output_json:
                 print("\n".join(hidb_m.json(e) for e in ag_sr))
             else:
-                if args.report_tables:
-                    print("\n".join("{} tables:{} most-recent:{} all-tables:{}".format(e.data().full_name(), e.number_of_tables(), e.most_recent_table().table_id(), [t.table_id() for t in e.tables()]) for e in ag_sr))
-                else:
-                    print("\n".join(e.data().full_name() for e in ag_sr))
+                print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(),
+                                               all_tables=[t.table_id() for t in e.tables()],
+                                               homologous="\n    ".join([repr(e2) for e2 in e.homologous()])) for e in ag_sr))
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))
@@ -64,6 +77,7 @@ try:
     parser.add_argument('--score', dest="report_score", action="store_true", default=False)
     parser.add_argument('--tables', dest="report_tables", action="store_true", default=False)
     parser.add_argument('-s', '--sera', dest="find_antigens", action="store_false", default=True)
+    parser.add_argument('--homologous', dest="report_homologous", action="store_true", default=False, help='Report homologous antigens for each serum')
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()
