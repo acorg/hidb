@@ -50,9 +50,15 @@ def main(args):
             if args.output_json:
                 print("\n".join(hidb_m.json(e) for e in ag_sr))
             else:
+                if args.find_antigens:
+                    def homologous(e):
+                        return ""
+                else:
+                    def homologous(e):
+                        return "\n    ".join([repr(e2) for e2 in e.homologous()])
                 print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(),
                                                all_tables=[t.table_id() for t in e.tables()],
-                                               homologous="\n    ".join([repr(e2) for e2 in e.homologous()])) for e in ag_sr))
+                                               homologous=homologous(e)) for e in ag_sr))
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))
