@@ -3,6 +3,8 @@
 PROG=$(readlink -f $0)
 LOG=/syn/eu/log/hidb4-night-build.log
 
+export PATH="$HOME/bin:/usr/local/bin:$PATH"
+
 on_error()
 {
     (echo $PROG FAILED; echo "LOG: $LOG") | mail -s "$(hostname) $PROG FAILED" eu@antigenic-cartography.org
@@ -11,11 +13,6 @@ on_error()
 
 trap on_error ERR
 
-report()
-{
-    echo "$@" >&2
-}
-
 date >"$LOG"
 cd ~/ac/acmacs >>"$LOG" 2>&1
 git pull >>"$LOG" 2>&1
@@ -23,36 +20,36 @@ c2 time make -j11 acmacs >>"$LOG" 2>&1
 
 cd ~/GH/hidb >>"$LOG" 2>&1
 git pull >>"$LOG" 2>&1
-time make -j11 >>"$LOG" 2>&1
+make -j11 >>"$LOG" 2>&1
 
 echo "" >>"$LOG"
 echo "==================================================================" >>"$LOG"
-date >"$LOG"
+date >>"$LOG"
 echo H3 >>"$LOG"
-report H3
 echo "" >>"$LOG"
 DB=$HOME/WHO/hidb4.h3.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-time ./bin/hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
+./bin/hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
 
 echo "" >>"$LOG"
 echo "==================================================================" >>"$LOG"
-date >"$LOG"
+date >>"$LOG"
 echo H1PDM >>"$LOG"
-report H1PDM
 echo "" >>"$LOG"
 DB=$HOME/WHO/hidb4.h1.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-time ./bin/hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
+./bin/hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
 
 echo "" >>"$LOG"
 echo "==================================================================" >>"$LOG"
-date >"$LOG"
+date >>"$LOG"
 echo B >>"$LOG"
-report B
 echo "" >>"$LOG"
 DB=$HOME/WHO/hidb4.b.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-time ./bin/hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* >>"$LOG" 2>&1
+./bin/hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* >>"$LOG" 2>&1
+echo "" >>"$LOG"
+date >>"$LOG"
+echo "----------------------------------------------------------------------" >>"$LOG"
 
 (echo "$PROG completed"; echo "LOG: $LOG") | mail -s "$(hostname) $PROG completed" eu@antigenic-cartography.org
