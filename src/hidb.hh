@@ -152,6 +152,8 @@ class HiDb
     std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
     std::vector<std::string> list_sera() const;
 
+    std::vector<const AntigenData*> find_antigens_from_country(std::string aCountry) const;
+
  private:
     std::vector<AntigenData> mAntigens;
     std::vector<SerumData> mSera;

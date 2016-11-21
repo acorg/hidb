@@ -59,6 +59,8 @@ def main(args):
                 print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(),
                                                all_tables=[t.table_id() for t in e.tables()],
                                                homologous=homologous(e)) for e in ag_sr))
+    elif args.country:
+        antigens = hidb.find_antigens_from_country(args.country.upper())
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))
@@ -77,6 +79,7 @@ try:
 
     parser.add_argument('--json', dest="output_json", action="store_true", default=False, help='Output full records in json.')
     parser.add_argument('-n', '--name', dest="name", default=None, help='Name to look for.')
+    parser.add_argument('--country', dest="country", default=None, help='Find antigens isolated in the country.')
     parser.add_argument('--list-antigens', dest="list_antigens", action="store_true", default=False, help='List all antigen names.')
     parser.add_argument('--list-sera', dest="list_sera", action="store_true", default=False, help='List all serum names.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)

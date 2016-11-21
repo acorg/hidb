@@ -263,6 +263,18 @@ std::vector<std::string> HiDb::list_sera() const
 
 // ----------------------------------------------------------------------
 
+std::vector<const AntigenData*> HiDb::find_antigens_from_country(std::string aCountry) const
+{
+    std::vector<const AntigenData*> result;
+    for (const auto& antigen: antigens()) {
+        std::cout << antigen.data().name() << std::endl;
+    }
+    return result;
+
+} // HiDb::find_antigens_from_country
+
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 /// Local Variables:

@@ -11,6 +11,8 @@ MAKEFLAGS = -w
 
 HIDB_SOURCES = hidb-py.cc hidb.cc hidb-export.cc chart.cc ace.cc read-file.cc xz.cc
 
+MODULES = $(realpath modules)
+
 # ----------------------------------------------------------------------
 
 CLANG = $(shell if g++ --version 2>&1 | grep -i llvm >/dev/null; then echo Y; else echo N; fi)
@@ -28,22 +30,24 @@ PYTHON_VERSION = $(shell python3 -c 'import sys; print("{0.major}.{0.minor}".for
 PYTHON_CONFIG = python$(PYTHON_VERSION)-config
 PYTHON_MODULE_SUFFIX = $(shell $(PYTHON_CONFIG) --extension-suffix)
 
+LOCATION_DB_LIB = $(MODULES)/locationdb/dist/location-db.so
+
 # -fvisibility=hidden and -flto make resulting lib smaller (pybind11) but linking is much slower
 OPTIMIZATION = -O3 #-fvisibility=hidden -flto
 PROFILE = # -pg
 CXXFLAGS = -MMD -g $(OPTIMIZATION) $(PROFILE) -fPIC -std=$(STD) $(WEVERYTHING) $(WARNINGS) -I$(BUILD)/include $(PKG_INCLUDES) $(MODULES_INCLUDE)
 LDFLAGS = $(OPTIMIZATION) $(PROFILE)
-HIDB_LDLIBS = $$(pkg-config --libs liblzma) $$($(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
+HIDB_LDLIBS = $(LOCATION_DB_LIB) $$(pkg-config --libs liblzma) $$($(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
 
-MODULES_INCLUDE = -Imodules/rapidjson/include -Imodules/pybind11/include
+MODULES_INCLUDE = -I$(MODULES)/rapidjson/include -I$(MODULES)/pybind11/include -I$(MODULES)/locationdb/cc
 PKG_INCLUDES = $$(pkg-config --cflags liblzma) $$($(PYTHON_CONFIG) --includes)
 
 # ----------------------------------------------------------------------
 
 BUILD = build
-DIST = dist
+DIST = $(abspath dist)
 
-all: $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(DIST)/test-rapidjson
+all: $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
 
 -include $(BUILD)/*.d
 
@@ -52,7 +56,7 @@ all: $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(DIST)/test-rapidjson
 $(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
 	g++ $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
 
-$(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST)
+$(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
 	g++ -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 	@#strip $@
 
@@ -61,6 +65,9 @@ clean:
 
 distclean: clean
 	rm -rf $(BUILD)
+
+$(LOCATION_DB_LIB):
+	$(MAKE) -C $(MODULES)/locationdb
 
 # ----------------------------------------------------------------------
 

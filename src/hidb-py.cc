@@ -10,6 +10,9 @@
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 #pragma GCC diagnostic ignored "-Wrange-loop-analysis"
 #pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#pragma GCC diagnostic ignored "-Wundef"
+#pragma GCC diagnostic ignored "-Wdocumentation"
+#pragma GCC diagnostic ignored "-Wcovered-switch-default"
 #endif
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -101,6 +104,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("list_sera", &HiDb::list_sera)
             .def("find_sera", &HiDb::find_sera, py::arg("name"), py::return_value_policy::reference)
             .def("find_sera_with_score", &HiDb::find_sera_with_score, py::arg("name"), py::return_value_policy::reference)
+            .def("find_antigens_from_country", &HiDb::find_antigens_from_country, py::arg("coutnry"), py::return_value_policy::reference)
             ;
 
       // ----------------------------------------------------------------------
