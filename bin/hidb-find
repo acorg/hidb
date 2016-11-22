@@ -33,35 +33,9 @@ def main(args):
         else:
             if args.find_antigens:
                 ag_sr = hidb.find_antigens(args.name.upper())
-                if args.report_tables:
-                    fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
-                else:
-                    fmt = "{full_name}"
             else:
                 ag_sr = hidb.find_sera(args.name.upper())
-                if args.report_tables:
-                    if args.report_homologous:
-                        fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}\n  Homologous:\n    {homologous}"
-                    else:
-                        fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
-                else:
-                    if args.report_homologous:
-                        fmt = "{full_name}\n  Homologous:\n    {homologous}"
-                    else:
-                        fmt = "{full_name}"
-            print(len(ag_sr))
-            if args.output_json:
-                print("\n".join(hidb_m.json(e) for e in ag_sr))
-            else:
-                if args.find_antigens:
-                    def homologous(e):
-                        return ""
-                else:
-                    def homologous(e):
-                        return "\n    ".join([repr(e2) for e2 in e.homologous()])
-                print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(),
-                                               all_tables=[t.table_id() for t in e.tables()],
-                                               homologous=homologous(e)) for e in ag_sr))
+            report(ag_sr, find_antigens=args.find_antigens, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
     elif args.countries:
         countries = hidb.all_countries()
         print(len(countries), "\n".join(countries), sep="\n")
@@ -69,7 +43,7 @@ def main(args):
         unrecognized_locations = hidb.unrecognized_locations()
         print(len(unrecognized_locations), "\n".join(unrecognized_locations), sep="\n")
     elif args.country:
-        antigens = hidb.find_antigens_from_country(args.country.upper())
+        report(hidb.find_antigens_from_country(args.country.upper()), find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))
@@ -78,6 +52,39 @@ def main(args):
         sera = hidb.list_sera()
         print(len(sera))
         print("\n".join(sera))
+
+# ----------------------------------------------------------------------
+
+def report(data, find_antigens, report_tables, report_homologous, output_json):
+    if find_antigens:
+        if report_tables:
+            fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+        else:
+            fmt = "{full_name}"
+    else:
+        if report_tables:
+            if report_homologous:
+                fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}\n  Homologous:\n    {homologous}"
+            else:
+                fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+        else:
+            if report_homologous:
+                fmt = "{full_name}\n  Homologous:\n    {homologous}"
+            else:
+                fmt = "{full_name}"
+    print(len(data))
+    if output_json:
+        print("\n".join(hidb_m.json(e) for e in data))
+    else:
+        if find_antigens:
+            def homologous(e):
+                return ""
+        else:
+            def homologous(e):
+                return "\n    ".join([repr(e2) for e2 in e.homologous()])
+        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(),
+                                       all_tables=[t.table_id() for t in e.tables()],
+                                       homologous=homologous(e)) for e in data))
 
 # ----------------------------------------------------------------------
 
