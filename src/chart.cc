@@ -17,6 +17,34 @@ AntigenSerum::~AntigenSerum()
 
 // ----------------------------------------------------------------------
 
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#endif
+
+std::string AntigenSerum::location() const
+{
+    static std::regex cdc_name{"^([A-Z][A-Z][A-Z]?) "};
+    static std::regex international_name{"^[AB][^/]*/(?:[^/]+/)?([^/]+)/[^/]+/[0-9]{4}$"};
+
+    std::string location;
+    std::smatch m;
+    if (std::regex_search(mName, m, cdc_name)) {
+        location = "#" + m[1].str();
+    }
+    else if (std::regex_match(mName, m, international_name)) {
+        location = m[1].str();
+    }
+    // if (location.empty())
+    //     std::cerr << "No location for: " << mName << std::endl;
+    return location;
+
+} // AntigenSerum::location
+
+#pragma GCC diagnostic pop
+
+// ----------------------------------------------------------------------
+
 std::string Antigen::variant_id() const
 {
     std::string n;

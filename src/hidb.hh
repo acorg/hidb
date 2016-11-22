@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "chart.hh"
+#include "locdb.hh"
 
 // ----------------------------------------------------------------------
 
@@ -137,6 +138,7 @@ class HiDb
     void add(const Chart& aChart);
     void importFrom(std::string aFilename);
     void exportTo(std::string aFilename, bool aPretty) const;
+    inline void importLocDb(std::string aFilename) { mLocDb.importFrom(aFilename); }
 
     const std::vector<AntigenData>& antigens() const { return mAntigens; }
     std::vector<AntigenData>& antigens() { return mAntigens; }
@@ -152,12 +154,14 @@ class HiDb
     std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
     std::vector<std::string> list_sera() const;
 
+    std::vector<std::string> all_countries() const;
     std::vector<const AntigenData*> find_antigens_from_country(std::string aCountry) const;
 
  private:
     std::vector<AntigenData> mAntigens;
     std::vector<SerumData> mSera;
     std::vector<ChartData> mCharts;
+    LocDb mLocDb;
 
     void add_antigen(const Antigen& aAntigen, std::string aTableId);
     void add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens);

@@ -62,6 +62,7 @@ $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB
 
 clean:
 	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d $(BUILD)/submodules
+	$(MAKE) -C $(MODULES)/locationdb clean
 
 distclean: clean
 	rm -rf $(BUILD)

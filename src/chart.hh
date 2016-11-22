@@ -95,6 +95,9 @@ class AntigenSerum
     virtual std::string variant_id() const = 0;
     virtual AntigenSerumMatch match(const AntigenSerum& aNother) const;
 
+      // returned cdc abbreviation starts with #
+    std::string location() const;
+
     inline bool operator == (const AntigenSerum& aNother) const { return name() == aNother.name() && variant_id() == aNother.variant_id(); }
     inline bool operator < (const AntigenSerum& aNother) const { return name() == aNother.name() ? variant_id() < aNother.variant_id() : name() < aNother.name(); }
 
@@ -244,7 +247,7 @@ class Chart
     inline size_t number_of_sera() const { return mSera.size(); }
     inline std::string table_id() const { return mInfo.table_id(lineage()); }
     std::string lineage() const;
-    
+
     inline const std::vector<Antigen>& antigens() const { return mAntigens; }
     inline Antigen& antigen(size_t ag_no) { return mAntigens[ag_no]; }
     inline const std::vector<Serum>& sera() const { return mSera; }

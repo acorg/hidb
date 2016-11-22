@@ -263,11 +263,38 @@ std::vector<std::string> HiDb::list_sera() const
 
 // ----------------------------------------------------------------------
 
+std::vector<std::string> HiDb::all_countries() const
+{
+    std::vector<std::string> result;
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return ag.data().location(); });
+      // Note: cdc_abbreviation starts with #
+    std::sort(result.begin(), result.end());
+    auto last = std::unique(result.begin(), result.end());
+    last = std::remove(result.begin(), last, std::string()); // remove empty name meaning no location in the name detected, i.e. unrecognized name
+    std::transform(result.begin(), last, result.begin(), [this](const auto& name) -> std::string { try { return mLocDb.country(name); } catch (LocationNotFound&) { return "UNKNOWN"; } });
+    std::sort(result.begin(), last);
+    last = std::unique(result.begin(), last);
+    result.erase(last, result.end());
+    // for (const auto& r: result) {
+    //     try {
+    //         mLocDb.country(r) ;
+    //     }
+    //     catch (LocationNotFound&) {
+    //         std::cerr << '[' << r << ']' << std::endl;
+    //     }
+    // }
+    return result;
+
+} // HiDb::all_countries
+
+// ----------------------------------------------------------------------
+
 std::vector<const AntigenData*> HiDb::find_antigens_from_country(std::string aCountry) const
 {
     std::vector<const AntigenData*> result;
     for (const auto& antigen: antigens()) {
-        std::cout << antigen.data().name() << std::endl;
+          // std::cout << antigen.data().name() << std::endl;
+        antigen.data().location();
     }
     return result;
 
