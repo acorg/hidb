@@ -29,8 +29,20 @@ template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writ
 
 template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData& chart)
 {
-    return writer << StartObject << JsonKey::TableId << chart.table_id() << JsonKey::Antigens << chart.antigens()
-                  << JsonKey::Sera << chart.sera() << JsonKey::Titers << chart.titers() << EndObject;
+    return writer << StartObject
+                  << JsonKey::TableId << chart.table_id()
+                  << if_not_empty(JsonKey::Virus, chart.chart_info().virus())
+                  << if_not_empty(JsonKey::VirusType, chart.chart_info().virus_type())
+                  << if_not_empty(JsonKey::Assay, chart.chart_info().assay())
+                  << if_not_empty(JsonKey::Date, chart.chart_info().date())
+                  << if_not_empty(JsonKey::Lab, chart.chart_info().lab())
+                  << if_not_empty(JsonKey::Rbc, chart.chart_info().rbc())
+                  << if_not_empty(JsonKey::Name, chart.chart_info().name())
+                  << if_not_empty(JsonKey::VirusSubset, chart.chart_info().subset())
+                  << JsonKey::Antigens << chart.antigens()
+                  << JsonKey::Sera << chart.sera()
+                  << JsonKey::Titers << chart.titers()
+                  << EndObject;
 }
 
 // ----------------------------------------------------------------------

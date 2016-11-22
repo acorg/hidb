@@ -7,7 +7,7 @@
 // ----------------------------------------------------------------------
 
 ChartData::ChartData(const Chart& aChart)
-    : mTableId(aChart.table_id()), mTiters(aChart.titers().as_list())
+    : mTableId(aChart.table_id()), mChartInfo(aChart.chart_info()), mTiters(aChart.titers().as_list())
 {
     for (const auto& antigen: aChart.antigens()) {
         mAntigens.emplace_back(antigen.name(), antigen.variant_id());

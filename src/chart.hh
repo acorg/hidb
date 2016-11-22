@@ -189,8 +189,16 @@ class ChartInfo
  public:
     enum TableType {Antigenic, Genetic};
     inline ChartInfo() : mType(Antigenic) {}
-    inline std::string virus_type() const { return mVirusType; }
     std::string table_id(std::string lineage) const;
+
+    inline std::string virus() const { return mVirus; }
+    inline std::string virus_type() const { return mVirusType; }
+    inline std::string assay() const { return mAssay; }
+    inline std::string date() const { return mDate; }
+    inline std::string lab() const { return mLab; }
+    inline std::string rbc() const { return mRbc; }
+    inline std::string name() const { return mName; }
+    inline std::string subset() const { return mSubset; }
 
  private:
     friend class ChartReaderEventHandler;
@@ -248,6 +256,7 @@ class Chart
     inline std::string table_id() const { return mInfo.table_id(lineage()); }
     std::string lineage() const;
 
+    inline const ChartInfo& chart_info() const { return mInfo; }
     inline const std::vector<Antigen>& antigens() const { return mAntigens; }
     inline Antigen& antigen(size_t ag_no) { return mAntigens[ag_no]; }
     inline const std::vector<Serum>& sera() const { return mSera; }

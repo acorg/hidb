@@ -117,6 +117,7 @@ class ChartData
     ChartData(const Chart& aChart);
 
     inline std::string table_id() const { return mTableId; }
+    inline const ChartInfo& chart_info() const { return mChartInfo; }
     inline const std::vector<AgSrRef>& antigens() const { return mAntigens; }
     inline const std::vector<AgSrRef>& sera() const { return mSera; }
     inline const Titers& titers() const { return mTiters; }
@@ -130,6 +131,7 @@ class ChartData
 
  private:
     std::string mTableId;
+    ChartInfo mChartInfo;
     std::vector<AgSrRef> mAntigens;
     std::vector<AgSrRef> mSera;
     Titers mTiters;

@@ -25,7 +25,7 @@ def main(args):
         hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
         print("------------")
     with utility.timeit("Writing hidb"):
-        hidb.export_to(args.path_to_hidb)
+        hidb.export_to(args.path_to_hidb, pretty=args.pretty)
 
 # ----------------------------------------------------------------------
 
@@ -36,6 +36,7 @@ try:
 
     parser.add_argument('input', nargs="+", help='Source files to process.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
+    parser.add_argument('--pretty', action='store_true', dest='pretty', default=False)
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()
