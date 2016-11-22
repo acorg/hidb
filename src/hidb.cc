@@ -39,16 +39,16 @@ AntigenRefs& AntigenRefs::country(std::string aCountry)
 AntigenRefs& AntigenRefs::date_range(std::string aBegin, std::string aEnd)
 {
     auto before_begin = [&aBegin](const auto& e) -> bool {
-        const auto date = e->data().date();
+        const auto date = e->date();
         std::cerr << e->data().name() << " [" << date << "] " << (date < aBegin) << std::endl;
         return date.empty() || date < aBegin;
     };
     auto after_end = [&aEnd](const auto& e) -> bool {
-        const auto date = e->data().date();
+        const auto date = e->date();
         return date.empty() || date >= aEnd;
     };
     auto not_between = [&aBegin,&aEnd](const auto& e) -> bool {
-        const auto date = e->data().date();
+        const auto date = e->date();
         return date.empty() || date < aBegin || date >= aEnd;
     };
 

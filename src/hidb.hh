@@ -91,6 +91,12 @@ template <typename AS> class AntigenSerumData
             return result;
         }
 
+      // returns isolation date (or empty string, if not available), if multiple dates are found in different tables, returns the most recent date
+    inline std::string date() const
+        {
+            return mTables.empty() ? std::string() : std::max_element(mTables.begin(), mTables.end(), [](const auto& a, const auto& b) { return a.date() < b.date(); })->date();
+        }
+
  private:
     AS mData;
     std::vector<PerTable> mTables;
