@@ -42,7 +42,7 @@ def main(args):
         unrecognized_locations = hidb.unrecognized_locations()
         print(len(unrecognized_locations), "\n".join(unrecognized_locations), sep="\n")
     elif args.country:
-        report(hidb.all_antigens().country(args.country.upper()).date_range("2015-01-01", ""),
+        report(hidb.all_antigens().country(args.country.upper()), #.date_range("2010", "2011"),
                    find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
     elif args.list_antigens:
         antigens = hidb.list_antigens()
@@ -58,9 +58,9 @@ def main(args):
 def report(data, find_antigens, report_tables, report_homologous, output_json):
     if find_antigens:
         if report_tables:
-            fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+            fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}"
         else:
-            fmt = "{full_name}"
+            fmt = "{full_name} [{date}]"
     else:
         if report_tables:
             if report_homologous:
@@ -82,7 +82,7 @@ def report(data, find_antigens, report_tables, report_homologous, output_json):
         else:
             def homologous(e):
                 return "\n    ".join([repr(e2) for e2 in e.homologous()])
-        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(),
+        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(), date=e.date(),
                                        all_tables=[t.table_id() for t in e.tables()],
                                        homologous=homologous(e)) for e in data))
 

@@ -83,6 +83,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("data", static_cast<const Antigen& (AntigenData::*)() const>(&AntigenData::data))
             .def("number_of_tables", &AntigenData::number_of_tables)
             .def("most_recent_table", &AntigenData::most_recent_table)
+            .def("date", &AntigenData::date)
             .def("tables", static_cast<const std::vector<PerTable>& (AntigenData::*)() const>(&AntigenData::per_table))
             ;
 
