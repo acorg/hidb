@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "chart.hh"
 #include "locdb.hh"
@@ -130,6 +131,35 @@ class ChartData
 
 // ----------------------------------------------------------------------
 
+class HiDb;
+
+class AntigenRefs : public std::vector<const AntigenData*>
+{
+ public:
+    inline AntigenRefs(const HiDb& aHiDb) : mHiDb(aHiDb) {}
+    template <typename Iterator> inline AntigenRefs(const HiDb& aHiDb, Iterator first, Iterator last) : std::vector<const AntigenData*>(first, last), mHiDb(aHiDb) {}
+    AntigenRefs& country(std::string aCountry);
+    AntigenRefs& date_range(std::string aBegin, std::string aEnd);
+
+ private:
+    const HiDb& mHiDb;
+};
+
+// ----------------------------------------------------------------------
+
+class Antigens : public std::vector<AntigenData>
+{
+ public:
+    inline AntigenRefs all(const HiDb& aHiDb) const
+        {
+            AntigenRefs result(aHiDb);
+            std::transform(begin(), end(), std::back_inserter(result), [](const auto& ag) { return &ag; });
+            return result;
+        }
+};
+
+// ----------------------------------------------------------------------
+
 class HiDb
 {
  public:
@@ -154,12 +184,15 @@ class HiDb
     std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
     std::vector<std::string> list_sera() const;
 
+    inline AntigenRefs all_antigens() const { return mAntigens.all(*this); }
+
     std::vector<std::string> all_countries() const;
-    std::vector<const AntigenData*> find_antigens_from_country(std::string aCountry) const;
     std::vector<std::string> unrecognized_locations() const;
 
+    const LocDb& locdb() const { return mLocDb; }
+
  private:
-    std::vector<AntigenData> mAntigens;
+    Antigens mAntigens;
     std::vector<SerumData> mSera;
     std::vector<ChartData> mCharts;
     LocDb mLocDb;

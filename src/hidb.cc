@@ -19,6 +19,55 @@ ChartData::ChartData(const Chart& aChart)
 
 // ----------------------------------------------------------------------
 
+AntigenRefs& AntigenRefs::country(std::string aCountry)
+{
+    auto not_in_country = [this,&aCountry](const auto& e) -> bool {
+        try {
+            return mHiDb.locdb().country(e->data().location()) != aCountry;
+        }
+        catch (LocationNotFound&) {
+            return true;
+        }
+    };
+    erase(std::remove_if(begin(), end(), not_in_country), end());
+    return *this;
+
+} // AntigenRefs::country
+
+// ----------------------------------------------------------------------
+
+AntigenRefs& AntigenRefs::date_range(std::string aBegin, std::string aEnd)
+{
+    auto before_begin = [&aBegin](const auto& e) -> bool {
+        const auto date = e->data().date();
+        std::cerr << e->data().name() << " [" << date << "] " << (date < aBegin) << std::endl;
+        return date.empty() || date < aBegin;
+    };
+    auto after_end = [&aEnd](const auto& e) -> bool {
+        const auto date = e->data().date();
+        return date.empty() || date >= aEnd;
+    };
+    auto not_between = [&aBegin,&aEnd](const auto& e) -> bool {
+        const auto date = e->data().date();
+        return date.empty() || date < aBegin || date >= aEnd;
+    };
+
+    if (aBegin.empty()) {
+        if (!aEnd.empty())
+            erase(std::remove_if(begin(), end(), after_end), end());
+    }
+    else {
+        if (aEnd.empty())
+            erase(std::remove_if(begin(), end(), before_begin), end());
+        else
+            erase(std::remove_if(begin(), end(), not_between), end());
+    }
+    return *this;
+
+} // AntigenRefs::date_range
+
+// ----------------------------------------------------------------------
+
 void HiDb::add(const Chart& aChart)
 {
     ChartData chart(aChart);
@@ -278,24 +327,6 @@ std::vector<std::string> HiDb::all_countries() const
     return result;
 
 } // HiDb::all_countries
-
-// ----------------------------------------------------------------------
-
-std::vector<const AntigenData*> HiDb::find_antigens_from_country(std::string aCountry) const
-{
-    std::vector<const AntigenData*> result;
-    for (const auto& antigen: antigens()) {
-        try {
-            if (mLocDb.country(antigen.data().location()) == aCountry) {
-                result.push_back(&antigen);
-            }
-        }
-        catch (LocationNotFound&) {
-        }
-    }
-    return result;
-
-} // HiDb::find_antigens_from_country
 
 // ----------------------------------------------------------------------
 

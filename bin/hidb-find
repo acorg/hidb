@@ -32,10 +32,9 @@ def main(args):
             print("\n".join("{:4d} {}".format(e[1], e[0].data().full_name()) for e in scores))
         else:
             if args.find_antigens:
-                ag_sr = hidb.find_antigens(args.name.upper())
+                report(hidb.find_antigens(args.name.upper()), find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
             else:
-                ag_sr = hidb.find_sera(args.name.upper())
-            report(ag_sr, find_antigens=args.find_antigens, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                report(hidb.find_sera(args.name.upper()), find_antigens=False, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
     elif args.countries:
         countries = hidb.all_countries()
         print(len(countries), "\n".join(countries), sep="\n")
@@ -43,7 +42,8 @@ def main(args):
         unrecognized_locations = hidb.unrecognized_locations()
         print(len(unrecognized_locations), "\n".join(unrecognized_locations), sep="\n")
     elif args.country:
-        report(hidb.find_antigens_from_country(args.country.upper()), find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
+        report(hidb.all_antigens().country(args.country.upper()).date_range("2015-01-01", ""),
+                   find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
     elif args.list_antigens:
         antigens = hidb.list_antigens()
         print(len(antigens))

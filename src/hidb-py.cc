@@ -16,6 +16,7 @@
 #endif
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/stl_bind.h>
 #pragma GCC diagnostic pop
 
 namespace py = pybind11;
@@ -93,12 +94,22 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("homologous", &SerumData::homologous)
             ;
 
+    py::class_<AntigenRefs>(m, "AntigenRefs")
+            .def("__len__", [](const AntigenRefs& ar) { return ar.size(); })
+            .def("__getitem__", [](const AntigenRefs& ar, size_t i) { if (i >= ar.size()) throw py::index_error(); return ar[i]; }, py::return_value_policy::reference)
+            .def("country", &AntigenRefs::country, py::arg("country"))
+            .def("date_range", &AntigenRefs::date_range, py::arg("begin") = "", py::arg("end") = "")
+            ;
+
     py::class_<HiDb>(m, "HiDb")
             .def(py::init<>())
             .def("add", &HiDb::add, py::arg("chart"))
             .def("export_to", &HiDb::exportTo, py::arg("filename"), py::arg("pretty") = false)
             .def("import_from", &HiDb::importFrom, py::arg("filename"))
             .def("import_locdb", &HiDb::importLocDb, py::arg("filename"))
+
+            .def("all_antigens", &HiDb::all_antigens, py::return_value_policy::reference)
+
             .def("list_antigens", &HiDb::list_antigens)
             .def("find_antigens", &HiDb::find_antigens, py::arg("name"), py::return_value_policy::reference)
             .def("find_antigens_with_score", &HiDb::find_antigens_with_score, py::arg("name"), py::return_value_policy::reference)
@@ -106,7 +117,6 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("find_sera", &HiDb::find_sera, py::arg("name"), py::return_value_policy::reference)
             .def("find_sera_with_score", &HiDb::find_sera_with_score, py::arg("name"), py::return_value_policy::reference)
             .def("all_countries", &HiDb::all_countries)
-            .def("find_antigens_from_country", &HiDb::find_antigens_from_country, py::arg("coutnry"), py::return_value_policy::reference)
             .def("unrecognized_locations", &HiDb::unrecognized_locations, py::doc("returns unrecognized locations found in all antigen/serum names"))
             ;
 
