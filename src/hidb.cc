@@ -302,6 +302,25 @@ std::vector<const AntigenData*> HiDb::find_antigens_from_country(std::string aCo
 
 // ----------------------------------------------------------------------
 
+std::vector<std::string> HiDb::unrecognized_locations() const
+{
+    std::vector<std::string> result;
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return ag.data().location(); });
+    std::transform(sera().begin(), sera().end(), std::back_inserter(result), [](const auto& sr) -> std::string { return sr.data().location(); });
+    std::sort(result.begin(), result.end());
+    auto last = std::unique(result.begin(), result.end());
+    last = std::remove(result.begin(), last, std::string()); // remove empty name meaning no location in the name detected, i.e. unrecognized name
+    std::transform(result.begin(), last, result.begin(), [this](const auto& name) -> std::string { try { mLocDb.find(name); return std::string(); } catch (LocationNotFound&) { return name; } });
+    std::sort(result.begin(), last);
+    last = std::unique(result.begin(), last);
+    last = std::remove(result.begin(), last, std::string()); // remove empty which mean recognized locations
+    result.erase(last, result.end());
+    return result;
+
+} // HiDb::unrecognized_locations
+
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 /// Local Variables:

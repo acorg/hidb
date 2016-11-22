@@ -107,6 +107,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("find_sera_with_score", &HiDb::find_sera_with_score, py::arg("name"), py::return_value_policy::reference)
             .def("all_countries", &HiDb::all_countries)
             .def("find_antigens_from_country", &HiDb::find_antigens_from_country, py::arg("coutnry"), py::return_value_policy::reference)
+            .def("unrecognized_locations", &HiDb::unrecognized_locations, py::doc("returns unrecognized locations found in all antigen/serum names"))
             ;
 
       // ----------------------------------------------------------------------

@@ -64,8 +64,10 @@ def main(args):
                                                homologous=homologous(e)) for e in ag_sr))
     elif args.countries:
         countries = hidb.all_countries()
-        print(len(countries))
-        print("\n".join(countries))
+        print(len(countries), "\n".join(countries), sep="\n")
+    elif args.unrecognized_locations:
+        unrecognized_locations = hidb.unrecognized_locations()
+        print(len(unrecognized_locations), "\n".join(unrecognized_locations), sep="\n")
     elif args.country:
         antigens = hidb.find_antigens_from_country(args.country.upper())
     elif args.list_antigens:
@@ -88,6 +90,7 @@ try:
     parser.add_argument('-n', '--name', dest="name", default=None, help='Name to look for.')
     parser.add_argument('--countries', dest="countries", action="store_true", default=False, help='List all countries.')
     parser.add_argument('--country', dest="country", default=None, help='Find antigens isolated in the country.')
+    parser.add_argument('--unrecognized-locations', dest="unrecognized_locations", action="store_true", default=False, help='List all unrecognized locations.')
     parser.add_argument('--list-antigens', dest="list_antigens", action="store_true", default=False, help='List all antigen names.')
     parser.add_argument('--list-sera', dest="list_sera", action="store_true", default=False, help='List all serum names.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)

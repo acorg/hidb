@@ -156,6 +156,7 @@ class HiDb
 
     std::vector<std::string> all_countries() const;
     std::vector<const AntigenData*> find_antigens_from_country(std::string aCountry) const;
+    std::vector<std::string> unrecognized_locations() const;
 
  private:
     std::vector<AntigenData> mAntigens;
