@@ -38,7 +38,7 @@ template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writ
                   << if_not_empty(JsonKey::Lab, chart.chart_info().lab())
                   << if_not_empty(JsonKey::Rbc, chart.chart_info().rbc())
                   << if_not_empty(JsonKey::Name, chart.chart_info().name())
-                  << if_not_empty(JsonKey::VirusSubset, chart.chart_info().subset())
+              // conflicts with JsonKey::Sera << if_not_empty(JsonKey::VirusSubset, chart.chart_info().subset())
                   << JsonKey::Antigens << chart.antigens()
                   << JsonKey::Sera << chart.sera()
                   << JsonKey::Titers << chart.titers()

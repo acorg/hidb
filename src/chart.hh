@@ -200,6 +200,15 @@ class ChartInfo
     inline std::string name() const { return mName; }
     inline std::string subset() const { return mSubset; }
 
+    inline std::string& virus() { return mVirus; }
+    inline std::string& virus_type() { return mVirusType; }
+    inline std::string& assay() { return mAssay; }
+    inline std::string& date() { return mDate; }
+    inline std::string& lab() { return mLab; }
+    inline std::string& rbc() { return mRbc; }
+    inline std::string& name() { return mName; }
+    inline std::string& subset() { return mSubset; }
+
  private:
     friend class ChartReaderEventHandler;
     std::string mVirus;     // "v"

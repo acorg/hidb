@@ -123,6 +123,7 @@ class ChartData
     inline const Titers& titers() const { return mTiters; }
 
     inline std::string& table_id() { return mTableId; }
+    inline ChartInfo& chart_info() { return mChartInfo; }
     inline std::vector<AgSrRef>& antigens() { return mAntigens; }
     inline std::vector<AgSrRef>& sera() { return mSera; }
     inline Titers& titers() { return mTiters; }
