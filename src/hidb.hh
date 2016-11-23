@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <algorithm>
 
 #include "chart.hh"
@@ -140,6 +141,28 @@ class ChartData
 
 // ----------------------------------------------------------------------
 
+class Tables : public std::vector<ChartData>
+{
+ public:
+    inline auto insert_pos(const ChartData& aChart)
+        {
+            const auto chart_insert_at = std::lower_bound(begin(), end(), aChart);
+            if (chart_insert_at != end() && chart_insert_at->table_id() == aChart.table_id())
+                throw std::runtime_error("Chart " + aChart.table_id() + " already in hidb");
+            return chart_insert_at;
+        }
+
+    inline const ChartData& operator[](std::string aTableId) const
+        {
+            auto c = std::lower_bound(begin(), end(), aTableId, [](const auto& a, const auto& b) { return a.table_id() < b; });
+            if (c == end() || c->table_id() != aTableId)
+                throw std::runtime_error("Tables::[]: table_id not found");
+            return *c;
+        }
+};
+
+// ----------------------------------------------------------------------
+
 class HiDb;
 
 class AntigenRefs : public std::vector<const AntigenData*>
@@ -166,6 +189,18 @@ class Antigens : public std::vector<AntigenData>
             return result;
         }
 };
+
+// ----------------------------------------------------------------------
+
+typedef std::string VirusType;
+typedef std::string Lab;
+typedef std::string YearMonth;
+typedef std::string Continent;
+typedef std::map<VirusType, std::map<Lab, std::map<YearMonth, std::map<Continent, size_t>>>> HiDbAntigenStat;
+
+// class HiDbAntigenStat : public std::map<Lab, std::map<YearMonth, std::map<Continent, size_t>>>
+// {
+// };
 
 // ----------------------------------------------------------------------
 
@@ -197,13 +232,14 @@ class HiDb
 
     std::vector<std::string> all_countries() const;
     std::vector<std::string> unrecognized_locations() const;
+    HiDbAntigenStat stat() const;
 
     const LocDb& locdb() const { return mLocDb; }
 
  private:
     Antigens mAntigens;
     std::vector<SerumData> mSera;
-    std::vector<ChartData> mCharts;
+    Tables mCharts;
     LocDb mLocDb;
 
     void add_antigen(const Antigen& aAntigen, std::string aTableId);

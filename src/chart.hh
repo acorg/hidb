@@ -97,6 +97,7 @@ class AntigenSerum
 
       // returned cdc abbreviation starts with #
     std::string location() const;
+    std::string year() const;
 
     inline bool operator == (const AntigenSerum& aNother) const { return name() == aNother.name() && variant_id() == aNother.variant_id(); }
     inline bool operator < (const AntigenSerum& aNother) const { return name() == aNother.name() ? variant_id() < aNother.variant_id() : name() < aNother.name(); }

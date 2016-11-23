@@ -19,21 +19,26 @@ AntigenSerum::~AntigenSerum()
 
 #pragma GCC diagnostic push
 #ifdef __clang__
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
 #pragma GCC diagnostic ignored "-Wexit-time-destructors"
 #endif
 
+static std::regex cdc_name{"^([A-Z][A-Z][A-Z]?) "};
+static std::regex international_name{"^[AB][^/]*/(?:([^/]+)/)?([^/]+)/([^/]+)/([0-9]{4})$"};
+
+#pragma GCC diagnostic pop
+
+// ----------------------------------------------------------------------
+
 std::string AntigenSerum::location() const
 {
-    static std::regex cdc_name{"^([A-Z][A-Z][A-Z]?) "};
-    static std::regex international_name{"^[AB][^/]*/(?:[^/]+/)?([^/]+)/[^/]+/[0-9]{4}$"};
-
     std::string location;
     std::smatch m;
     if (std::regex_search(mName, m, cdc_name)) {
         location = "#" + m[1].str();
     }
     else if (std::regex_match(mName, m, international_name)) {
-        location = m[1].str();
+        location = m[2].str();
     }
     // if (location.empty())
     //     std::cerr << "No location for: " << mName << std::endl;
@@ -41,7 +46,18 @@ std::string AntigenSerum::location() const
 
 } // AntigenSerum::location
 
-#pragma GCC diagnostic pop
+// ----------------------------------------------------------------------
+
+std::string AntigenSerum::year() const
+{
+    std::string year;
+    std::smatch m;
+    if (std::regex_match(mName, m, international_name)) {
+        year = m[4].str();
+    }
+    return year;
+
+} // AntigenSerum::year
 
 // ----------------------------------------------------------------------
 

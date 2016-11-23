@@ -71,10 +71,7 @@ void HiDb::add(const Chart& aChart)
 {
     ChartData chart(aChart);
     std::cout << chart.table_id() << std::endl;
-    auto chart_insert_at = std::lower_bound(mCharts.begin(), mCharts.end(), chart);
-    if (chart_insert_at != mCharts.end() && chart_insert_at->table_id() == chart.table_id())
-        throw std::runtime_error("Chart " + chart.table_id() + " already in hidb");
-    mCharts.insert(chart_insert_at, std::move(chart));
+    mCharts.insert(mCharts.insert_pos(chart), std::move(chart));
 
     aChart.find_homologous_antigen_for_sera_const();
 
@@ -345,6 +342,37 @@ std::vector<std::string> HiDb::unrecognized_locations() const
     return result;
 
 } // HiDb::unrecognized_locations
+
+// ----------------------------------------------------------------------
+
+HiDbAntigenStat HiDb::stat() const
+{
+    size_t total = 0;
+
+    HiDbAntigenStat stat;
+    std::string previous_name;
+    for (const auto& antigen: antigens()) {
+        if (antigen.data().name() != previous_name) {
+            const auto continent = locdb().continent(antigen.data().location(), "UNKNOWN");
+            YearMonth date = antigen.date();
+            if (date.empty()) {
+                date = antigen.data().year();
+                if (date.empty())
+                    date = "????";
+            }
+            else {
+                date = date.substr(0, 4) + date.substr(5, 2);
+            }
+            const auto& table = mCharts[antigen.per_table().front().table_id()].chart_info();
+            ++stat[table.virus_type()][table.lab()][date][continent];
+            ++total;
+            previous_name = antigen.data().name();
+        }
+    }
+    std::cerr << "Total: " << total << std::endl;
+    return stat;
+
+} // HiDb::stat
 
 // ----------------------------------------------------------------------
 

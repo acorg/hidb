@@ -4,7 +4,7 @@
 """
 """
 
-import sys, traceback
+import sys, traceback, json, pprint
 if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
 from pathlib import Path
 sys.path[:0] = [str(Path(sys.argv[0]).resolve().parents[1].joinpath("dist")), str(Path(sys.argv[0]).resolve().parents[1].joinpath("python"))]
@@ -52,6 +52,8 @@ def main(args):
         sera = hidb.list_sera()
         print(len(sera))
         print("\n".join(sera))
+    elif args.stat:
+        print(json.dumps(hidb.stat(), sort_keys=True, indent=1))
 
 # ----------------------------------------------------------------------
 
@@ -98,6 +100,7 @@ try:
     parser.add_argument('--countries', dest="countries", action="store_true", default=False, help='List all countries.')
     parser.add_argument('--country', dest="country", default=None, help='Find antigens isolated in the country.')
     parser.add_argument('--unrecognized-locations', dest="unrecognized_locations", action="store_true", default=False, help='List all unrecognized locations.')
+    parser.add_argument('--stat', dest="stat", action="store_true", default=False, help='Report stat (for SSM).')
     parser.add_argument('--list-antigens', dest="list_antigens", action="store_true", default=False, help='List all antigen names.')
     parser.add_argument('--list-sera', dest="list_sera", action="store_true", default=False, help='List all serum names.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)

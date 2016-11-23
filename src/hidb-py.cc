@@ -110,6 +110,9 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("import_locdb", &HiDb::importLocDb, py::arg("filename"))
 
             .def("all_antigens", &HiDb::all_antigens, py::return_value_policy::reference)
+            .def("all_countries", &HiDb::all_countries)
+            .def("unrecognized_locations", &HiDb::unrecognized_locations, py::doc("returns unrecognized locations found in all antigen/serum names"))
+            .def("stat", &HiDb::stat)
 
             .def("list_antigens", &HiDb::list_antigens)
             .def("find_antigens", &HiDb::find_antigens, py::arg("name"), py::return_value_policy::reference)
@@ -117,8 +120,6 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("list_sera", &HiDb::list_sera)
             .def("find_sera", &HiDb::find_sera, py::arg("name"), py::return_value_policy::reference)
             .def("find_sera_with_score", &HiDb::find_sera_with_score, py::arg("name"), py::return_value_policy::reference)
-            .def("all_countries", &HiDb::all_countries)
-            .def("unrecognized_locations", &HiDb::unrecognized_locations, py::doc("returns unrecognized locations found in all antigen/serum names"))
             ;
 
       // ----------------------------------------------------------------------
