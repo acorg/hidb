@@ -3,8 +3,10 @@
 export ACMACSD_ROOT=$HOME/AD
 PROG=$(readlink -f $0)
 LOG=/syn/eu/log/hidb4-night-build.log
+DB_DIR=$ACMACSD_ROOT/data
 
-export PATH="$HOME/bin:/usr/local/bin:$PATH"
+export PATH="$ACMACSD_ROOT/bin:$HOME/bin:/usr/local/bin:$PATH"
+export TIME='<Time %E>'
 
 on_error()
 {
@@ -14,45 +16,48 @@ on_error()
 
 trap on_error ERR
 
-date >"$LOG"
-echo Updating acmacs-c2 >>"$LOG"
-cd ~/ac/acmacs >>"$LOG" 2>&1
-git pull >>"$LOG" 2>&1
-c2 time make -j11 acmacs >>"$LOG" 2>&1
+exec > "$LOG"
+exec 2>&1
 
-echo "==================================================================" >>"$LOG"
-date >>"$LOG"
-echo Updating ACMACSD packages >>"$LOG"
-$ACMACSD_ROOT/bin/update-all >>"$LOG" 2>&1
+date
+echo Updating acmacs-c2
+cd ~/ac/acmacs
+git pull
+c2 time make -j11 acmacs
 
-echo "" >>"$LOG"
-echo "==================================================================" >>"$LOG"
-date >>"$LOG"
-echo H3 >>"$LOG"
-echo "" >>"$LOG"
-DB=$ACMACSD_ROOT/hidb4.h3.json.xz
+echo "=================================================================="
+date
+echo Updating ACMACSD packages
+update-all
+
+echo
+echo "=================================================================="
+date
+echo H3
+echo
+DB=$DB_DIR/hidb4.h3.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-$ACMACSD_ROOT/bin/hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
+time hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* 2>&1
 
-echo "" >>"$LOG"
-echo "==================================================================" >>"$LOG"
-date >>"$LOG"
-echo H1PDM >>"$LOG"
-echo "" >>"$LOG"
-DB=$ACMACSD_ROOT/hidb4.h1.json.xz
+echo
+echo "=================================================================="
+date
+echo H1PDM
+echo
+DB=$DB_DIR/hidb4.h1.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-$ACMACSD_ROOT/bin/hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
+time hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* 2>&1
 
-echo "" >>"$LOG"
-echo "==================================================================" >>"$LOG"
-date >>"$LOG"
-echo B >>"$LOG"
-echo "" >>"$LOG"
-DB=$ACMACSD_ROOT/hidb4.b.json.xz
+echo
+echo "=================================================================="
+date
+echo B
+echo
+DB=$DB_DR/hidb4.b.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-$ACMACSD_ROOT/bin/hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* >>"$LOG" 2>&1
-echo "" >>"$LOG"
-date >>"$LOG"
-echo "----------------------------------------------------------------------" >>"$LOG"
+time hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* 2>&1
+echo
+date
+echo "----------------------------------------------------------------------"
 
 (echo "$PROG completed"; echo "LOG: $LOG") | mail -s "$(hostname) $PROG completed" eu@antigenic-cartography.org
