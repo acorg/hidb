@@ -32,7 +32,7 @@ echo H3 >>"$LOG"
 echo "" >>"$LOG"
 DB=$ACMACSD_ROOT/hidb4.h3.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-./bin/hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
+$ACMACSD_ROOT/bin/hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
 
 echo "" >>"$LOG"
 echo "==================================================================" >>"$LOG"
@@ -41,7 +41,7 @@ echo H1PDM >>"$LOG"
 echo "" >>"$LOG"
 DB=$ACMACSD_ROOT/hidb4.h1.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-./bin/hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
+$ACMACSD_ROOT/bin/hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
 
 echo "" >>"$LOG"
 echo "==================================================================" >>"$LOG"
@@ -50,7 +50,7 @@ echo B >>"$LOG"
 echo "" >>"$LOG"
 DB=$ACMACSD_ROOT/hidb4.b.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-./bin/hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* >>"$LOG" 2>&1
+$ACMACSD_ROOT/bin/hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* >>"$LOG" 2>&1
 echo "" >>"$LOG"
 date >>"$LOG"
 echo "----------------------------------------------------------------------" >>"$LOG"

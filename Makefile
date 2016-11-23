@@ -51,7 +51,9 @@ all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
 install: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(ACMACSD_ROOT)/py
 	ln -sf $(abspath py)/* $(ACMACSD_ROOT)/py
-	ln -sf $(abspath bin)/{hidb-night-build,hidb-update,hidb-find} $(ACMACSD_ROOT)/bin
+	ln -sf $(abspath bin)/hidb-night-build $(ACMACSD_ROOT)/bin
+	ln -sf $(abspath bin)/hidb-update $(ACMACSD_ROOT)/bin
+	ln -sf $(abspath bin)/hidb-find $(ACMACSD_ROOT)/bin
 
 -include $(BUILD)/*.d
 
