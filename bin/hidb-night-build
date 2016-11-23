@@ -1,5 +1,6 @@
 #! /bin/bash
 
+export ACMACSD_ROOT=$HOME/AD
 PROG=$(readlink -f $0)
 LOG=/syn/eu/log/hidb4-night-build.log
 
@@ -14,21 +15,22 @@ on_error()
 trap on_error ERR
 
 date >"$LOG"
+echo Updating acmacs-c2 >>"$LOG"
 cd ~/ac/acmacs >>"$LOG" 2>&1
 git pull >>"$LOG" 2>&1
 c2 time make -j11 acmacs >>"$LOG" 2>&1
 
-cd ~/GH/hidb >>"$LOG" 2>&1
-git pull >>"$LOG" 2>&1
-make clean >>"$LOG" 2>&1
-make -j11 >>"$LOG" 2>&1
+echo "==================================================================" >>"$LOG"
+date >>"$LOG"
+echo Updating ACMACSD packages >>"$LOG"
+$ACMACSD_ROOT/bin/update-all >>"$LOG" 2>&1
 
 echo "" >>"$LOG"
 echo "==================================================================" >>"$LOG"
 date >>"$LOG"
 echo H3 >>"$LOG"
 echo "" >>"$LOG"
-DB=$HOME/WHO/hidb4.h3.json.xz
+DB=$ACMACSD_ROOT/hidb4.h3.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
 ./bin/hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
 
@@ -37,7 +39,7 @@ echo "==================================================================" >>"$LO
 date >>"$LOG"
 echo H1PDM >>"$LOG"
 echo "" >>"$LOG"
-DB=$HOME/WHO/hidb4.h1.json.xz
+DB=$ACMACSD_ROOT/hidb4.h1.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
 ./bin/hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* >>"$LOG" 2>&1
 
@@ -46,7 +48,7 @@ echo "==================================================================" >>"$LO
 date >>"$LOG"
 echo B >>"$LOG"
 echo "" >>"$LOG"
-DB=$HOME/WHO/hidb4.b.json.xz
+DB=$ACMACSD_ROOT/hidb4.b.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
 ./bin/hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* >>"$LOG" 2>&1
 echo "" >>"$LOG"

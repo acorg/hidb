@@ -4,27 +4,29 @@
 """
 """
 
-import sys, traceback
+import sys, os, traceback
 if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
 from pathlib import Path
-sys.path[:0] = [str(Path(sys.argv[0]).resolve().parents[1].joinpath("dist")), str(Path(sys.argv[0]).resolve().parents[1].joinpath("python"))]
+sys.path[:0] = [str(Path(os.environ["ACMACSD_ROOT"]).resolve().joinpath("py"))]
+# sys.path[:0] = [str(Path(sys.argv[0]).resolve().parents[1].joinpath("dist")), str(Path(sys.argv[0]).resolve().parents[1].joinpath("python"))]
 import logging; module_logger = logging.getLogger(__name__)
 
 import hidb as hidb_m
 from hidb import utility
+from acmacs_base import timeit
 
 # ----------------------------------------------------------------------
 
 def main(args):
     hidb = hidb_m.HiDb()
     if Path(args.path_to_hidb).exists():
-        with utility.timeit("Reading hidb"):
+        with timeit("Reading hidb"):
             hidb.import_from(args.path_to_hidb)
     for source in (Path(f).resolve() for f in args.input):
         print(source)
         hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
         print("------------")
-    with utility.timeit("Writing hidb"):
+    with timeit("Writing hidb"):
         hidb.export_to(args.path_to_hidb, pretty=args.pretty)
 
 # ----------------------------------------------------------------------

@@ -30,16 +30,15 @@ PYTHON_VERSION = $(shell python3 -c 'import sys; print("{0.major}.{0.minor}".for
 PYTHON_CONFIG = python$(PYTHON_VERSION)-config
 PYTHON_MODULE_SUFFIX = $(shell $(PYTHON_CONFIG) --extension-suffix)
 
-LOCATION_DB_LIB = $(MODULES)/locationdb/dist/location-db.so
+LOCATION_DB_LIB = $(ACMACSD_ROOT)/lib/location-db.so
 
 # -fvisibility=hidden and -flto make resulting lib smaller (pybind11) but linking is much slower
 OPTIMIZATION = -O3 #-fvisibility=hidden -flto
 PROFILE = # -pg
-CXXFLAGS = -MMD -g $(OPTIMIZATION) $(PROFILE) -fPIC -std=$(STD) $(WEVERYTHING) $(WARNINGS) -I$(BUILD)/include $(PKG_INCLUDES) $(MODULES_INCLUDE)
+CXXFLAGS = -MMD -g $(OPTIMIZATION) $(PROFILE) -fPIC -std=$(STD) $(WEVERYTHING) $(WARNINGS) -I$(BUILD)/include -I$(ACMACSD_ROOT)/include $(PKG_INCLUDES)
 LDFLAGS = $(OPTIMIZATION) $(PROFILE)
 HIDB_LDLIBS = $(LOCATION_DB_LIB) $$(pkg-config --libs liblzma) $$($(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
 
-MODULES_INCLUDE = -I$(MODULES)/rapidjson/include -I$(MODULES)/pybind11/include -I$(MODULES)/locationdb/cc
 PKG_INCLUDES = $$(pkg-config --cflags liblzma) $$($(PYTHON_CONFIG) --includes)
 
 # ----------------------------------------------------------------------
@@ -47,7 +46,12 @@ PKG_INCLUDES = $$(pkg-config --cflags liblzma) $$($(PYTHON_CONFIG) --includes)
 BUILD = build
 DIST = $(abspath dist)
 
-all: $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
+all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
+
+install: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
+	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(ACMACSD_ROOT)/py
+	ln -sf $(abspath py)/* $(ACMACSD_ROOT)/py
+	ln -sf $(abspath bin)/{hidb-night-build,hidb-update,hidb-find} $(ACMACSD_ROOT)/bin
 
 -include $(BUILD)/*.d
 
@@ -61,7 +65,7 @@ $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB
 	@#strip $@
 
 clean:
-	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d $(BUILD)/submodules
+	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d
 	-$(MAKE) -C $(MODULES)/locationdb clean
 
 distclean: clean
@@ -72,25 +76,32 @@ $(LOCATION_DB_LIB):
 
 # ----------------------------------------------------------------------
 
-$(BUILD)/%.o: src/%.cc | $(BUILD) $(BUILD)/submodules
+$(BUILD)/%.o: src/%.cc | $(BUILD)
 	@echo $<
 	@g++ $(CXXFLAGS) -c -o $@ $<
 
 # ----------------------------------------------------------------------
 
-$(BUILD)/submodules:
-	git submodule init
-	git submodule update
-	git submodule update --remote
-	touch $@
+# $(BUILD)/submodules:
+#	git submodule init
+#	git submodule update
+#	git submodule update --remote
+#	touch $@
 
 # ----------------------------------------------------------------------
+
+check-acmacsd-root:
+ifndef ACMACSD_ROOT
+	$(error ACMACSD_ROOT is not set)
+endif
 
 $(DIST):
 	mkdir -p $(DIST)
 
 $(BUILD):
 	mkdir -p $(BUILD)
+
+.PHONY: check-acmacsd-root
 
 # ======================================================================
 ### Local Variables:

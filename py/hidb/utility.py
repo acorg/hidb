@@ -7,16 +7,6 @@ from contextlib import contextmanager
 # ----------------------------------------------------------------------
 
 @contextmanager
-def timeit(name):
-    start = datetime.datetime.utcnow()
-    try:
-        yield
-    finally:
-        module_logger.info('{} <{}>'.format(name, datetime.datetime.utcnow() - start))
-
-# ----------------------------------------------------------------------
-
-@contextmanager
 def tempdir():
     dir = tempfile.mkdtemp()
     try:

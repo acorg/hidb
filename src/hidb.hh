@@ -7,7 +7,7 @@
 #include <algorithm>
 
 #include "chart.hh"
-#include "locdb.hh"
+#include "locationdb/locdb.hh"
 
 // ----------------------------------------------------------------------
 
