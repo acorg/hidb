@@ -11,8 +11,6 @@ MAKEFLAGS = -w
 
 HIDB_SOURCES = hidb-py.cc hidb.cc hidb-export.cc chart.cc ace.cc read-file.cc xz.cc
 
-MODULES = $(realpath modules)
-
 # ----------------------------------------------------------------------
 
 CLANG = $(shell if g++ --version 2>&1 | grep -i llvm >/dev/null; then echo Y; else echo N; fi)
@@ -69,13 +67,9 @@ $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB
 
 clean:
 	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d
-	-$(MAKE) -C $(MODULES)/locationdb clean
 
 distclean: clean
 	rm -rf $(BUILD)
-
-$(LOCATION_DB_LIB):
-	$(MAKE) -C $(MODULES)/locationdb
 
 # ----------------------------------------------------------------------
 
