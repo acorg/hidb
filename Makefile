@@ -9,7 +9,7 @@ MAKEFLAGS = -w
 
 # ----------------------------------------------------------------------
 
-HIDB_SOURCES = hidb-py.cc hidb.cc hidb-export.cc chart.cc ace.cc read-file.cc xz.cc
+HIDB_SOURCES = hidb-py.cc hidb.cc hidb-export.cc chart.cc ace.cc
 
 # ----------------------------------------------------------------------
 
@@ -73,7 +73,7 @@ distclean: clean
 
 # ----------------------------------------------------------------------
 
-$(BUILD)/%.o: src/%.cc | $(BUILD)
+$(BUILD)/%.o: cc/%.cc | $(BUILD)
 	@echo $<
 	@g++ $(CXXFLAGS) -c -o $@ $<
 

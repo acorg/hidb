@@ -3,7 +3,7 @@
 #include "rapidjson/reader.h"
 
 #include "hidb-export.hh"
-#include "read-file.hh"
+#include "acmacs-base/read-file.hh"
 
 // ----------------------------------------------------------------------
 
@@ -14,7 +14,7 @@ void hidb_export(std::string aFilename, const HiDb& aHiDb)
     writer.Key("  version");
     writer.String("hidb-v4");
     writer << JsonKey::Antigens << aHiDb.antigens() << JsonKey::Sera << aHiDb.sera() << JsonKey::Tables << aHiDb.charts() << EndObject;
-    write_file(aFilename, writer);
+    acmacs_base::write_file(aFilename, writer);
 }
 
 // ----------------------------------------------------------------------
@@ -30,7 +30,7 @@ void hidb_export_pretty(std::string aFilename, const HiDb& aHiDb)
     // writer.String("hidb on");
     writer << JsonKey::Antigens << aHiDb.antigens() << JsonKey::Sera << aHiDb.sera() << JsonKey::Tables << aHiDb.charts() << EndObject;
 
-    write_file(aFilename, writer);
+    acmacs_base::write_file(aFilename, writer);
 
 } // hidb_export_pretty
 
@@ -322,9 +322,9 @@ const HiDbReaderEventHandler::Ptr HiDbReaderEventHandler::transition[][62] = {
 void hidb_import(std::string buffer, HiDb& aHiDb)
 {
     if (buffer == "-")
-        buffer = read_stdin();
+        buffer = acmacs_base::read_stdin();
     else
-        buffer = read_file(buffer);
+        buffer = acmacs_base::read_file(buffer);
     if (buffer[0] == '{') { // && buffer.find("\"  version\": \"hidb-v4\"") != std::string::npos) {
         HiDbReaderEventHandler handler{aHiDb};
         rapidjson::Reader reader;

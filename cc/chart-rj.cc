@@ -5,17 +5,17 @@
 #include "rapidjson/error/en.h"
 
 #include "chart-rj.hh"
-#include "read-file.hh"
-#include "xz.hh"
+#include "acmacs-base/read-file.hh"
+#include "acmacs-base/xz.hh"
 
 // ----------------------------------------------------------------------
 
 RJ::Chart* RJ::import_chart(std::string buffer)
 {
     if (buffer == "-")
-        buffer = read_stdin();
+        buffer = acmacs_base::read_stdin();
     else
-        buffer = read_file(buffer);
+        buffer = acmacs_base::read_file(buffer);
     Chart* chart = nullptr;
     if (buffer[0] == '{') { // && buffer.find("\"  version\": \"acmacs-ace-v1\"") != std::string::npos) {
         std::shared_ptr<rapidjson::Document> d(new rapidjson::Document());
@@ -73,9 +73,9 @@ class EventHandler : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>, Even
 RJ_SAX::Chart* RJ_SAX::import_chart(std::string buffer)
 {
     if (buffer == "-")
-        buffer = read_stdin();
+        buffer = acmacs_base::read_stdin();
     else
-        buffer = read_file(buffer);
+        buffer = acmacs_base::read_file(buffer);
     Chart* chart = nullptr;
     if (buffer[0] == '{') { // && buffer.find("\"  version\": \"acmacs-ace-v1\"") != std::string::npos) {
         chart = new Chart;

@@ -6,8 +6,8 @@
 #include "ace.hh"
 #include "json-keys.hh"
 #include "chart.hh"
-#include "read-file.hh"
-#include "xz.hh"
+#include "acmacs-base/read-file.hh"
+#include "acmacs-base/xz.hh"
 
 // ----------------------------------------------------------------------
 
@@ -632,9 +632,9 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
 Chart* import_chart(std::string buffer)
 {
     if (buffer == "-")
-        buffer = read_stdin();
+        buffer = acmacs_base::read_stdin();
     else
-        buffer = read_file(buffer);
+        buffer = acmacs_base::read_file(buffer);
     Chart* chart = nullptr;
     if (buffer[0] == '{') { // && buffer.find("\"  version\": \"acmacs-ace-v1\"") != std::string::npos) {
         chart = new Chart;
