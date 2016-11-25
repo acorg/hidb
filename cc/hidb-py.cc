@@ -95,10 +95,10 @@ PYBIND11_PLUGIN(hidb_backend)
 
       // ----------------------------------------------------------------------
 
-    m.def("json", &json<Antigen>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
-    m.def("json", &json<AntigenData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
-    m.def("json", &json<Serum>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
-    m.def("json", &json<SerumData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("pretty") = true);
+    m.def("json", &json<Antigen>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1);
+    m.def("json", &json<AntigenData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1);
+    m.def("json", &json<Serum>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1);
+    m.def("json", &json<SerumData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1);
 
       // ----------------------------------------------------------------------
 
