@@ -9,21 +9,19 @@
 
 template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const HiDb& aHiDb)
 {
-    writer.StartObject();
-    writer.Key("  version");
-    writer.String("hidb-v4");
-    writer << JsonKey::Antigens << aHiDb.antigens()
-           << JsonKey::Sera << aHiDb.sera()
-           << JsonKey::Tables << aHiDb.charts()
-           << EndObject;
-    return writer;
+    return writer << StartObject
+                  << JsonObjectKey("  version") << "hidb-v4"
+                  << JsonKey::Antigens << aHiDb.antigens()
+                  << JsonKey::Sera << aHiDb.sera()
+                  << JsonKey::Tables << aHiDb.charts()
+                  << EndObject;
 }
 
 // ----------------------------------------------------------------------
 
 void hidb_export(std::string aFilename, const HiDb& aHiDb, size_t aIndent)
 {
-    export_to_json(aHiDb, "hiqdb", aFilename, aIndent);
+    export_to_json(aHiDb, "hidb", aFilename, aIndent);
 }
 
 // ----------------------------------------------------------------------
