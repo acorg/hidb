@@ -131,10 +131,7 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
 
 void HiDb::exportTo(std::string aFilename, bool aPretty) const
 {
-    if (aPretty)
-        hidb_export_pretty(aFilename, *this);
-    else
-        hidb_export(aFilename, *this);
+    hidb_export(aFilename, *this, aPretty ? 1 : 0);
 
 } // HiDb::exportTo
 

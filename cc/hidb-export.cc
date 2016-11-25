@@ -7,32 +7,24 @@
 
 // ----------------------------------------------------------------------
 
-void hidb_export(std::string aFilename, const HiDb& aHiDb)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const HiDb& aHiDb)
 {
-    JsonWriter writer("hidb");
     writer.StartObject();
     writer.Key("  version");
     writer.String("hidb-v4");
-    writer << JsonKey::Antigens << aHiDb.antigens() << JsonKey::Sera << aHiDb.sera() << JsonKey::Tables << aHiDb.charts() << EndObject;
-    acmacs_base::write_file(aFilename, writer);
+    writer << JsonKey::Antigens << aHiDb.antigens()
+           << JsonKey::Sera << aHiDb.sera()
+           << JsonKey::Tables << aHiDb.charts()
+           << EndObject;
+    return writer;
 }
 
 // ----------------------------------------------------------------------
 
-void hidb_export_pretty(std::string aFilename, const HiDb& aHiDb)
+void hidb_export(std::string aFilename, const HiDb& aHiDb, size_t aIndent)
 {
-    JsonPrettyWriter writer("hidb");
-
-    writer.StartObject();
-    writer.Key("  version");
-    writer.String("hidb-v4");
-    // writer.Key("?created");
-    // writer.String("hidb on");
-    writer << JsonKey::Antigens << aHiDb.antigens() << JsonKey::Sera << aHiDb.sera() << JsonKey::Tables << aHiDb.charts() << EndObject;
-
-    acmacs_base::write_file(aFilename, writer);
-
-} // hidb_export_pretty
+    export_to_json(aHiDb, "hiqdb", aFilename, aIndent);
+}
 
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
