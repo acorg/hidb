@@ -6,7 +6,7 @@
 #include <map>
 #include <algorithm>
 
-#include "chart.hh"
+#include "hidb/chart.hh"
 #include "locationdb/locdb.hh"
 
 // ----------------------------------------------------------------------

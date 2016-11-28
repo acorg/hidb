@@ -9,7 +9,8 @@ MAKEFLAGS = -w
 
 # ----------------------------------------------------------------------
 
-HIDB_SOURCES = hidb-py.cc hidb.cc hidb-export.cc chart.cc ace.cc
+HIDB_SOURCES = hidb.cc hidb-export.cc chart.cc ace.cc
+HIDB_PY_SOURCES = hidb-py.cc $(HIDB_SOURCES)
 
 # ----------------------------------------------------------------------
 
@@ -28,14 +29,16 @@ PYTHON_VERSION = $(shell python3 -c 'import sys; print("{0.major}.{0.minor}".for
 PYTHON_CONFIG = python$(PYTHON_VERSION)-config
 PYTHON_MODULE_SUFFIX = $(shell $(PYTHON_CONFIG) --extension-suffix)
 
-LOCATION_DB_LIB = $(ACMACSD_ROOT)/lib/location-db.so
+LIB_DIR = $(ACMACSD_ROOT)/lib
+LOCATION_DB_LIB = $(LIB_DIR)/liblocationdb.so
+HIDB_LIB = $(DIST)/libhidb.so
 
 # -fvisibility=hidden and -flto make resulting lib smaller (pybind11) but linking is much slower
 OPTIMIZATION = -O3 #-fvisibility=hidden -flto
 PROFILE = # -pg
-CXXFLAGS = -MMD -g $(OPTIMIZATION) $(PROFILE) -fPIC -std=$(STD) $(WEVERYTHING) $(WARNINGS) -I$(BUILD)/include -I$(ACMACSD_ROOT)/include $(PKG_INCLUDES)
+CXXFLAGS = -MMD -g $(OPTIMIZATION) $(PROFILE) -fPIC -std=$(STD) $(WEVERYTHING) $(WARNINGS) -Icc -I$(BUILD)/include -I$(ACMACSD_ROOT)/include $(PKG_INCLUDES)
 LDFLAGS = $(OPTIMIZATION) $(PROFILE)
-HIDB_LDLIBS = $(LOCATION_DB_LIB) $$(pkg-config --libs liblzma) $$($(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
+HIDB_LDLIBS = -L$(LIB_DIR) -llocationdb $$(pkg-config --libs liblzma) $$($(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
 
 PKG_INCLUDES = $$(pkg-config --cflags liblzma) $$($(PYTHON_CONFIG) --includes)
 
@@ -44,10 +47,15 @@ PKG_INCLUDES = $$(pkg-config --cflags liblzma) $$($(PYTHON_CONFIG) --includes)
 BUILD = build
 DIST = $(abspath dist)
 
-all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
+all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
 
-install: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
+install: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
+	[ -f $(HIDB_LIB) ] || (echo $(HIDB_LIB) not found >&2; exit 1)
+	if [ $$(uname) = "Darwin" ]; then /usr/bin/install_name_tool -id $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)) $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)); fi
+	ln -sf $(HIDB_LIB) $(ACMACSD_ROOT)/lib
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(ACMACSD_ROOT)/py
+	if [ ! -d $(ACMACSD_ROOT)/include/hidb ]; then mkdir $(ACMACSD_ROOT)/include/hidb; fi
+	ln -sf $(abspath cc)/hidb.hh $(abspath cc)/chart.hh $(ACMACSD_ROOT)/include/hidb
 	ln -sf $(abspath py)/* $(ACMACSD_ROOT)/py
 	ln -sf $(abspath bin)/hidb-night-build $(ACMACSD_ROOT)/bin
 	ln -sf $(abspath bin)/hidb-update $(ACMACSD_ROOT)/bin
@@ -58,12 +66,15 @@ install: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX)
 
 # ----------------------------------------------------------------------
 
-$(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
-	g++ $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
-
-$(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
+$(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_PY_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
 	g++ -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 	@#strip $@
+
+$(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
+	g++ -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+
+$(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
+	g++ $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
 
 clean:
 	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d
