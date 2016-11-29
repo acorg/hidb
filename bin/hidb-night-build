@@ -23,12 +23,12 @@ date
 echo Updating acmacs-c2
 cd ~/ac/acmacs
 git pull
-c2 time make -j11 acmacs
+c2 make -j11 acmacs
 
 echo "=================================================================="
 date
 echo Updating ACMACSD packages
-update-all
+/usr/bin/time update-all
 
 echo
 echo "=================================================================="
@@ -37,7 +37,7 @@ echo H3
 echo
 DB=$DB_DIR/hidb4.h3.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-time hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* 2>&1
+/usr/bin/time hidb-update --db "$DB" ~/ac/tables-store/H3/{CDC,MELB,NIID,NIMR}/*.ac* 2>&1
 
 echo
 echo "=================================================================="
@@ -46,16 +46,16 @@ echo H1PDM
 echo
 DB=$DB_DIR/hidb4.h1.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-time hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* 2>&1
+/usr/bin/time hidb-update --db "$DB" ~/ac/tables-store/H1PDM/{CDC,MELB,NIID,NIMR}/*.ac* 2>&1
 
 echo
 echo "=================================================================="
 date
 echo B
 echo
-DB=$DB_DR/hidb4.b.json.xz
+DB=$DB_DIR/hidb4.b.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-time hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* 2>&1
+/usr/bin/time hidb-update --db "$DB" ~/ac/tables-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* 2>&1
 echo
 date
 echo "----------------------------------------------------------------------"
