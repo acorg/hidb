@@ -188,6 +188,15 @@ class Antigens : public std::vector<AntigenData>
             std::transform(begin(), end(), std::back_inserter(result), [](const auto& ag) { return &ag; });
             return result;
         }
+
+    void make_index(const HiDb& aHiDb);
+    std::vector<const AntigenData*> find_by_index(std::string name) const;
+
+ private:
+    std::map<std::string, AntigenRefs> mIndex;
+
+    class NotFound : public std::exception {};
+    void split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& index_key) const; // throws NotFound
 };
 
 // ----------------------------------------------------------------------
@@ -214,8 +223,8 @@ class HiDb
     void exportTo(std::string aFilename, bool aPretty) const;
     inline void importLocDb(std::string aFilename) { mLocDb.importFrom(aFilename); }
 
-    const std::vector<AntigenData>& antigens() const { return mAntigens; }
-    std::vector<AntigenData>& antigens() { return mAntigens; }
+    const Antigens& antigens() const { return mAntigens; }
+    Antigens& antigens() { return mAntigens; }
     const std::vector<SerumData>& sera() const { return mSera; }
     std::vector<SerumData>& sera() { return mSera; }
     const std::vector<ChartData>& charts() const { return mCharts; }
@@ -227,6 +236,9 @@ class HiDb
     std::vector<const SerumData*> find_sera(std::string name) const;
     std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
     std::vector<std::string> list_sera() const;
+
+      // name is just (international) name without reassortant/passage
+    inline std::vector<const AntigenData*> find_antigens_by_name(std::string name) const { return mAntigens.find_by_index(name); }
 
     inline AntigenRefs all_antigens() const { return mAntigens.all(*this); }
 

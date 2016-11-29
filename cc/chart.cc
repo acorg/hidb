@@ -1,7 +1,6 @@
 #include <cctype>
 #include <cassert>
 #include <map>
-#include <regex>
 
 #include "rapidjson/reader.h"
 #include "rapidjson/error/en.h"
@@ -23,8 +22,10 @@ AntigenSerum::~AntigenSerum()
 #pragma GCC diagnostic ignored "-Wexit-time-destructors"
 #endif
 
-static std::regex cdc_name{"^([A-Z][A-Z][A-Z]?) "};
-static std::regex international_name{"^[AB][^/]*/(?:([^/]+)/)?([^/]+)/([^/]+)/([0-9]{4})$"};
+std::regex AntigenSerum::cdc_name{"^([A-Z][A-Z][A-Z]?) "};
+
+// [1] - host, [2] - location, [3] - isolation-number (omitting leading zeros), [4] - year (2 last digit)
+std::regex AntigenSerum::international_name{"^[AB][^/]*/(?:([^/]+)/)?([^/]+)/0*([^/]+)/(?:\\d\\d)?(\\d\\d)$"};
 
 #pragma GCC diagnostic pop
 

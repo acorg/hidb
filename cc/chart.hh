@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <regex>
 
 // ----------------------------------------------------------------------
 
@@ -101,6 +102,9 @@ class AntigenSerum
 
     inline bool operator == (const AntigenSerum& aNother) const { return name() == aNother.name() && variant_id() == aNother.variant_id(); }
     inline bool operator < (const AntigenSerum& aNother) const { return name() == aNother.name() ? variant_id() < aNother.variant_id() : name() < aNother.name(); }
+
+    static std::regex cdc_name;
+    static std::regex international_name;
 
  protected:
     inline AntigenSerum() = default;

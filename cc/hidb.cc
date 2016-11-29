@@ -1,4 +1,5 @@
 #include <iomanip>
+#include <regex>
 
 #include "hidb.hh"
 #include "hidb-export.hh"
@@ -64,6 +65,71 @@ AntigenRefs& AntigenRefs::date_range(std::string aBegin, std::string aEnd)
     return *this;
 
 } // AntigenRefs::date_range
+
+// ----------------------------------------------------------------------
+
+inline void Antigens::split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& index_key) const
+{
+    std::smatch m;
+    if (std::regex_match(name, m, AntigenSerum::international_name)) {
+        host = m[1].str();
+        location = m[2].str();
+        index_key = location.substr(0, 2);
+        isolation = m[3].str();
+        year = m[4].str();
+    }
+    else {
+        throw NotFound{};
+    }
+
+} // Antigens::split
+
+// ----------------------------------------------------------------------
+
+void Antigens::make_index(const HiDb& aHiDb)
+{
+    std::smatch m;
+    for (const auto& antigen: *this) {
+        try {
+            std::string host, location, isolation, year, key;
+            split(antigen.data().name(), host, location, isolation, year, key);
+            auto p = mIndex.find(key);
+            if (p == mIndex.end()) {
+                p = mIndex.emplace(key, aHiDb).first;
+            }
+            p->second.push_back(&antigen);
+        }
+        catch (NotFound&) {
+        }
+    }
+      // std::cerr << size() << " antigens " << mIndex.size() << " index entries" << std::endl;
+
+} // Antigens::make_index
+
+// ----------------------------------------------------------------------
+
+std::vector<const AntigenData*> Antigens::find_by_index(std::string name) const
+{
+    std::vector<const AntigenData*> result;
+    try {
+        std::string n_host, n_location, n_isolation, n_year, n_key;
+        split(name, n_host, n_location, n_isolation, n_year, n_key);
+        auto p = mIndex.find(n_key);
+        if (p != mIndex.end()) {
+            for (const auto* ad: p->second) {
+                std::string f_host, f_location, f_isolation, f_year, f_key;
+                split(ad->data().name(), f_host, f_location, f_isolation, f_year, f_key);
+                if (f_host == n_host && f_location == n_location && f_isolation == n_isolation && f_year == n_year) {
+                    result.push_back(ad);
+                }
+            }
+        }
+    }
+    catch (NotFound&) {
+    }
+    return result;
+
+} // Antigens::find_by_index
 
 // ----------------------------------------------------------------------
 
@@ -140,6 +206,7 @@ void HiDb::exportTo(std::string aFilename, bool aPretty) const
 void HiDb::importFrom(std::string aFilename)
 {
     hidb_import(aFilename, *this);
+    mAntigens.make_index(*this);
 
 } // HiDb::importFrom
 
@@ -167,6 +234,7 @@ template <typename Data> class FindScore
                     });
                 if (mFull == 0)
                     mFull = string_match::match(full_name, name);
+                  // std::cerr << mName << " " << mFull << " " << full_name << std::endl;
             }
         }
 
