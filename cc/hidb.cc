@@ -253,6 +253,7 @@ template <typename Data> class FindScore
 
     inline bool operator == (const FindScore<Data>& aNother) const { return mName == aNother.mName; }
     inline operator const Data*() const { return mAntigen; }
+    inline const Data* data() const { return mAntigen; }
     inline operator bool() const { return mName > 0; }
     inline string_match::score_t name_score() const { return mName; }
     inline std::pair<const Data*, size_t> score() const { return std::make_pair(mAntigen, mFull); }
@@ -292,7 +293,7 @@ typedef FindScore<SerumData> FindSerumScore;
 template <typename Data> inline static void find_scores(std::string name, const std::vector<Data>& antigens, std::vector<FindScore<Data>>& scores, typename std::vector<FindScore<Data>>::iterator& scores_end)
 {
     string_match::score_t score_threshold = 0;
-    for (const auto& antigen: antigens) {
+    for (const Data& antigen: antigens) {
         scores.emplace_back(name, antigen, score_threshold);
         score_threshold = std::max(scores.back().name_score(), score_threshold);
     }
