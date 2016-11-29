@@ -134,6 +134,13 @@ AntigenRefs Antigens::find_by_index(std::string name) const
 
 // ----------------------------------------------------------------------
 
+AntigenRefs Antigens::find_by_cdcid(std::string cdcid) const
+{
+
+} // Antigens::find_by_cdcid
+
+// ----------------------------------------------------------------------
+
 void HiDb::add(const Chart& aChart)
 {
     ChartData chart(aChart);
