@@ -207,7 +207,7 @@ class Antigens : public std::vector<AntigenData>
         }
 
  private:
-    static constexpr const size_t IndexKeySize = 3;
+    static constexpr const size_t IndexKeySize = 2;
     std::map<std::string, AntigenRefs> mIndex;
 
     class NotFound : public std::exception {};
