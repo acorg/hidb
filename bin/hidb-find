@@ -38,7 +38,8 @@ def main(args):
                 report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
                 # print(r)
                 with timeit("find_antigens"):
-                    report(hidb.find_antigens(args.name.upper()), find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                    r = hidb.find_antigens(args.name.upper())
+                report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
             else:
                 report(hidb.find_sera(args.name.upper()), find_antigens=False, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
     elif args.countries:
@@ -90,7 +91,10 @@ def report(data, find_antigens, report_tables, report_homologous, output_json):
         else:
             def homologous(e):
                 return "\n    ".join([repr(e2) for e2 in e.homologous()])
-        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=e.most_recent_table().table_id(), date=e.date(),
+        class NoMostRecentTable:
+            def table_id(self):
+                return "*no-most-recent-table*"
+        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=(e.most_recent_table() or NoMostRecentTable()).table_id(), date=e.date(),
                                        all_tables=[t.table_id() for t in e.tables()],
                                        homologous=homologous(e)) for e in data))
 
