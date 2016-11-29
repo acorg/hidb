@@ -94,6 +94,10 @@ PYBIND11_PLUGIN(hidb_backend)
         return pointer_to_copy(aHiDb.find_antigens_fuzzy(name));
     };
 
+    auto find_antigens_extra_fuzzy = [&pointer_to_copy](const HiDb& aHiDb, std::string name) {
+        return pointer_to_copy(aHiDb.find_antigens_extra_fuzzy(name));
+    };
+
     auto find_antigens_with_score = [](const HiDb& aHiDb, std::string name) {
         const auto source = aHiDb.find_antigens_with_score(name);
         std::vector<std::pair<AntigenData, size_t>> result;
@@ -132,6 +136,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("list_antigens", &HiDb::list_antigens)
             .def("find_antigens", find_antigens, py::arg("name"))
             .def("find_antigens_fuzzy", find_antigens_fuzzy, py::arg("name"))
+            .def("find_antigens_extra_fuzzy", find_antigens_extra_fuzzy, py::arg("name"))
             .def("find_antigens_with_score", find_antigens_with_score, py::arg("name"))
             .def("find_antigens_by_name", find_antigens_by_name, py::arg("name"))
             .def("list_sera", &HiDb::list_sera)

@@ -24,7 +24,7 @@ AntigenRefs& AntigenRefs::country(std::string aCountry)
 {
     auto not_in_country = [this,&aCountry](const auto& e) -> bool {
         try {
-            return mHiDb.locdb().country(e->data().location()) != aCountry;
+            return mHiDb->locdb().country(e->data().location()) != aCountry;
         }
         catch (LocationNotFound&) {
             return true;
@@ -109,21 +109,21 @@ void Antigens::make_index(const HiDb& aHiDb)
 
 // ----------------------------------------------------------------------
 
-std::vector<const AntigenData*> Antigens::find_by_index(std::string name) const
+AntigenRefs Antigens::find_by_index(std::string name) const
 {
-    std::vector<const AntigenData*> result;
+    AntigenRefs result;
     try {
         std::string n_host, n_location, n_isolation, n_year, n_passage, n_key;
         split(name, n_host, n_location, n_isolation, n_year, n_passage, n_key);
-        auto p = mIndex.find(n_key);
-        if (p != mIndex.end()) {
-            for (const auto* ad: p->second) {
+        const AntigenRefs* fk = for_key(n_key);
+        if (fk) {
+            result = *fk;
+            auto not_match_fields = [&](const auto& e) -> bool {
                 std::string f_host, f_location, f_isolation, f_year, f_passage, f_key;
-                split(ad->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key);
-                if (f_host == n_host && f_location == n_location && f_isolation == n_isolation && f_year == n_year) {
-                    result.push_back(ad);
-                }
-            }
+                split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key);
+                return f_host != n_host || f_location != n_location || f_isolation != n_isolation || f_year != n_year;
+            };
+            result.erase(std::remove_if(result.begin(), result.end(), not_match_fields), result.end());
         }
     }
     catch (NotFound&) {
@@ -319,7 +319,7 @@ template <typename AntigenT, typename Data> inline static void find_scores(std::
 
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 {
-    std::vector<const AntigenData*> by_name = mAntigens.find_by_index(name);
+    AntigenRefs by_name = mAntigens.find_by_index(name);
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;
     find_scores(name, by_name, scores, scores_end);
@@ -331,12 +331,29 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 
 std::vector<const AntigenData*> HiDb::find_antigens_fuzzy(std::string name) const
 {
+    const AntigenRefs* by_index = mAntigens.all_by_index(name);
+    if (by_index) {
+        std::vector<FindAntigenScore> scores;
+        std::vector<FindAntigenScore>::iterator scores_end;
+        find_scores(name, *by_index, scores, scores_end);
+        return {scores.begin(), scores_end};
+    }
+    else {
+        return {};
+    }
+
+} // HiDb::find_antigens_fuzzy
+
+// ----------------------------------------------------------------------
+
+std::vector<const AntigenData*> HiDb::find_antigens_extra_fuzzy(std::string name) const
+{
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;
     find_scores(name, antigens(), scores, scores_end);
     return {scores.begin(), scores_end};
 
-} // HiDb::find_antigens_fuzzy
+} // HiDb::find_antigens_extra_fuzzy
 
 // ----------------------------------------------------------------------
 

@@ -168,13 +168,14 @@ class HiDb;
 class AntigenRefs : public std::vector<const AntigenData*>
 {
  public:
-    inline AntigenRefs(const HiDb& aHiDb) : mHiDb(aHiDb) {}
-    template <typename Iterator> inline AntigenRefs(const HiDb& aHiDb, Iterator first, Iterator last) : std::vector<const AntigenData*>(first, last), mHiDb(aHiDb) {}
+    inline AntigenRefs() : mHiDb(nullptr) {}
+    inline AntigenRefs(const HiDb& aHiDb) : mHiDb(&aHiDb) {}
+    template <typename Iterator> inline AntigenRefs(const HiDb& aHiDb, Iterator first, Iterator last) : std::vector<const AntigenData*>(first, last), mHiDb(&aHiDb) {}
     AntigenRefs& country(std::string aCountry);
     AntigenRefs& date_range(std::string aBegin, std::string aEnd);
 
  private:
-    const HiDb& mHiDb;
+    const HiDb* mHiDb;
 };
 
 // ----------------------------------------------------------------------
@@ -190,13 +191,31 @@ class Antigens : public std::vector<AntigenData>
         }
 
     void make_index(const HiDb& aHiDb);
-    std::vector<const AntigenData*> find_by_index(std::string name) const;
+    AntigenRefs find_by_index(std::string name) const;
+
+    inline const AntigenRefs* all_by_index(std::string name) const
+        {
+            try {
+                std::string n_host, n_location, n_isolation, n_year, n_passage, n_key;
+                split(name, n_host, n_location, n_isolation, n_year, n_passage, n_key);
+                return for_key(n_key);
+            }
+            catch (NotFound&) {
+                return nullptr;
+            }
+        }
 
  private:
     std::map<std::string, AntigenRefs> mIndex;
 
     class NotFound : public std::exception {};
     void split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const; // throws NotFound
+
+    inline const AntigenRefs* for_key(std::string key) const
+        {
+            auto p = mIndex.find(key);
+            return p != mIndex.end() ? &p->second : nullptr;
+        }
 };
 
 // ----------------------------------------------------------------------
@@ -232,6 +251,7 @@ class HiDb
 
     std::vector<const AntigenData*> find_antigens(std::string name) const;
     std::vector<const AntigenData*> find_antigens_fuzzy(std::string name) const;
+    std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name) const;
     std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
     std::vector<std::string> list_antigens() const;
     std::vector<const SerumData*> find_sera(std::string name) const;
