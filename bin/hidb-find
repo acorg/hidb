@@ -35,7 +35,7 @@ def main(args):
             if args.find_antigens:
                 with timeit("find_antigen_by_name"):
                     r = hidb.find_antigens_by_name(args.name.upper())
-                # report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
                 # print(r)
                 with timeit("find_antigens"):
                     r = hidb.find_antigens(args.name.upper())
