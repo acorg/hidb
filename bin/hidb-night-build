@@ -8,6 +8,10 @@ DB_DIR=$ACMACSD_ROOT/data
 export PATH="$ACMACSD_ROOT/bin:$HOME/bin:/usr/local/bin:$PATH"
 export TIME='<Time %E>'
 
+if [ "$(uname)" == "Linux" ]; then
+    export LD_LIBRARY_PATH="$ACMACSD_ROOT/lib"
+fi
+
 on_error()
 {
     (echo $PROG FAILED; echo "LOG: $LOG") | mail -s "$(hostname) $PROG FAILED" eu@antigenic-cartography.org
