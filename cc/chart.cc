@@ -24,8 +24,8 @@ AntigenSerum::~AntigenSerum()
 
 std::regex AntigenSerum::cdc_name{"^([A-Z][A-Z][A-Z]?) "};
 
-// [1] - host, [2] - location, [3] - isolation-number (omitting leading zeros), [4] - year (2 last digit)
-std::regex AntigenSerum::international_name{"^[AB][^/]*/(?:([^/]+)/)?([^/]+)/0*([^/]+)/(?:\\d\\d)?(\\d\\d)$"};
+// [1] - host, [2] - location, [3] - isolation-number (omitting leading zeros), [4] - year (2 last digit), [5] - reassortant and passage
+std::regex AntigenSerum::international_name{"^[AB][^/]*/(?:([^/]+)/)?([^/]+)/0*([^/]+)/(?:\\d\\d)?(\\d\\d)(?:\\s+(.+))?$"};
 
 #pragma GCC diagnostic pop
 

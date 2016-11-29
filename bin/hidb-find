@@ -40,6 +40,10 @@ def main(args):
                 with timeit("find_antigens"):
                     r = hidb.find_antigens(args.name.upper())
                 report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                if not r:
+                    with timeit("find_antigens_fuzzy"):
+                        r = hidb.find_antigens_fuzzy(args.name.upper())
+                    report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
             else:
                 report(hidb.find_sera(args.name.upper()), find_antigens=False, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
     elif args.countries:

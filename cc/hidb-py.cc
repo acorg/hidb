@@ -5,15 +5,6 @@
 
 // ----------------------------------------------------------------------
 
-inline std::vector<AntigenData> find_antigens_make_result(const std::vector<const AntigenData*>& source)
-{
-    std::vector<AntigenData> result;
-    std::transform(source.begin(), source.end(), std::back_inserter(result), [](const auto& e) { return *e; });
-    return result;
-}
-
-// ----------------------------------------------------------------------
-
 PYBIND11_PLUGIN(hidb_backend)
 {
     py::module m("hidb_backend", "HiDB access plugin");
@@ -82,17 +73,27 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("date_range", &AntigenRefs::date_range, py::arg("begin") = "", py::arg("end") = "")
             ;
 
-      // to avoid python GC affecting data
-    auto find_antigens_by_name = [](const HiDb& aHiDb, std::string name) {
-        return find_antigens_make_result(aHiDb.find_antigens_by_name(name));
+      // --------------------------------------------------
+      // lambdas below are to avoid python GC affecting data
+
+    auto pointer_to_copy = [](const std::vector<const AntigenData*>& source) -> std::vector<AntigenData> {
+        std::vector<AntigenData> result;
+        std::transform(source.begin(), source.end(), std::back_inserter(result), [](const auto& e) { return *e; });
+        return result;
     };
 
-      // to avoid python GC affecting data
-    auto find_antigens = [](const HiDb& aHiDb, std::string name) {
-        return find_antigens_make_result(aHiDb.find_antigens(name));
+    auto find_antigens_by_name = [&pointer_to_copy](const HiDb& aHiDb, std::string name) -> std::vector<AntigenData> {
+        return pointer_to_copy(aHiDb.find_antigens_by_name(name));
     };
 
-      // to avoid python GC affecting data
+    auto find_antigens = [&pointer_to_copy](const HiDb& aHiDb, std::string name) -> std::vector<AntigenData> {
+        return pointer_to_copy(aHiDb.find_antigens(name));
+    };
+
+    auto find_antigens_fuzzy = [&pointer_to_copy](const HiDb& aHiDb, std::string name) {
+        return pointer_to_copy(aHiDb.find_antigens_fuzzy(name));
+    };
+
     auto find_antigens_with_score = [](const HiDb& aHiDb, std::string name) {
         const auto source = aHiDb.find_antigens_with_score(name);
         std::vector<std::pair<AntigenData, size_t>> result;
@@ -100,7 +101,6 @@ PYBIND11_PLUGIN(hidb_backend)
         return result;
     };
 
-      // to avoid python GC affecting data
     auto find_sera = [](const HiDb& aHiDb, std::string name) {
         const auto source = aHiDb.find_sera(name);
         std::vector<SerumData> result;
@@ -108,13 +108,14 @@ PYBIND11_PLUGIN(hidb_backend)
         return result;
     };
 
-      // to avoid python GC affecting data
     auto find_sera_with_score = [](const HiDb& aHiDb, std::string name) {
         const auto source = aHiDb.find_sera_with_score(name);
         std::vector<std::pair<SerumData, size_t>> result;
         std::transform(source.begin(), source.end(), std::back_inserter(result), [](const auto& e) { return std::make_pair(*e.first, e.second); });
         return result;
     };
+
+      // --------------------------------------------------
 
     py::class_<HiDb>(m, "HiDb")
             .def(py::init<>())
@@ -130,6 +131,7 @@ PYBIND11_PLUGIN(hidb_backend)
 
             .def("list_antigens", &HiDb::list_antigens)
             .def("find_antigens", find_antigens, py::arg("name"))
+            .def("find_antigens_fuzzy", find_antigens_fuzzy, py::arg("name"))
             .def("find_antigens_with_score", find_antigens_with_score, py::arg("name"))
             .def("find_antigens_by_name", find_antigens_by_name, py::arg("name"))
             .def("list_sera", &HiDb::list_sera)

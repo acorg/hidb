@@ -68,7 +68,7 @@ AntigenRefs& AntigenRefs::date_range(std::string aBegin, std::string aEnd)
 
 // ----------------------------------------------------------------------
 
-inline void Antigens::split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& index_key) const
+inline void Antigens::split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const
 {
     std::smatch m;
     if (std::regex_match(name, m, AntigenSerum::international_name)) {
@@ -77,6 +77,7 @@ inline void Antigens::split(std::string name, std::string& host, std::string& lo
         index_key = location.substr(0, 2);
         isolation = m[3].str();
         year = m[4].str();
+        passage = m[5].str();
     }
     else {
         throw NotFound{};
@@ -91,8 +92,8 @@ void Antigens::make_index(const HiDb& aHiDb)
     std::smatch m;
     for (const auto& antigen: *this) {
         try {
-            std::string host, location, isolation, year, key;
-            split(antigen.data().name(), host, location, isolation, year, key);
+            std::string host, location, isolation, year, passage, key;
+            split(antigen.data().name(), host, location, isolation, year, passage, key);
             auto p = mIndex.find(key);
             if (p == mIndex.end()) {
                 p = mIndex.emplace(key, aHiDb).first;
@@ -112,13 +113,13 @@ std::vector<const AntigenData*> Antigens::find_by_index(std::string name) const
 {
     std::vector<const AntigenData*> result;
     try {
-        std::string n_host, n_location, n_isolation, n_year, n_key;
-        split(name, n_host, n_location, n_isolation, n_year, n_key);
+        std::string n_host, n_location, n_isolation, n_year, n_passage, n_key;
+        split(name, n_host, n_location, n_isolation, n_year, n_passage, n_key);
         auto p = mIndex.find(n_key);
         if (p != mIndex.end()) {
             for (const auto* ad: p->second) {
-                std::string f_host, f_location, f_isolation, f_year, f_key;
-                split(ad->data().name(), f_host, f_location, f_isolation, f_year, f_key);
+                std::string f_host, f_location, f_isolation, f_year, f_passage, f_key;
+                split(ad->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key);
                 if (f_host == n_host && f_location == n_location && f_isolation == n_isolation && f_year == n_year) {
                     result.push_back(ad);
                 }
@@ -221,21 +222,13 @@ template <typename Data> class FindScore
     inline FindScore(std::string name, const Data& aAntigen, string_match::score_t aNameScoreThreshold)
         : mAntigen(&aAntigen), mName(0), mFull(0)
         {
-            const auto antigen_name = aAntigen.data().name();
-            mName = string_match::match(antigen_name, name);
-            if (aNameScoreThreshold == 0)
-                aNameScoreThreshold = static_cast<string_match::score_t>(name.length() * name.length() * 0.05);
-            if (mName >= aNameScoreThreshold) {
-                const auto full_name = aAntigen.data().full_name();
-                mFull = std::max({
-                    for_subst(full_name, antigen_name.size(), name, " CELL", {" MDCK", " SIAT"}, {}),
-                    for_subst(full_name, antigen_name.size(), name, " EGG", {" E"}, {"NYMC", "IVR", "NIB", "RESVIR", "RG", "VI", "REASSORTANT"}),
-                    for_subst(full_name, antigen_name.size(), name, " REASSORTANT", {" NYMC", " IVR", " NIB", " RESVIR", " RG", " VI", " REASSORTANT"}, {})
-                    });
-                if (mFull == 0)
-                    mFull = string_match::match(full_name, name);
-                  // std::cerr << mName << " " << mFull << " " << full_name << std::endl;
-            }
+            preprocess(name, aNameScoreThreshold);
+        }
+
+    inline FindScore(std::string name, const Data* aAntigen, string_match::score_t aNameScoreThreshold)
+        : mAntigen(aAntigen), mName(0), mFull(0)
+        {
+            preprocess(name, aNameScoreThreshold);
         }
 
     inline bool operator < (const FindScore<Data>& aNother) const
@@ -253,7 +246,8 @@ template <typename Data> class FindScore
 
     inline bool operator == (const FindScore<Data>& aNother) const { return mName == aNother.mName; }
     inline operator const Data*() const { return mAntigen; }
-    inline const Data* data() const { return mAntigen; }
+    inline operator const Data&() const { return *mAntigen; }
+      // inline const Data* data() const { return mAntigen; }
     inline operator bool() const { return mName > 0; }
     inline string_match::score_t name_score() const { return mName; }
     inline std::pair<const Data*, size_t> score() const { return std::make_pair(mAntigen, mFull); }
@@ -261,6 +255,25 @@ template <typename Data> class FindScore
  private:
     const Data* mAntigen;
     string_match::score_t mName, mFull;
+
+    inline void preprocess(std::string name, string_match::score_t aNameScoreThreshold)
+        {
+            const auto antigen_name = mAntigen->data().name();
+            mName = string_match::match(antigen_name, name);
+            if (aNameScoreThreshold == 0)
+                aNameScoreThreshold = static_cast<string_match::score_t>(name.length() * name.length() * 0.05);
+            if (mName >= aNameScoreThreshold) {
+                const auto full_name = mAntigen->data().full_name();
+                mFull = std::max({
+                    for_subst(full_name, antigen_name.size(), name, " CELL", {" MDCK", " SIAT"}, {}),
+                    for_subst(full_name, antigen_name.size(), name, " EGG", {" E"}, {"NYMC", "IVR", "NIB", "RESVIR", "RG", "VI", "REASSORTANT"}),
+                    for_subst(full_name, antigen_name.size(), name, " REASSORTANT", {" NYMC", " IVR", " NIB", " RESVIR", " RG", " VI", " REASSORTANT"}, {})
+                    });
+                if (mFull == 0)
+                    mFull = string_match::match(full_name, name);
+                  // std::cerr << mName << " " << mFull << " " << full_name << std::endl;
+            }
+        }
 
     inline string_match::score_t for_subst(std::string full_name, size_t name_part_size, std::string name, std::string keyword, std::initializer_list<const char*>&& subst_list, std::initializer_list<const char*>&& negative_list)
     {
@@ -290,10 +303,10 @@ typedef FindScore<SerumData> FindSerumScore;
 
 // ----------------------------------------------------------------------
 
-template <typename Data> inline static void find_scores(std::string name, const std::vector<Data>& antigens, std::vector<FindScore<Data>>& scores, typename std::vector<FindScore<Data>>::iterator& scores_end)
+template <typename AntigenT, typename Data> inline static void find_scores(std::string name, const std::vector<AntigenT>& antigens, std::vector<FindScore<Data>>& scores, typename std::vector<FindScore<Data>>::iterator& scores_end)
 {
     string_match::score_t score_threshold = 0;
-    for (const Data& antigen: antigens) {
+    for (const AntigenT& antigen: antigens) {
         scores.emplace_back(name, antigen, score_threshold);
         score_threshold = std::max(scores.back().name_score(), score_threshold);
     }
@@ -306,12 +319,24 @@ template <typename Data> inline static void find_scores(std::string name, const 
 
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 {
+    std::vector<const AntigenData*> by_name = mAntigens.find_by_index(name);
+    std::vector<FindAntigenScore> scores;
+    std::vector<FindAntigenScore>::iterator scores_end;
+    find_scores(name, by_name, scores, scores_end);
+    return {scores.begin(), scores_end};
+
+} // HiDb::find_antigens
+
+// ----------------------------------------------------------------------
+
+std::vector<const AntigenData*> HiDb::find_antigens_fuzzy(std::string name) const
+{
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;
     find_scores(name, antigens(), scores, scores_end);
     return {scores.begin(), scores_end};
 
-} // HiDb::find_antigens
+} // HiDb::find_antigens_fuzzy
 
 // ----------------------------------------------------------------------
 

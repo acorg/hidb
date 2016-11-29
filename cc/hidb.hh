@@ -196,7 +196,7 @@ class Antigens : public std::vector<AntigenData>
     std::map<std::string, AntigenRefs> mIndex;
 
     class NotFound : public std::exception {};
-    void split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& index_key) const; // throws NotFound
+    void split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const; // throws NotFound
 };
 
 // ----------------------------------------------------------------------
@@ -231,6 +231,7 @@ class HiDb
     std::vector<ChartData>& charts() { return mCharts; }
 
     std::vector<const AntigenData*> find_antigens(std::string name) const;
+    std::vector<const AntigenData*> find_antigens_fuzzy(std::string name) const;
     std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
     std::vector<std::string> list_antigens() const;
     std::vector<const SerumData*> find_sera(std::string name) const;
