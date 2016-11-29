@@ -74,7 +74,7 @@ inline void Antigens::split(std::string name, std::string& host, std::string& lo
     if (std::regex_match(name, m, AntigenSerum::international_name)) {
         host = m[1].str();
         location = m[2].str();
-        index_key = location.substr(0, 2);
+        index_key = location.substr(0, IndexKeySize);
         isolation = m[3].str();
         year = m[4].str();
         passage = m[5].str();
