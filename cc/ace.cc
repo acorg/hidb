@@ -27,7 +27,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
     typedef JsonKey AceKey;
 
  public:
-    inline ChartReaderEventHandler(Chart* aChart)
+    inline ChartReaderEventHandler(hidb::Chart* aChart)
         : chart(aChart), ignore_compound(0),
           string_to_fill(nullptr), bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr), vector_string_to_fill(nullptr), layer_to_fill(nullptr)
         { state.push(State::Init); }
@@ -49,14 +49,14 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   break;
               case State::Antigen:
                   state.push(State::Antigen);
-                  chart->mAntigens.emplace_back();
+                  chart->antigens().emplace_back();
                   break;
               case State::Serum:
                   state.push(State::Serum);
-                  chart->mSera.emplace_back();
+                  chart->sera().emplace_back();
                   break;
               case State::Sources:
-                  chart->mInfo.mSources.emplace_back();
+                  chart->chart_info().sources().emplace_back();
                   break;
               case State::Projections:
                   state.push(State::Ignore);
@@ -168,10 +168,10 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                         }
                         break;
                     case State::Info:
-                        r = infoField(static_cast<AceKey>(str[0]), chart->mInfo, false);
+                        r = infoField(static_cast<AceKey>(str[0]), chart->chart_info(), false);
                         break;
                     case State::Sources:
-                        r = infoField(static_cast<AceKey>(str[0]), chart->mInfo.mSources.back(), true);
+                        r = infoField(static_cast<AceKey>(str[0]), chart->chart_info().sources().back(), true);
                         break;
                     case State::Antigen:
                         push_state = State::StringField;
@@ -181,33 +181,33 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                               push_state = State::Ignore;
                               break;
                           case AceKey::Name:
-                              string_to_fill = &chart->mAntigens.back().mName;
+                              string_to_fill = &chart->antigens().back().name();
                               break;
                           case AceKey::Date:
-                              string_to_fill = &chart->mAntigens.back().mDate;
+                              string_to_fill = &chart->antigens().back().date();
                               break;
                           case AceKey::Lineage:
-                              string_to_fill = &chart->mAntigens.back().mLineage;
+                              string_to_fill = &chart->antigens().back().lineage();
                               break;
                           case AceKey::Passage:
-                              string_to_fill = &chart->mAntigens.back().mPassage;
+                              string_to_fill = &chart->antigens().back().passage();
                               break;
                           case AceKey::Reassortant:
-                              string_to_fill = &chart->mAntigens.back().mReassortant;
+                              string_to_fill = &chart->antigens().back().reassortant();
                               break;
                           case AceKey::SemanticAttributes:
-                              string_to_fill = &chart->mAntigens.back().mSemanticAttributes;
+                              string_to_fill = &chart->antigens().back().semantic();
                               break;
                           case AceKey::LabId:
-                              vector_string_to_fill = &chart->mAntigens.back().mLabId;
+                              vector_string_to_fill = &chart->antigens().back().lab_id();
                               push_state = State::VectorStringField;
                               break;
                           case AceKey::Annotations:
-                              vector_string_to_fill = &chart->mAntigens.back().mAnnotations;
+                              vector_string_to_fill = &chart->antigens().back().annotations();
                               push_state = State::VectorStringField;
                               break;
                           case AceKey::Clades:
-                              vector_string_to_fill = &chart->mAntigens.back().mClades;
+                              vector_string_to_fill = &chart->antigens().back().clades();
                               push_state = State::VectorStringField;
                               break;
                           default:
@@ -224,33 +224,33 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                               push_state = State::Ignore;
                               break;
                           case AceKey::Name:
-                              string_to_fill = &chart->mSera.back().mName;
+                              string_to_fill = &chart->sera().back().name();
                               break;
                           case AceKey::Lineage:
-                              string_to_fill = &chart->mSera.back().mLineage;
+                              string_to_fill = &chart->sera().back().lineage();
                               break;
                           case AceKey::Passage:
-                              string_to_fill = &chart->mSera.back().mPassage;
+                              string_to_fill = &chart->sera().back().passage();
                               break;
                           case AceKey::Reassortant:
-                              string_to_fill = &chart->mSera.back().mReassortant;
+                              string_to_fill = &chart->sera().back().reassortant();
                               break;
                           case AceKey::Annotations:
-                              vector_string_to_fill = &chart->mSera.back().mAnnotations;
+                              vector_string_to_fill = &chart->sera().back().annotations();
                               push_state = State::VectorStringField;
                               break;
                           case AceKey::SemanticAttributes:
-                              string_to_fill = &chart->mSera.back().mSemanticAttributes;
+                              string_to_fill = &chart->sera().back().semantic();
                               break;
                           case AceKey::SerumId:
-                              string_to_fill = &chart->mSera.back().mSerumId;
+                              string_to_fill = &chart->sera().back().serum_id();
                               break;
                           case AceKey::HomologousAntigen:
                               push_state = State::IntField;
-                              int_to_fill = &chart->mSera.back().mHomologous;
+                              int_to_fill = &chart->sera().back().homologous();
                               break;
                           case AceKey::SerumSpecies:
-                              string_to_fill = &chart->mSera.back().mSerumSpecies;
+                              string_to_fill = &chart->sera().back().serum_species();
                               break;
                           default:
                               r = false;
@@ -330,7 +330,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
             return r;
         }
 
-    inline bool infoField(AceKey key, ChartInfo& info, bool aSources)
+    inline bool infoField(AceKey key, hidb::ChartInfo& info, bool aSources)
         {
             bool r = true;
             State push_state = State::StringField;
@@ -340,28 +340,28 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   push_state = State::Ignore;
                   break;
               case AceKey::Assay:
-                  string_to_fill = &info.mAssay;
+                  string_to_fill = &info.assay();
                   break;
               case AceKey::Virus:
-                  string_to_fill = &info.mVirus;
+                  string_to_fill = &info.virus();
                   break;
               case AceKey::VirusType:
-                  string_to_fill = &info.mVirusType;
+                  string_to_fill = &info.virus_type();
                   break;
               case AceKey::Date:
-                  string_to_fill = &info.mDate;
+                  string_to_fill = &info.date();
                   break;
               case AceKey::Name:
-                  string_to_fill = &info.mName;
+                  string_to_fill = &info.name();
                   break;
               case AceKey::Lab:
-                  string_to_fill = &info.mLab;
+                  string_to_fill = &info.lab();
                   break;
               case AceKey::Rbc:
-                  string_to_fill = &info.mRbc;
+                  string_to_fill = &info.rbc();
                   break;
               case AceKey::VirusSubset:
-                  string_to_fill = &info.mSubset;
+                  string_to_fill = &info.subset();
                   break;
               case AceKey::TableType:
                   r = !aSources;
@@ -425,16 +425,16 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   break;
               case State::TitersList2:
                   state.push(State::TitersList2);
-                  chart->mTiters.mList.emplace_back();
+                  chart->titers().list().emplace_back();
                   break;
               case State::TitersLayers:
-                  chart->mTiters.mLayers.emplace_back();
-                  layer_to_fill = &chart->mTiters.mLayers.back();
+                  chart->titers().layers().emplace_back();
+                  layer_to_fill = &chart->titers().layers().back();
                   state.push(State::TitersDict);
                   break;
               case State::TitersDict:
                   if (layer_to_fill == nullptr) {
-                      layer_to_fill = &chart->mTiters.mDict;
+                      layer_to_fill = &chart->titers().dict();
                   }
                   break;
               case State::Ignore:
@@ -516,11 +516,11 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   switch (str[0]) {
                     case 'A':
                     case 'a':
-                        chart->mInfo.mType = ChartInfo::Antigenic;
+                        chart->chart_info().type() = hidb::ChartInfo::Antigenic;
                         break;
                     case 'G':
                     case 'g':
-                        chart->mInfo.mType = ChartInfo::Genetic;
+                        chart->chart_info().type() = hidb::ChartInfo::Genetic;
                         break;
                     default:
                         r = false;
@@ -528,7 +528,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   }
                   break;
               case State::TitersList2:
-                  chart->mTiters.mList.back().emplace_back(str, length);
+                  chart->titers().list().back().emplace_back(str, length);
                   break;
               case State::TitersDict:
                   layer_to_fill->back().back().second.assign(str, length);
@@ -595,7 +595,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
                   state.pop();
                   break;
               case State::ColumnBases:
-                  chart->mColumnBases.push_back(d);
+                  chart->column_bases().push_back(d);
                   break;
               default:
                   r = false;
@@ -614,7 +614,7 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
     bool Uint64(uint64_t u) { std::cout << "Uint64(" << u << ")" << std::endl; return false; }
 
  private:
-    Chart* chart;
+    hidb::Chart* chart;
     std::stack<State> state;
     size_t ignore_compound;
     std::string* string_to_fill;
@@ -622,22 +622,22 @@ class ChartReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::U
     int* int_to_fill;
     double* double_to_fill;
     std::vector<std::string>* vector_string_to_fill;
-    ChartTiters::Dict* layer_to_fill;
+    hidb::ChartTiters::Dict* layer_to_fill;
 };
 
 #pragma GCC diagnostic pop
 
 // ----------------------------------------------------------------------
 
-Chart* import_chart(std::string buffer)
+hidb::Chart* import_chart(std::string buffer)
 {
     if (buffer == "-")
         buffer = acmacs_base::read_stdin();
     else
         buffer = acmacs_base::read_file(buffer);
-    Chart* chart = nullptr;
+    hidb::Chart* chart = nullptr;
     if (buffer[0] == '{') { // && buffer.find("\"  version\": \"acmacs-ace-v1\"") != std::string::npos) {
-        chart = new Chart;
+        chart = new hidb::Chart{};
         ChartReaderEventHandler handler{chart};
         rapidjson::Reader reader;
         rapidjson::StringStream ss(buffer.c_str());

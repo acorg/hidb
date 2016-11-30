@@ -7,26 +7,26 @@
 
 // ----------------------------------------------------------------------
 
-void hidb_export(std::string aFilename, const HiDb& aHiDb, size_t aIndent);
-void hidb_import(std::string aFilename, HiDb& aHiDb);
+void hidb_export(std::string aFilename, const hidb::HiDb& aHiDb, size_t aIndent);
+void hidb_import(std::string aFilename, hidb::HiDb& aHiDb);
 
 // ----------------------------------------------------------------------
 
-template <typename RW, typename AS> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const AntigenSerumData<AS>& ag_sr)
+template <typename RW, typename AS> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const hidb::AntigenSerumData<AS>& ag_sr)
 {
     return writer << StartObject << ag_sr.data() << JsonKey::PerTable << ag_sr.per_table() << EndObject;
 }
 
 // ----------------------------------------------------------------------
 
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData::AgSrRef& ref)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const hidb::ChartData::AgSrRef& ref)
 {
     return writer << StartArray << ref.first << ref.second << EndArray;
 }
 
 // ----------------------------------------------------------------------
 
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const ChartData& chart)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const hidb::ChartData& chart)
 {
     return writer << StartObject
                   << JsonKey::TableId << chart.table_id()
@@ -46,7 +46,7 @@ template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writ
 
 // ----------------------------------------------------------------------
 
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const PerTable& per_table)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const hidb::PerTable& per_table)
 {
     return writer << StartObject << JsonKey::TableId << per_table.table_id() << if_not_empty(JsonKey::Date, per_table.date())
                   << if_not_empty(JsonKey::LabId, per_table.lab_id()) << if_not_empty(JsonKey::HomologousAntigen, per_table.homologous()) << EndObject;

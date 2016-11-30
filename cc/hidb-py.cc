@@ -3,6 +3,8 @@
 #include "ace.hh"
 #include "acmacs-base/pybind11.hh"
 
+using namespace hidb;
+
 // ----------------------------------------------------------------------
 
 PYBIND11_PLUGIN(hidb_backend)

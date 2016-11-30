@@ -7,7 +7,7 @@
 
 // ----------------------------------------------------------------------
 
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const HiDb& aHiDb)
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const hidb::HiDb& aHiDb)
 {
     return writer << StartObject
                   << JsonObjectKey("  version") << "hidb-v4"
@@ -19,7 +19,7 @@ template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writ
 
 // ----------------------------------------------------------------------
 
-void hidb_export(std::string aFilename, const HiDb& aHiDb, size_t aIndent)
+void hidb_export(std::string aFilename, const hidb::HiDb& aHiDb, size_t aIndent)
 {
     export_to_json(aHiDb, "hidb", aFilename, aIndent);
 }
@@ -62,7 +62,7 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     enum class Tr : char { StartArray='['-input_base, EndArray=']'-input_base, StartObject='{'-input_base, EndObject='}'-input_base, String='_'-input_base, Bool='^'-input_base, Int='\\'-input_base, Double='|'-input_base, Version='~'-input_base };
 
  public:
-    inline HiDbReaderEventHandler(HiDb& aHiDb)
+    inline HiDbReaderEventHandler(hidb::HiDb& aHiDb)
         : mHiDb(aHiDb), ignore_compound(0),
           string_to_fill(nullptr),
             // bool_to_fill(nullptr), int_to_fill(nullptr), double_to_fill(nullptr),
@@ -124,18 +124,18 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     bool in_init_state() const { return state.top() == State::Init; }
 
  private:
-    HiDb& mHiDb;
+    hidb::HiDb& mHiDb;
     std::stack<State> state;
     size_t ignore_compound;
     std::string* string_to_fill;
     // bool* bool_to_fill;
     // int* int_to_fill;
     // double* double_to_fill;
-    ChartData::AgSrRef* ag_sr_ref_to_fill;
+    hidb::ChartData::AgSrRef* ag_sr_ref_to_fill;
     std::vector<std::string>* vector_string_to_fill;
-    AntigenData* antigen_to_fill;
-    SerumData* serum_to_fill;
-    std::vector<PerTable>* per_table_list;
+    hidb::AntigenData* antigen_to_fill;
+    hidb::SerumData* serum_to_fill;
+    std::vector<hidb::PerTable>* per_table_list;
 
       // ----------------------------------------------------------------------
 
@@ -266,7 +266,7 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
 
     static const Ptr transition[][62];
 
-    friend void hidb_import(std::string, HiDb&);
+    friend void hidb_import(std::string, hidb::HiDb&);
 
 };
 
@@ -309,7 +309,7 @@ const HiDbReaderEventHandler::Ptr HiDbReaderEventHandler::transition[][62] = {
 
 // ----------------------------------------------------------------------
 
-void hidb_import(std::string buffer, HiDb& aHiDb)
+void hidb_import(std::string buffer, hidb::HiDb& aHiDb)
 {
     if (buffer == "-")
         buffer = acmacs_base::read_stdin();

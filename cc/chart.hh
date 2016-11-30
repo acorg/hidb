@@ -8,6 +8,11 @@
 
 // ----------------------------------------------------------------------
 
+namespace hidb
+{
+
+// ----------------------------------------------------------------------
+
 class AntigenSerumMatch
 {
  public:
@@ -114,7 +119,6 @@ class AntigenSerum
     virtual AntigenSerumMatch match_passage(const AntigenSerum& aNother) const;
 
  private:
-    friend class ChartReaderEventHandler;
       // Chart& mChart;
     std::string mName; // "N" "[VIRUS_TYPE/][HOST/]LOCATION/ISOLATION/YEAR" or "CDC_ABBR NAME" or "NAME"
     std::string mLineage; // "L"
@@ -137,11 +141,14 @@ class Antigen : public AntigenSerum
     virtual inline std::string full_name() const { const auto vi = variant_id(); std::string n = name(); if (!vi.empty()) { n.append(1, ' '); n.append(vi); } return n; }
 
     inline std::string date() const { return mDate; }
+    inline std::string& date() { return mDate; }
     inline bool reference() const { return has_semantic('R'); }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
+    inline std::vector<std::string>& lab_id() { return mLabId; }
     inline bool has_lab_id(std::string aLabId) const { return std::find(mLabId.begin(), mLabId.end(), aLabId) != mLabId.end(); }
     virtual std::string variant_id() const;
     inline const std::vector<std::string>& clades() const { return mClades; }
+    inline std::vector<std::string>& clades() { return mClades; }
 
     using AntigenSerum::match;
     virtual AntigenSerumMatch match(const Serum& aNother) const;
@@ -172,6 +179,7 @@ class Serum : public AntigenSerum
     template <typename No> inline void set_homologous(No ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
     inline bool has_homologous() const { return mHomologous >= 0; }
     inline int homologous() const { return mHomologous; }
+    inline int& homologous() { return mHomologous; }
     virtual bool is_egg() const;
 
     using AntigenSerum::match;
@@ -205,6 +213,7 @@ class ChartInfo
     inline std::string rbc() const { return mRbc; }
     inline std::string name() const { return mName; }
     inline std::string subset() const { return mSubset; }
+    inline TableType type() const { return mType; }
 
     inline std::string& virus() { return mVirus; }
     inline std::string& virus_type() { return mVirusType; }
@@ -214,9 +223,12 @@ class ChartInfo
     inline std::string& rbc() { return mRbc; }
     inline std::string& name() { return mName; }
     inline std::string& subset() { return mSubset; }
+    inline TableType& type() { return mType; }
+
+    inline auto& sources() { return mSources; }
+    inline const auto& sources() const { return mSources; }
 
  private:
-    friend class ChartReaderEventHandler;
     std::string mVirus;     // "v"
     std::string mVirusType;     // "V"
     std::string mAssay;         // "A"
@@ -248,8 +260,11 @@ class ChartTiters
             return mList;
         }
 
+    inline List& list() { return mList; }
+    inline Dict& dict() { return mDict; }
+    inline auto& layers() { return mLayers; }
+
  private:
-    friend class ChartReaderEventHandler;
     List mList;
     Dict mDict;
     std::vector<Dict> mLayers;
@@ -272,11 +287,17 @@ class Chart
     std::string lineage() const;
 
     inline const ChartInfo& chart_info() const { return mInfo; }
+    inline ChartInfo& chart_info() { return mInfo; }
     inline const std::vector<Antigen>& antigens() const { return mAntigens; }
+    inline std::vector<Antigen>& antigens() { return mAntigens; }
     inline Antigen& antigen(size_t ag_no) { return mAntigens[ag_no]; }
     inline const std::vector<Serum>& sera() const { return mSera; }
+    inline std::vector<Serum>& sera() { return mSera; }
     inline Serum& serum(size_t sr_no) { return mSera[sr_no]; }
     inline const ChartTiters& titers() const { return mTiters; }
+    inline ChartTiters& titers() { return mTiters; }
+    inline const auto& column_bases() const { return mColumnBases; }
+    inline auto& column_bases() { return mColumnBases; }
 
     void find_homologous_antigen_for_sera();
     inline void find_homologous_antigen_for_sera_const() const { const_cast<Chart*>(this)->find_homologous_antigen_for_sera(); }
@@ -284,7 +305,6 @@ class Chart
     inline bool operator < (const Chart& aNother) const { return table_id() < aNother.table_id(); }
 
  private:
-    friend class ChartReaderEventHandler;
     ChartInfo mInfo;
     std::vector<Antigen> mAntigens;
     std::vector<Serum> mSera;
@@ -292,6 +312,10 @@ class Chart
     std::vector <double> mColumnBases;
 
 };
+
+// ----------------------------------------------------------------------
+
+} // namespace hidb
 
 // ----------------------------------------------------------------------
 /// Local Variables:

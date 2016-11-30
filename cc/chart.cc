@@ -7,6 +7,8 @@
 
 #include "chart.hh"
 
+using namespace hidb;
+
 // ----------------------------------------------------------------------
 
 AntigenSerum::~AntigenSerum()
