@@ -24,6 +24,7 @@ class PerTable
     inline std::string& date() { return mDate; }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
     inline std::vector<std::string>& lab_id() { return mLabId; }
+    inline bool has_lab_id(std::string aLabId) const { return std::find(mLabId.begin(), mLabId.end(), aLabId) != mLabId.end(); }
     inline std::string homologous() const { return mHomologous; }
     inline std::string& homologous() { return mHomologous; }
 
@@ -81,6 +82,7 @@ template <typename AS> class AntigenSerumData
     inline std::vector<PerTable>& per_table() { return mTables; }
     inline size_t number_of_tables() const { return mTables.size(); }
     inline const PerTable& most_recent_table() const { return *std::max_element(mTables.begin(), mTables.end()); }
+    inline bool has_lab_id(std::string aLabId) const { return std::any_of(mTables.begin(), mTables.end(), [&](const auto& e) -> bool { return e.has_lab_id(aLabId); }); }
 
     inline std::vector<std::pair<std::string, std::string>> homologous() const
         {

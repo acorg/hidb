@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <regex>
+#include <cctype>
 
 #include "hidb.hh"
 #include "hidb-export.hh"
@@ -120,7 +121,7 @@ AntigenRefs Antigens::find_by_index(std::string name) const
             result = *fk;
             auto not_match_fields = [&](const auto& e) -> bool {
                 std::string f_host, f_location, f_isolation, f_year, f_passage, f_key;
-                this->split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key);
+                this->split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key); // gcc 6.2 wants this->
                 return f_host != n_host || f_location != n_location || f_isolation != n_isolation || f_year != n_year;
             };
             result.erase(std::remove_if(result.begin(), result.end(), not_match_fields), result.end());
@@ -136,6 +137,14 @@ AntigenRefs Antigens::find_by_index(std::string name) const
 
 AntigenRefs Antigens::find_by_cdcid(std::string cdcid) const
 {
+    if (std::isdigit(cdcid[0]))
+        cdcid = "CDC#" + cdcid;
+    AntigenRefs result;
+    for (const auto& antigen: *this) {
+        if (antigen.has_lab_id(cdcid))
+            result.push_back(&antigen);
+    }
+    return result;
 
 } // Antigens::find_by_cdcid
 

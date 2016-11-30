@@ -105,6 +105,10 @@ PYBIND11_PLUGIN(hidb_backend)
         return result;
     };
 
+    auto find_antigens_by_cdcid = [&pointer_to_copy](const HiDb& aHiDb, std::string cdcid) -> std::vector<AntigenData> {
+        return pointer_to_copy(aHiDb.find_antigens_by_cdcid(cdcid));
+    };
+
     auto find_sera = [](const HiDb& aHiDb, std::string name) {
         const auto source = aHiDb.find_sera(name);
         std::vector<SerumData> result;
@@ -139,6 +143,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("find_antigens_extra_fuzzy", find_antigens_extra_fuzzy, py::arg("name"))
             .def("find_antigens_with_score", find_antigens_with_score, py::arg("name"))
             .def("find_antigens_by_name", find_antigens_by_name, py::arg("name"))
+            .def("find_antigens_by_cdcid", find_antigens_by_cdcid, py::arg("cdcid"))
             .def("list_sera", &HiDb::list_sera)
             .def("find_sera", find_sera, py::arg("name"))
             .def("find_sera_with_score", find_sera_with_score, py::arg("name"))

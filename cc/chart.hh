@@ -139,6 +139,7 @@ class Antigen : public AntigenSerum
     inline std::string date() const { return mDate; }
     inline bool reference() const { return has_semantic('R'); }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
+    inline bool has_lab_id(std::string aLabId) const { return std::find(mLabId.begin(), mLabId.end(), aLabId) != mLabId.end(); }
     virtual std::string variant_id() const;
     inline const std::vector<std::string>& clades() const { return mClades; }
 

@@ -23,7 +23,7 @@ def main(args):
     if args.path_to_locdb is not None:
         with timeit("Reading locationdb"):
             hidb.import_locdb(args.path_to_locdb)
-    if args.name:
+    if args.name or args.cdcid:
         if args.report_score:
             if args.find_antigens:
                 scores = hidb.find_antigens_with_score(args.name.upper())
@@ -32,7 +32,10 @@ def main(args):
             print(len(scores))
             print("\n".join("{:4d} {}".format(e[1], e[0].data().full_name()) for e in scores))
         else:
-            if args.find_antigens:
+            if args.cdcid:
+                r = hidb.find_antigens_by_cdcid(args.cdcid)
+                report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+            elif args.find_antigens:
                 for fn in ["find_antigens", "find_antigens_fuzzy", "find_antigens_extra_fuzzy"]:
                     with timeit(fn):
                         r = getattr(hidb, fn)(args.name.upper())
@@ -106,6 +109,7 @@ try:
 
     parser.add_argument('--json', dest="output_json", action="store_true", default=False, help='Output full records in json.')
     parser.add_argument('-n', '--name', dest="name", default=None, help='Name to look for.')
+    parser.add_argument('--cdcid', dest="cdcid", default=None, help='CDC# to look for.')
     parser.add_argument('--countries', dest="countries", action="store_true", default=False, help='List all countries.')
     parser.add_argument('--country', dest="country", default=None, help='Find antigens isolated in the country.')
     parser.add_argument('--unrecognized-locations', dest="unrecognized_locations", action="store_true", default=False, help='List all unrecognized locations.')
