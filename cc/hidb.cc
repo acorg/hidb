@@ -120,7 +120,7 @@ AntigenRefs Antigens::find_by_index(std::string name) const
             result = *fk;
             auto not_match_fields = [&](const auto& e) -> bool {
                 std::string f_host, f_location, f_isolation, f_year, f_passage, f_key;
-                split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key);
+                this->split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key);
                 return f_host != n_host || f_location != n_location || f_isolation != n_isolation || f_year != n_year;
             };
             result.erase(std::remove_if(result.begin(), result.end(), not_match_fields), result.end());
