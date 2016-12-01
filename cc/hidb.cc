@@ -112,24 +112,33 @@ void Antigens::make_index(const HiDb& aHiDb)
 
 // ----------------------------------------------------------------------
 
-AntigenRefs Antigens::find_by_index(std::string name) const
+AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
 {
     AntigenRefs result;
     try {
         std::string n_host, n_location, n_isolation, n_year, n_passage, n_key;
         split(name, n_host, n_location, n_isolation, n_year, n_passage, n_key);
-        const AntigenRefs* fk = for_key(n_key);
-        if (fk) {
-            result = *fk;
-            auto not_match_fields = [&](const auto& e) -> bool {
-                std::string f_host, f_location, f_isolation, f_year, f_passage, f_key;
-                this->split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key); // gcc 6.2 wants this->
-                return f_host != n_host || f_location != n_location || f_isolation != n_isolation || f_year != n_year;
-            };
-            result.erase(std::remove_if(result.begin(), result.end(), not_match_fields), result.end());
+        try {
+            const auto location = aHiDb.locdb().find(n_location);
+            n_key = location.name.substr(0, IndexKeySize);
+            const AntigenRefs* fk = for_key(n_key);
+            if (fk) {
+                result = *fk;
+                auto not_match_fields = [&](const auto& e) -> bool {
+                    std::string f_host, f_location, f_isolation, f_year, f_passage, f_key;
+                    this->split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key); // gcc 6.2 wants this->
+                    return f_host != n_host || f_location != location.name || f_isolation != n_isolation || f_year != n_year;
+                };
+                result.erase(std::remove_if(result.begin(), result.end(), not_match_fields), result.end());
+            }
+        }
+        catch (LocationNotFound&) {
+              // location not found in locdb, makes no sense looking up
+            std::cerr << "LocationNotFound " << n_location << std::endl;
         }
     }
     catch (NotFound&) {
+          // Not a recognized name, ignore it
     }
     return result;
 
@@ -337,7 +346,7 @@ template <typename AntigenT, typename Data> inline static void find_scores(std::
 
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
 {
-    AntigenRefs by_name = mAntigens.find_by_index(name);
+    AntigenRefs by_name = mAntigens.find_by_index(name, *this);
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;
     find_scores(name, by_name, scores, scores_end);

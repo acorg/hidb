@@ -198,7 +198,7 @@ namespace hidb
             }
 
         void make_index(const HiDb& aHiDb);
-        AntigenRefs find_by_index(std::string name) const;
+        AntigenRefs find_by_index(std::string name, const HiDb& aHiDb) const;
         AntigenRefs find_by_cdcid(std::string cdcid) const;
 
         inline const AntigenRefs* all_by_index(std::string name) const
@@ -261,7 +261,7 @@ namespace hidb
         std::vector<const AntigenData*> find_antigens(std::string name) const;
         std::vector<const AntigenData*> find_antigens_fuzzy(std::string name) const;
         std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name) const;
-        inline std::vector<const AntigenData*> find_antigens_by_name(std::string name) const { return mAntigens.find_by_index(name); }
+        inline std::vector<const AntigenData*> find_antigens_by_name(std::string name) const { return mAntigens.find_by_index(name, *this); }
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
 
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
