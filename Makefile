@@ -50,9 +50,8 @@ DIST = $(abspath dist)
 all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
 
 install: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
-	[ -f $(HIDB_LIB) ] || (echo $(HIDB_LIB) not found >&2; exit 1)
-	if [ $$(uname) = "Darwin" ]; then /usr/bin/install_name_tool -id $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)) $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)); fi
 	ln -sf $(HIDB_LIB) $(ACMACSD_ROOT)/lib
+	if [ $$(uname) = "Darwin" ]; then /usr/bin/install_name_tool -id $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)) $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)); fi
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(ACMACSD_ROOT)/py
 	if [ ! -d $(ACMACSD_ROOT)/include/hidb ]; then mkdir $(ACMACSD_ROOT)/include/hidb; fi
 	ln -sf $(abspath cc)/hidb.hh $(abspath cc)/chart.hh $(ACMACSD_ROOT)/include/hidb
