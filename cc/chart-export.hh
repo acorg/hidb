@@ -6,15 +6,6 @@
 
 // ----------------------------------------------------------------------
 
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, JsonKey key)
-{
-    const char k = static_cast<char>(key);
-    writer.Key(&k, 1, false);
-    return writer;
-}
-
-// ----------------------------------------------------------------------
-
 template <typename RW> inline void JsonWriter_output(JsonWriterT<RW>& writer, const hidb::AntigenSerum& ag_sr)
 {
     writer << JsonKey::Name << ag_sr.name() << if_not_empty(JsonKey::Lineage, ag_sr.lineage())
