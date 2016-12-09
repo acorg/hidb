@@ -1,7 +1,17 @@
 #pragma once
 
-#include "json-writer.hh"
+#include "acmacs-base/json-writer.hh"
 #include "chart.hh"
+#include "json-keys.hh"
+
+// ----------------------------------------------------------------------
+
+template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, JsonKey key)
+{
+    const char k = static_cast<char>(key);
+    writer.Key(&k, 1, false);
+    return writer;
+}
 
 // ----------------------------------------------------------------------
 
