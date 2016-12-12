@@ -22,6 +22,7 @@ trap failed ERR
 
 # ======================================================================
 
+export LD_LIBRARY_PATH="$HOME"/AD/lib
 cd "$TESTDIR"
 ../bin/hidb-update --db "$TDIR"/hidb.json.xz ./test.acd1.xz
 ../bin/hidb-copy "$TDIR"/hidb.json.xz "$TDIR"/hidb2.json.xz
