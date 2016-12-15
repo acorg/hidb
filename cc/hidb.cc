@@ -71,32 +71,12 @@ AntigenRefs& AntigenRefs::date_range(std::string aBegin, std::string aEnd)
 
 // ----------------------------------------------------------------------
 
-inline void Antigens::split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const
-{
-    std::smatch m;
-    if (std::regex_match(name, m, AntigenSerum::international_name)) {
-        host = m[1].str();
-        location = m[2].str();
-        index_key = location.substr(0, IndexKeySize);
-        isolation = m[3].str();
-        year = m[4].str();
-        passage = m[5].str();
-    }
-    else {
-        throw NotFound{};
-    }
-
-} // Antigens::split
-
-// ----------------------------------------------------------------------
-
 void Antigens::make_index(const HiDb& aHiDb)
 {
     std::smatch m;
     for (const auto& antigen: *this) {
         try {
-            std::string host, location, isolation, year, passage, key;
-            split(antigen.data().name(), host, location, isolation, year, passage, key);
+            const std::string key = index_key(antigen.data().name());
             auto p = mIndex.find(key);
             if (p == mIndex.end()) {
                 p = mIndex.emplace(key, aHiDb).first;

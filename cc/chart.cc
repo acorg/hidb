@@ -18,52 +18,6 @@ AntigenSerum::~AntigenSerum()
 
 // ----------------------------------------------------------------------
 
-#pragma GCC diagnostic push
-#ifdef __clang__
-#pragma GCC diagnostic ignored "-Wglobal-constructors"
-#pragma GCC diagnostic ignored "-Wexit-time-destructors"
-#endif
-
-std::regex AntigenSerum::cdc_name{"^([A-Z][A-Z][A-Z]?) "};
-
-// [1] - host, [2] - location, [3] - isolation-number (omitting leading zeros), [4] - year (2 last digit), [5] - reassortant and passage
-std::regex AntigenSerum::international_name{"^[AB][^/]*/(?:([^/]+)/)?([^/]+)/0*([^/]+)/(?:\\d\\d)?(\\d\\d)(?:\\s+(.+))?$"};
-
-#pragma GCC diagnostic pop
-
-// ----------------------------------------------------------------------
-
-std::string AntigenSerum::location() const
-{
-    std::string location;
-    std::smatch m;
-    if (std::regex_search(mName, m, cdc_name)) {
-        location = "#" + m[1].str();
-    }
-    else if (std::regex_match(mName, m, international_name)) {
-        location = m[2].str();
-    }
-    // if (location.empty())
-    //     std::cerr << "No location for: " << mName << std::endl;
-    return location;
-
-} // AntigenSerum::location
-
-// ----------------------------------------------------------------------
-
-std::string AntigenSerum::year() const
-{
-    std::string year;
-    std::smatch m;
-    if (std::regex_match(mName, m, international_name)) {
-        year = m[4].str();
-    }
-    return year;
-
-} // AntigenSerum::year
-
-// ----------------------------------------------------------------------
-
 std::string Antigen::variant_id() const
 {
     std::string n;

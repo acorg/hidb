@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <regex>
+
+#include "acmacs-base/virus-name.hh"
 
 // ----------------------------------------------------------------------
 
@@ -102,14 +103,11 @@ class AntigenSerum
     virtual AntigenSerumMatch match(const AntigenSerum& aNother) const;
 
       // returned cdc abbreviation starts with #
-    std::string location() const;
-    std::string year() const;
+    inline std::string location() const { return virus_name::location(mName); }
+    inline std::string year() const { return virus_name::year(mName); }
 
     inline bool operator == (const AntigenSerum& aNother) const { return name() == aNother.name() && variant_id() == aNother.variant_id(); }
     inline bool operator < (const AntigenSerum& aNother) const { return name() == aNother.name() ? variant_id() < aNother.variant_id() : name() < aNother.name(); }
-
-    static std::regex cdc_name;
-    static std::regex international_name;
 
  protected:
     inline AntigenSerum() = default;

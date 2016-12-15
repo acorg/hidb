@@ -204,9 +204,7 @@ namespace hidb
         inline const AntigenRefs* all_by_index(std::string name) const
             {
                 try {
-                    std::string n_host, n_location, n_isolation, n_year, n_passage, n_key;
-                    split(name, n_host, n_location, n_isolation, n_year, n_passage, n_key);
-                    return for_key(n_key);
+                    return for_key(index_key(name));
                 }
                 catch (NotFound&) {
                     return nullptr;
@@ -218,7 +216,26 @@ namespace hidb
         std::map<std::string, AntigenRefs> mIndex;
 
         class NotFound : public std::exception {};
-        void split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const; // throws NotFound
+        inline void split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const
+            {
+                try {
+                    virus_name::split(name, host, location, isolation, year, passage);
+                    index_key = location.substr(0, IndexKeySize);
+                }
+                catch (virus_name::Unrecognized&) {
+                    throw NotFound{};
+                }
+            }
+
+        inline std::string index_key(std::string name) const
+            {
+                try {
+                    return virus_name::location(name).substr(0, IndexKeySize);
+                }
+                catch (virus_name::Unrecognized&) {
+                    throw NotFound{};
+                }
+            }
 
         inline const AntigenRefs* for_key(std::string key) const
             {
