@@ -96,8 +96,8 @@ AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
 {
     AntigenRefs result;
     try {
-        std::string n_host, n_location, n_isolation, n_year, n_passage, n_key;
-        split(name, n_host, n_location, n_isolation, n_year, n_passage, n_key);
+        std::string n_virus_type, n_host, n_location, n_isolation, n_year, n_passage, n_key;
+        split(name, n_virus_type, n_host, n_location, n_isolation, n_year, n_passage, n_key);
         try {
             const auto location = aHiDb.locdb().find(n_location);
             n_key = location.name.substr(0, IndexKeySize);
@@ -105,8 +105,8 @@ AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
             if (fk) {
                 result = *fk;
                 auto not_match_fields = [&](const auto& e) -> bool {
-                    std::string f_host, f_location, f_isolation, f_year, f_passage, f_key;
-                    this->split(e->data().name(), f_host, f_location, f_isolation, f_year, f_passage, f_key); // gcc 6.2 wants this->
+                    std::string f_virus_type, f_host, f_location, f_isolation, f_year, f_passage, f_key;
+                    this->split(e->data().name(), f_virus_type, f_host, f_location, f_isolation, f_year, f_passage, f_key); // gcc 6.2 wants this->
                     return f_host != n_host || f_location != location.name || f_isolation != n_isolation || f_year != n_year;
                 };
                 result.erase(std::remove_if(result.begin(), result.end(), not_match_fields), result.end());

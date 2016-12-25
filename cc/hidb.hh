@@ -216,10 +216,10 @@ namespace hidb
         std::map<std::string, AntigenRefs> mIndex;
 
         class NotFound : public std::exception {};
-        inline void split(std::string name, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const
+        inline void split(std::string name, std::string& virus_type, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const
             {
                 try {
-                    virus_name::split(name, host, location, isolation, year, passage);
+                    virus_name::split(name, virus_type, host, location, isolation, year, passage);
                     index_key = location.substr(0, IndexKeySize);
                 }
                 catch (virus_name::Unrecognized&) {
