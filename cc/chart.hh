@@ -80,15 +80,15 @@ class AntigenSerum
 
     virtual std::string full_name() const = 0;
 
-    inline std::string name() const { return mName; }
+    inline const std::string name() const { return mName; }
     inline std::string& name() { return mName; }
-    inline std::string lineage() const { return mLineage; }
+    inline const std::string lineage() const { return mLineage; }
     inline std::string& lineage() { return mLineage; }
-    inline std::string passage() const { return mPassage; }
+    inline const std::string passage() const { return mPassage; }
     inline std::string& passage() { return mPassage; }
     inline bool has_passage() const { return !mPassage.empty(); }
     std::string passage_without_date() const;
-    inline std::string reassortant() const { return mReassortant; }
+    inline const std::string reassortant() const { return mReassortant; }
     inline std::string& reassortant() { return mReassortant; }
     virtual bool is_egg() const;
     inline bool is_reassortant() const { return !mReassortant.empty(); }
@@ -96,7 +96,7 @@ class AntigenSerum
     inline const Annotations& annotations() const { return mAnnotations; }
     inline Annotations& annotations() { return mAnnotations; }
     inline bool has_semantic(char c) const { return mSemanticAttributes.find(c) != std::string::npos; }
-    inline std::string semantic() const { return mSemanticAttributes; }
+    inline const std::string semantic() const { return mSemanticAttributes; }
     inline std::string& semantic() { return mSemanticAttributes; }
 
     virtual std::string variant_id() const = 0;
@@ -138,7 +138,7 @@ class Antigen : public AntigenSerum
     inline Antigen() = default;
     virtual inline std::string full_name() const { const auto vi = variant_id(); std::string n = name(); if (!vi.empty()) { n.append(1, ' '); n.append(vi); } return n; }
 
-    inline std::string date() const { return mDate; }
+    inline const std::string date() const { return mDate; }
     inline std::string& date() { return mDate; }
     inline bool reference() const { return has_semantic('R'); }
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
@@ -168,9 +168,9 @@ class Serum : public AntigenSerum
     inline Serum() : mHomologous(-1) {}
     virtual std::string full_name() const;
 
-    inline std::string serum_id() const { return mSerumId; }
+    inline const std::string serum_id() const { return mSerumId; }
     inline std::string& serum_id() { return mSerumId; }
-    inline std::string serum_species() const { return mSerumSpecies; }
+    inline const std::string serum_species() const { return mSerumSpecies; }
     inline std::string& serum_species() { return mSerumSpecies; }
     virtual std::string variant_id() const;
 
@@ -203,14 +203,14 @@ class ChartInfo
     inline ChartInfo() : mType(Antigenic) {}
     std::string table_id(std::string lineage) const;
 
-    inline std::string virus() const { return mVirus; }
-    inline std::string virus_type() const { return mVirusType; }
-    inline std::string assay() const { return mAssay; }
-    inline std::string date() const { return mDate; }
-    inline std::string lab() const { return mLab; }
-    inline std::string rbc() const { return mRbc; }
-    inline std::string name() const { return mName; }
-    inline std::string subset() const { return mSubset; }
+    inline const std::string virus() const { return mVirus; }
+    inline const std::string virus_type() const { return mVirusType; }
+    inline const std::string assay() const { return mAssay; }
+    inline const std::string date() const { return mDate; }
+    inline const std::string lab() const { return mLab; }
+    inline const std::string rbc() const { return mRbc; }
+    inline const std::string name() const { return mName; }
+    inline const std::string subset() const { return mSubset; }
     inline TableType type() const { return mType; }
 
     inline std::string& virus() { return mVirus; }

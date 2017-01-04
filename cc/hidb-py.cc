@@ -18,7 +18,7 @@ PYBIND11_PLUGIN(hidb_backend)
     py::class_<AntigenSerum>(m, "AntigenSerum")
             .def("full_name", &AntigenSerum::full_name)
             .def("variant_id", &AntigenSerum::variant_id)
-            .def("name", static_cast<std::string (AntigenSerum::*)() const>(&AntigenSerum::name))
+            .def("name", static_cast<const std::string (AntigenSerum::*)() const>(&AntigenSerum::name))
             .def("annotations", [](const AntigenSerum &as) { py::list list; for (const auto& anno: as.annotations()) { list.append(py::str(anno)); } return list; }, py::doc("returns a copy of the annotation list, modifications to the returned list are not applied"))
             ;
 
@@ -49,7 +49,7 @@ PYBIND11_PLUGIN(hidb_backend)
       // ----------------------------------------------------------------------
 
     py::class_<PerTable>(m, "PerTable")
-            .def("table_id", static_cast<std::string (PerTable::*)() const>(&PerTable::table_id))
+            .def("table_id", static_cast<const std::string (PerTable::*)() const>(&PerTable::table_id))
             ;
 
     py::class_<AntigenData>(m, "AntigenData")

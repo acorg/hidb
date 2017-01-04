@@ -23,14 +23,14 @@ namespace hidb
         inline PerTable(std::string aTableId, const Antigen& aAntigen) : mTableId(aTableId), mDate(aAntigen.date()), mLabId(aAntigen.lab_id()) {}
         inline PerTable(std::string aTableId, const Serum& /*aSerum*/) : mTableId(aTableId) {}
 
-        inline std::string table_id() const { return mTableId; }
+        inline const std::string table_id() const { return mTableId; }
         inline std::string& table_id() { return mTableId; }
-        inline std::string date() const { return mDate; }
+        inline const std::string date() const { return mDate; }
         inline std::string& date() { return mDate; }
         inline const std::vector<std::string>& lab_id() const { return mLabId; }
         inline std::vector<std::string>& lab_id() { return mLabId; }
         inline bool has_lab_id(std::string aLabId) const { return std::find(mLabId.begin(), mLabId.end(), aLabId) != mLabId.end(); }
-        inline std::string homologous() const { return mHomologous; }
+        inline const std::string homologous() const { return mHomologous; }
         inline std::string& homologous() { return mHomologous; }
 
         inline void set_homologous(std::string aHomologous) { mHomologous = aHomologous; }
@@ -124,7 +124,7 @@ namespace hidb
         inline ChartData() = default;
         ChartData(const Chart& aChart);
 
-        inline std::string table_id() const { return mTableId; }
+        inline const std::string table_id() const { return mTableId; }
         inline const ChartInfo& chart_info() const { return mChartInfo; }
         inline const std::vector<AgSrRef>& antigens() const { return mAntigens; }
         inline const std::vector<AgSrRef>& sera() const { return mSera; }
