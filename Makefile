@@ -9,7 +9,7 @@ MAKEFLAGS = -w
 
 # ----------------------------------------------------------------------
 
-HIDB_SOURCES = hidb.cc hidb-export.cc chart.cc ace.cc
+HIDB_SOURCES = hidb.cc hidb-export.cc hidb-import.cc chart.cc ace.cc
 HIDB_PY_SOURCES = hidb-py.cc $(HIDB_SOURCES)
 
 # ----------------------------------------------------------------------

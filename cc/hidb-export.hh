@@ -8,7 +8,6 @@
 // ----------------------------------------------------------------------
 
 void hidb_export(std::string aFilename, const hidb::HiDb& aHiDb, size_t aIndent);
-void hidb_import(std::string aFilename, hidb::HiDb& aHiDb);
 
 // ----------------------------------------------------------------------
 

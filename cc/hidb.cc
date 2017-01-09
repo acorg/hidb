@@ -4,6 +4,7 @@
 
 #include "hidb.hh"
 #include "hidb-export.hh"
+#include "hidb-import.hh"
 #include "acmacs-base/string-matcher.hh"
 
 using namespace hidb;
