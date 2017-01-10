@@ -7,21 +7,21 @@
 
 // ----------------------------------------------------------------------
 
-template <typename RW> inline JsonWriterT<RW>& operator <<(JsonWriterT<RW>& writer, const hidb::HiDb& aHiDb)
+template <typename RW> inline jsw::writer<RW>& operator <<(jsw::writer<RW>& writer, const hidb::HiDb& aHiDb)
 {
-    return writer << StartObject
-                  << JsonObjectKey("  version") << "hidb-v4"
+    return writer << jsw::start_object
+                  << jsw::key("  version") << "hidb-v4"
                   << JsonKey::Antigens << aHiDb.antigens()
                   << JsonKey::Sera << aHiDb.sera()
                   << JsonKey::Tables << aHiDb.charts()
-                  << EndObject;
+                  << jsw::end_object;
 }
 
 // ----------------------------------------------------------------------
 
 void hidb_export(std::string aFilename, const hidb::HiDb& aHiDb, size_t aIndent)
 {
-    export_to_json(aHiDb, "hidb", aFilename, aIndent);
+    jsw::export_to_json(aHiDb, "hidb", aFilename, aIndent);
 }
 
 // ----------------------------------------------------------------------

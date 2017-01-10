@@ -118,8 +118,8 @@ namespace hidb
     class ChartData
     {
      public:
-        typedef std::pair<std::string, std::string> AgSrRef;
-        typedef std::vector<std::vector<std::string>> Titers;
+        using AgSrRef = std::pair<std::string, std::string>;
+        using Titers = std::vector<std::vector<std::string>>;
 
         inline ChartData() = default;
         ChartData(const Chart& aChart);

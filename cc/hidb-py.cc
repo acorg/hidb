@@ -153,10 +153,10 @@ PYBIND11_PLUGIN(hidb_backend)
 
       // ----------------------------------------------------------------------
 
-    m.def("json", &json<Antigen>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
-    m.def("json", &json<AntigenData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
-    m.def("json", &json<Serum>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
-    m.def("json", &json<SerumData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
+    m.def("json", &jsw::json<Antigen>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
+    m.def("json", &jsw::json<AntigenData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
+    m.def("json", &jsw::json<Serum>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
+    m.def("json", &jsw::json<SerumData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
 
       // ----------------------------------------------------------------------
 
