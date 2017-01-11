@@ -1,5 +1,6 @@
 #include <iomanip>
 #include <regex>
+#include <sstream>
 #include <cctype>
 
 #include "hidb.hh"
@@ -516,6 +517,18 @@ const hidb::HiDb& HiDbSet::get(std::string aVirusType) const
     return *h->second;
 
 } // HiDbSet::get
+
+// ----------------------------------------------------------------------
+
+std::string hidb::report(const std::vector<const AntigenData*>& aAntigens, std::string aPrefix)
+{
+    std::ostringstream out;
+    for (const auto ag: aAntigens) {
+        out << aPrefix << ag->data().full_name() << std::endl;
+    }
+    return out.str();
+
+} // hidb::report
 
 // ----------------------------------------------------------------------
 

@@ -309,6 +309,8 @@ namespace hidb
 
     }; // class HiDb
 
+    std::string report(const std::vector<const AntigenData*>& aAntigens, std::string aPrefix = "");
+
 // ----------------------------------------------------------------------
 
     class NoHiDb : public std::exception {};
