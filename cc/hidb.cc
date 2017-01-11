@@ -359,8 +359,9 @@ const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annot
 {
     AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
     auto score = find_best_score(name_reassortant_annotations_passage, by_name);
-    if (score.full_name() != name_reassortant_annotations_passage)
-        throw NotFound(name_reassortant_annotations_passage);
+    if (score.full_name() != name_reassortant_annotations_passage) {
+        throw NotFound(name_reassortant_annotations_passage + " (best: " + score.full_name() + ")");
+    }
     return score;
 
 } // HiDb::find_antigen_exactly
