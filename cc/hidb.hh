@@ -144,7 +144,7 @@ namespace hidb
         std::vector<AgSrRef> mAntigens;
         std::vector<AgSrRef> mSera;
         Titers mTiters;
-    };
+    }; // class ChartData
 
 // ----------------------------------------------------------------------
 
@@ -166,7 +166,7 @@ namespace hidb
                     throw std::runtime_error("Tables::[]: table_id not found");
                 return *c;
             }
-    };
+    }; // class Tables
 
 // ----------------------------------------------------------------------
 
@@ -183,7 +183,7 @@ namespace hidb
 
      private:
         const HiDb* mHiDb;
-    };
+    }; // class AntigenRefs
 
 // ----------------------------------------------------------------------
 
@@ -242,7 +242,7 @@ namespace hidb
                 auto p = mIndex.find(key);
                 return p != mIndex.end() ? &p->second : nullptr;
             }
-    };
+    }; // class Antigens
 
 // ----------------------------------------------------------------------
 
@@ -306,7 +306,27 @@ namespace hidb
 
         void add_antigen(const Antigen& aAntigen, std::string aTableId);
         void add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens);
-    };
+
+    }; // class HiDb
+
+// ----------------------------------------------------------------------
+
+    class NoHiDb : public std::exception {};
+
+    class HiDbSet
+    {
+     public:
+        inline HiDbSet(std::string aHiDbDir) : mHiDbDir(aHiDbDir) {}
+
+        const HiDb& get(std::string aVirusType) const;
+
+     private:
+        using Ptrs = std::map<std::string, std::unique_ptr<hidb::HiDb>>;
+
+        std::string mHiDbDir;
+        mutable Ptrs mPtrs;
+
+    }; // class HiDbSet
 
 // ----------------------------------------------------------------------
 

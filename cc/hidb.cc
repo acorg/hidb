@@ -492,6 +492,33 @@ HiDbAntigenStat HiDb::stat() const
 
 // ----------------------------------------------------------------------
 
+const hidb::HiDb& HiDbSet::get(std::string aVirusType) const
+{
+    auto h = mPtrs.find(aVirusType);
+    if (h == mPtrs.end()) {
+        std::string filename;
+        if (aVirusType == "A(H1N1)")
+            filename = mHiDbDir + "/hidb4.h1.json.xz";
+        else if (aVirusType == "A(H3N2)")
+            filename = mHiDbDir + "/hidb4.h3.json.xz";
+        else if (aVirusType == "B")
+            filename = mHiDbDir + "/hidb4.b.json.xz";
+        else
+            throw NoHiDb{};
+          //throw std::runtime_error("No HiDb for " + aVirusType);
+
+        std::unique_ptr<HiDb> hidb{new HiDb{}};
+          // std::cout << "opening " << filename << std::endl;
+        hidb->importFrom(filename);
+        hidb->importLocDb(mHiDbDir + "/locationdb.json.xz");
+        h = mPtrs.emplace(aVirusType, std::move(hidb)).first;
+    }
+    return *h->second;
+
+} // HiDbSet::get
+
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 /// Local Variables:
