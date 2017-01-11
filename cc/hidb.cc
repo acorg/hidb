@@ -260,6 +260,7 @@ template <typename Data> class FindScore
     inline operator bool() const { return mName > 0; }
     inline string_match::score_t name_score() const { return mName; }
     inline std::pair<const Data*, size_t> score() const { return std::make_pair(mAntigen, mFull); }
+    inline std::string full_name() const { return mAntigen->data().full_name(); }
 
  private:
     const Data* mAntigen;
@@ -326,25 +327,53 @@ template <typename AntigenT, typename Data> inline static void find_scores(std::
 
 // ----------------------------------------------------------------------
 
-std::vector<const AntigenData*> HiDb::find_antigens(std::string name) const
+template <typename AntigenT> inline static FindScore<AntigenT> find_best_score(std::string name, const std::vector<AntigenT*>& antigens)
 {
-    AntigenRefs by_name = mAntigens.find_by_index(name, *this);
+    string_match::score_t score_threshold = 0;
+    FindScore<AntigenT> result{name, antigens.front(), score_threshold};
+    for (const AntigenT* antigen: antigens) {
+        const FindScore<AntigenT> score{name, *antigen, score_threshold};
+        if (score < result)
+            result = score;
+        score_threshold = std::max(score.name_score(), score_threshold);
+    }
+    return result;
+
+} // HiDb::find_scores
+
+// ----------------------------------------------------------------------
+
+std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant_annotations_passage) const
+{
+    AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;
-    find_scores(name, by_name, scores, scores_end);
+    find_scores(name_reassortant_annotations_passage, by_name, scores, scores_end);
     return {scores.begin(), scores_end};
 
 } // HiDb::find_antigens
 
 // ----------------------------------------------------------------------
 
-std::vector<const AntigenData*> HiDb::find_antigens_fuzzy(std::string name) const
+const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annotations_passage) const
 {
-    const AntigenRefs* by_index = mAntigens.all_by_index(name);
+    AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
+    auto score = find_best_score(name_reassortant_annotations_passage, by_name);
+    if (score.full_name() != name_reassortant_annotations_passage)
+        throw NotFound(name_reassortant_annotations_passage);
+    return score;
+
+} // HiDb::find_antigen_exactly
+
+// ----------------------------------------------------------------------
+
+std::vector<const AntigenData*> HiDb::find_antigens_fuzzy(std::string name_reassortant_annotations_passage) const
+{
+    const AntigenRefs* by_index = mAntigens.all_by_index(name_reassortant_annotations_passage);
     if (by_index) {
         std::vector<FindAntigenScore> scores;
         std::vector<FindAntigenScore>::iterator scores_end;
-        find_scores(name, *by_index, scores, scores_end);
+        find_scores(name_reassortant_annotations_passage, *by_index, scores, scores_end);
         return {scores.begin(), scores_end};
     }
     else {
@@ -355,11 +384,11 @@ std::vector<const AntigenData*> HiDb::find_antigens_fuzzy(std::string name) cons
 
 // ----------------------------------------------------------------------
 
-std::vector<const AntigenData*> HiDb::find_antigens_extra_fuzzy(std::string name) const
+std::vector<const AntigenData*> HiDb::find_antigens_extra_fuzzy(std::string name_reassortant_annotations_passage) const
 {
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;
-    find_scores(name, antigens(), scores, scores_end);
+    find_scores(name_reassortant_annotations_passage, antigens(), scores, scores_end);
     return {scores.begin(), scores_end};
 
 } // HiDb::find_antigens_extra_fuzzy

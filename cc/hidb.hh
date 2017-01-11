@@ -261,6 +261,8 @@ namespace hidb
     class HiDb
     {
      public:
+        class NotFound : public std::runtime_error { public: using std::runtime_error::runtime_error; };
+
         inline HiDb() {}
 
         void add(const Chart& aChart);
@@ -275,9 +277,10 @@ namespace hidb
         const std::vector<ChartData>& charts() const { return mCharts; }
         std::vector<ChartData>& charts() { return mCharts; }
 
-        std::vector<const AntigenData*> find_antigens(std::string name) const;
-        std::vector<const AntigenData*> find_antigens_fuzzy(std::string name) const;
-        std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name) const;
+        std::vector<const AntigenData*> find_antigens(std::string name_reassortant_annotations_passage) const;
+        const AntigenData& find_antigen_exactly(std::string name_reassortant_annotations_passage) const; // throws NotFound if antigen with this very set of data not found
+        std::vector<const AntigenData*> find_antigens_fuzzy(std::string name_reassortant_annotations_passage) const;
+        std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name_reassortant_annotations_passage) const;
         inline std::vector<const AntigenData*> find_antigens_by_name(std::string name) const { return mAntigens.find_by_index(name, *this); }
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
 
