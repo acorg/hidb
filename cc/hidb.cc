@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <regex>
-#include <sstream>
 #include <cctype>
 
 #include "hidb.hh"
@@ -430,6 +429,17 @@ std::vector<const SerumData*> HiDb::find_sera(std::string name) const
 
 // ----------------------------------------------------------------------
 
+const SerumData& HiDb::find_serum_exactly(std::string name_reassortant_annotations_serum_id) const
+{
+    const auto found = std::find_if(mSera.begin(), mSera.end(), [&](const auto& sr) -> bool { return name_reassortant_annotations_serum_id == sr.data().full_name(); });
+    if (found == mSera.end())
+        throw NotFound(name_reassortant_annotations_serum_id);
+    return *found;
+
+} // HiDb::find_serum_exactly
+
+// ----------------------------------------------------------------------
+
 std::vector<std::pair<const SerumData*, size_t>> HiDb::find_sera_with_score(std::string name) const
 {
     std::vector<FindSerumScore> scores;
@@ -548,19 +558,6 @@ const hidb::HiDb& HiDbSet::get(std::string aVirusType) const
 } // HiDbSet::get
 
 // ----------------------------------------------------------------------
-
-std::string hidb::report(const std::vector<const AntigenData*>& aAntigens, std::string aPrefix)
-{
-    std::ostringstream out;
-    for (const auto ag: aAntigens) {
-        out << aPrefix << ag->data().full_name() << std::endl;
-    }
-    return out.str();
-
-} // hidb::report
-
-// ----------------------------------------------------------------------
-
 
 // ----------------------------------------------------------------------
 /// Local Variables:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -287,6 +288,7 @@ namespace hidb
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
         std::vector<std::string> list_antigens() const;
         std::vector<const SerumData*> find_sera(std::string name) const;
+        const SerumData& find_serum_exactly(std::string name_reassortant_annotations_serum_id) const; // throws NotFound if serum with this very set of data not found
         std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
         std::vector<std::string> list_sera() const;
 
@@ -312,7 +314,14 @@ namespace hidb
 
     }; // class HiDb
 
-    std::string report(const std::vector<const AntigenData*>& aAntigens, std::string aPrefix = "");
+    template <typename AS> inline std::string report(const std::vector<const AS*>& aAntigens, std::string aPrefix = "")
+    {
+        std::ostringstream out;
+        for (const auto* ag: aAntigens) {
+            out << aPrefix << ag->data().full_name() << std::endl;
+        }
+        return out.str();
+    }
 
 // ----------------------------------------------------------------------
 
