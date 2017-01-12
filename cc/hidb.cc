@@ -358,11 +358,10 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant
 const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annotations_passage) const
 {
     AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
-    auto score = find_best_score(name_reassortant_annotations_passage, by_name);
-    if (score.full_name() != name_reassortant_annotations_passage) {
-        throw NotFound(name_reassortant_annotations_passage + " (best: " + score.full_name() + ")");
-    }
-    return score;
+    const auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == a->data().full_name(); });
+    if (found == by_name.end())
+        throw NotFound(name_reassortant_annotations_passage);
+    return **found;
 
 } // HiDb::find_antigen_exactly
 
