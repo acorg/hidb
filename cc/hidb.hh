@@ -262,7 +262,16 @@ namespace hidb
     class HiDb
     {
      public:
-        class NotFound : public std::runtime_error { public: using std::runtime_error::runtime_error; };
+        class NotFound : public std::runtime_error
+        {
+         public:
+            using std::runtime_error::runtime_error;
+            inline NotFound(std::string aMessage, const AntigenRefs& aSuggestions) : std::runtime_error::runtime_error(aMessage), mSuggestions(aSuggestions) {}
+            const AntigenRefs& suggestions() const { return mSuggestions; }
+
+         private:
+            AntigenRefs mSuggestions;
+        };
 
         inline HiDb() {}
 

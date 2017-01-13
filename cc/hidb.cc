@@ -123,8 +123,18 @@ AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
         const AntigenRefs* fk = for_key(key);
         if (fk) {
             const auto found = std::find_if(fk->begin(), fk->end(), [&name](const auto& e) -> bool { return e->data().full_name() == name; });
-            if (found != fk->end())
+            if (found != fk->end()) {
+                  // exact match
                 result.push_back(*found);
+            }
+            else {
+                  // try with prefix
+                std::string prefix(name, 0, name.find(' ', 3));
+                for (const auto& e: *fk) {
+                    if (e->data().full_name().substr(0, prefix.size()) == prefix)
+                        result.push_back(e);
+                }
+            }
         }
         else {
               //std::cerr << "find_by_index not recognized name: " << name << " index-key: " << key << " " << (fk ? fk->size() : 0) << std::endl;
@@ -368,8 +378,9 @@ const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annot
 {
     AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
     const auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == a->data().full_name(); });
-    if (found == by_name.end())
-        throw NotFound(name_reassortant_annotations_passage);
+    if (found == by_name.end()) {
+        throw NotFound(name_reassortant_annotations_passage, by_name);
+    }
     return **found;
 
 } // HiDb::find_antigen_exactly
