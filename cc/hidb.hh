@@ -243,6 +243,9 @@ namespace hidb
                 auto p = mIndex.find(key);
                 return p != mIndex.end() ? &p->second : nullptr;
             }
+
+        void find_by_index_cdc_name(std::string name, AntigenRefs& aResult) const;
+
     }; // class Antigens
 
 // ----------------------------------------------------------------------

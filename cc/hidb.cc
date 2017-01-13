@@ -119,31 +119,44 @@ AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
         }
     }
     catch (NotFound&) {         // CDC name?
-        const std::string key = index_key(name);
-        const AntigenRefs* fk = for_key(key);
-        if (fk) {
-            const auto found = std::find_if(fk->begin(), fk->end(), [&name](const auto& e) -> bool { return e->data().full_name() == name; });
-            if (found != fk->end()) {
-                  // exact match
-                result.push_back(*found);
-            }
-            else {
-                  // try with prefix
-                std::string prefix(name, 0, name.find(' ', 3));
-                for (const auto& e: *fk) {
-                    if (e->data().full_name().substr(0, prefix.size()) == prefix)
-                        result.push_back(e);
-                }
-            }
-        }
-        else {
-              //std::cerr << "find_by_index not recognized name: " << name << " index-key: " << key << " " << (fk ? fk->size() : 0) << std::endl;
-              // Not a recognized name, ignore it
-        }
+        find_by_index_cdc_name(name, result);
     }
     return result;
 
 } // Antigens::find_by_index
+
+// ----------------------------------------------------------------------
+
+void Antigens::find_by_index_cdc_name(std::string name, AntigenRefs& aResult) const
+{
+    const std::string key = index_key(name);
+    const AntigenRefs* fk = for_key(key);
+    if (fk) {
+        const auto found1 = std::find_if(fk->begin(), fk->end(), [&name](const auto& e) -> bool { return e->data().full_name() == name; });
+        if (found1 != fk->end()) {
+              // exact match
+            aResult.push_back(*found1);
+        }
+        else {
+              // try with prefix
+            std::string prefix(name, 0, name.find(' ', 3));
+            for (const auto& e: *fk) {
+                if (e->data().full_name().substr(0, prefix.size()) == prefix)
+                    aResult.push_back(e);
+            }
+
+            if (aResult.empty() && name[2] == ' ') {
+                  // use all names with matching cdc abbreviation as a suggestion
+                std::copy_if(fk->begin(), fk->end(), std::back_inserter(aResult), [&name](const auto& e) -> bool { return e->data().full_name().substr(0, 2) == name.substr(0, 2); });
+            }
+        }
+    }
+    else {
+          //std::cerr << "find_by_index not recognized name: " << name << " index-key: " << key << " " << (fk ? fk->size() : 0) << std::endl;
+          // Not a recognized name, ignore it
+    }
+
+} // Antigens::find_by_index_cdc_name
 
 // ----------------------------------------------------------------------
 
@@ -377,10 +390,9 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant
 const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annotations_passage) const
 {
     AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
-    const auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == a->data().full_name(); });
-    if (found == by_name.end()) {
+    auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == a->data().full_name(); });
+    if (found == by_name.end())
         throw NotFound(name_reassortant_annotations_passage, by_name);
-    }
     return **found;
 
 } // HiDb::find_antigen_exactly
