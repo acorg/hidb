@@ -118,8 +118,18 @@ AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
             std::cerr << "LocationNotFound " << n_location << std::endl;
         }
     }
-    catch (NotFound&) {
-          // Not a recognized name, ignore it
+    catch (NotFound&) {         // CDC name?
+        const std::string key = index_key(name);
+        const AntigenRefs* fk = for_key(key);
+        if (fk) {
+            const auto found = std::find_if(fk->begin(), fk->end(), [&name](const auto& e) -> bool { return e->data().full_name() == name; });
+            if (found != fk->end())
+                result.push_back(*found);
+        }
+        else {
+              //std::cerr << "find_by_index not recognized name: " << name << " index-key: " << key << " " << (fk ? fk->size() : 0) << std::endl;
+              // Not a recognized name, ignore it
+        }
     }
     return result;
 
