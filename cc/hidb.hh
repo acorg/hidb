@@ -216,7 +216,8 @@ namespace hidb
         static constexpr const size_t IndexKeySize = 2;
         std::map<std::string, AntigenRefs> mIndex;
 
-        class NotFound : public std::exception {};
+        class NotFound : public std::runtime_error { public: using std::runtime_error::runtime_error; };
+
         inline void split(std::string name, std::string& virus_type, std::string& host, std::string& location, std::string& isolation, std::string& year, std::string& passage, std::string& index_key) const
             {
                 try {
@@ -224,7 +225,7 @@ namespace hidb
                     index_key = location.substr(0, IndexKeySize);
                 }
                 catch (virus_name::Unrecognized&) {
-                    throw NotFound{};
+                    throw NotFound{"cannot split " + name};
                 }
             }
 
@@ -234,7 +235,7 @@ namespace hidb
                     return virus_name::location(name).substr(0, IndexKeySize);
                 }
                 catch (virus_name::Unrecognized&) {
-                    throw NotFound{};
+                    throw NotFound{"cannot find location in " + name};
                 }
             }
 
