@@ -80,12 +80,7 @@ std::string AntigenSerum::passage_without_date() const
 
 std::string Serum::full_name() const
 {
-    std::string n = name();
-    const auto vi = variant_id();
-    if (!vi.empty()) {
-        n.append(1, ' ');
-        n.append(vi);
-    }
+    std::string n = name_for_exact_matching();
     if (has_passage()) {
         n.append(1, ' ');
         n.append(passage());
@@ -97,6 +92,20 @@ std::string Serum::full_name() const
     return n;
 
 } // Serum::full_name
+
+// ----------------------------------------------------------------------
+
+std::string Serum::name_for_exact_matching() const // full_name without passage, serum species
+{
+    std::string n = name();
+    const auto vi = variant_id();
+    if (!vi.empty()) {
+        n.append(1, ' ');
+        n.append(vi);
+    }
+    return n;
+
+} // Serum::name_for_exact_matching
 
 // ----------------------------------------------------------------------
 

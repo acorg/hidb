@@ -392,7 +392,7 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant
 const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annotations_passage) const
 {
     AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
-    auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == a->data().full_name(); });
+    auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == a->data().name_for_exact_matching(); });
     if (found == by_name.end())
         throw NotFound(name_reassortant_annotations_passage, by_name);
     return **found;
@@ -466,9 +466,12 @@ std::vector<const SerumData*> HiDb::find_sera(std::string name) const
 
 const SerumData& HiDb::find_serum_exactly(std::string name_reassortant_annotations_serum_id) const
 {
-    const auto found = std::find_if(mSera.begin(), mSera.end(), [&](const auto& sr) -> bool { return name_reassortant_annotations_serum_id == sr.data().full_name(); });
-    if (found == mSera.end())
+    const auto found = std::find_if(mSera.begin(), mSera.end(), [&](const auto& sr) -> bool { return name_reassortant_annotations_serum_id == sr.data().name_for_exact_matching(); });
+    if (found == mSera.end()) {
+        // std::cerr << "find_serum_exactly \"" << name_reassortant_annotations_serum_id << '"' << std::endl;
+        // for (const auto& sr: mSera) std::cerr << "  \"" << sr.data().name_for_exact_matching() << '"' << std::endl;
         throw NotFound(name_reassortant_annotations_serum_id);
+    }
     return *found;
 
 } // HiDb::find_serum_exactly

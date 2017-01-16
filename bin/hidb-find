@@ -90,13 +90,17 @@ def report(data, find_antigens, report_tables, report_homologous, output_json):
         if find_antigens:
             def homologous(e):
                 return ""
+            def date(e):
+                return e.date()
         else:
             def homologous(e):
                 return "\n    ".join([repr(e2) for e2 in e.homologous()])
+            def date(e):
+                return ""
         class NoMostRecentTable:
             def table_id(self):
                 return "*no-most-recent-table*"
-        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=(e.most_recent_table() or NoMostRecentTable()).table_id(), date=e.date(),
+        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=(e.most_recent_table() or NoMostRecentTable()).table_id(), date=date(e),
                                        all_tables=[t.table_id() for t in e.tables()],
                                        homologous=homologous(e)) for e in data))
 

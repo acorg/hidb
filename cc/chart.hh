@@ -79,6 +79,7 @@ class AntigenSerum
     inline AntigenSerum& operator=(const AntigenSerum&) = default;
 
     virtual std::string full_name() const = 0;
+    virtual std::string name_for_exact_matching() const = 0;
 
     inline const std::string name() const { return mName; }
     inline std::string& name() { return mName; }
@@ -136,7 +137,8 @@ class Antigen : public AntigenSerum
  public:
       // inline Antigen(Chart& aChart) : AntigenSerum(aChart) {}
     inline Antigen() = default;
-    virtual inline std::string full_name() const { const auto vi = variant_id(); std::string n = name(); if (!vi.empty()) { n.append(1, ' '); n.append(vi); } return n; }
+    virtual inline std::string full_name() const { return name_for_exact_matching(); }
+    virtual inline std::string name_for_exact_matching() const { const auto vi = variant_id(); std::string n = name(); if (!vi.empty()) { n.append(1, ' '); n.append(vi); } return n; }
 
     inline const std::string date() const { return mDate; }
     inline std::string& date() { return mDate; }
@@ -167,6 +169,7 @@ class Serum : public AntigenSerum
       // inline Serum(Chart& aChart) : AntigenSerum(aChart), mHomologous(-1) {}
     inline Serum() : mHomologous(-1) {}
     virtual std::string full_name() const;
+    virtual std::string name_for_exact_matching() const; // full_name without passage, serum species
 
     inline const std::string serum_id() const { return mSerumId; }
     inline std::string& serum_id() { return mSerumId; }
