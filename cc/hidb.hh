@@ -26,7 +26,7 @@ namespace hidb
 
         inline const std::string table_id() const { return mTableId; }
         inline std::string& table_id() { return mTableId; }
-        inline const std::string date() const { return mDate; }
+        inline const std::string date() const { return mDate; } // date of an antigen in that table! (NOT date of a table!)
         inline std::string& date() { return mDate; }
         inline const std::vector<std::string>& lab_id() const { return mLabId; }
         inline std::vector<std::string>& lab_id() { return mLabId; }
@@ -145,6 +145,7 @@ namespace hidb
         std::vector<AgSrRef> mAntigens;
         std::vector<AgSrRef> mSera;
         Titers mTiters;
+
     }; // class ChartData
 
 // ----------------------------------------------------------------------
@@ -167,6 +168,7 @@ namespace hidb
                     throw std::runtime_error("Tables::[]: table_id not found");
                 return *c;
             }
+
     }; // class Tables
 
 // ----------------------------------------------------------------------
@@ -288,8 +290,8 @@ namespace hidb
         Antigens& antigens() { return mAntigens; }
         const std::vector<SerumData>& sera() const { return mSera; }
         std::vector<SerumData>& sera() { return mSera; }
-        const std::vector<ChartData>& charts() const { return mCharts; }
-        std::vector<ChartData>& charts() { return mCharts; }
+        const Tables& charts() const { return mCharts; }
+        Tables& charts() { return mCharts; }
 
         std::vector<const AntigenData*> find_antigens(std::string name_reassortant_annotations_passage) const;
         const AntigenData& find_antigen_exactly(std::string name_reassortant_annotations_passage) const; // throws NotFound if antigen with this very set of data not found
@@ -306,7 +308,6 @@ namespace hidb
         std::vector<std::string> list_sera() const;
 
           // name is just (international) name without reassortant/passage
-
 
         inline AntigenRefs all_antigens() const { return mAntigens.all(*this); }
 
