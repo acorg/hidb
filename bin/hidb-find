@@ -70,23 +70,23 @@ def report(hidb, data, find_antigens, report_tables, report_homologous, output_j
     if find_antigens:
         if report_tables:
             if report_homologous:
-                fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}\n  Homologous:\n    {homologous}"
+                fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
             else:
                 fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}"
         else:
             if report_homologous:
-                fmt = "{full_name} [{date}]\n  Homologous:\n    {homologous}"
+                fmt = "{full_name} [{date}]{homologous}"
             else:
                 fmt = "{full_name} [{date}]"
     else:
         if report_tables:
             if report_homologous:
-                fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}\n  Homologous:\n    {homologous}"
+                fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
             else:
                 fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
         else:
             if report_homologous:
-                fmt = "{full_name}\n  Homologous:\n    {homologous}"
+                fmt = "{full_name}{homologous}"
             else:
                 fmt = "{full_name}"
     print(len(data))
@@ -95,12 +95,20 @@ def report(hidb, data, find_antigens, report_tables, report_homologous, output_j
     else:
         if find_antigens:
             def homologous(e):
-                return "\n    ".join([repr(e2) for e2 in hidb.find_homologous_sera(e)])
+                hom = [e2.data().full_name() for e2 in hidb.find_homologous_sera(e)]
+                if hom:
+                    return "\n  Homologous:\n    " + "\n    ".join(hom)
+                else:
+                    return ""
             def date(e):
                 return e.date()
         else:
             def homologous(e):
-                return "\n    ".join([repr(e2) for e2 in e.homologous()])
+                hom = [repr(e2) for e2 in e.homologous()]
+                if hom:
+                    return "\n  Homologous:\n    " + "\n    ".join(hom)
+                else:
+                    return ""
             def date(e):
                 return ""
         class NoMostRecentTable:
