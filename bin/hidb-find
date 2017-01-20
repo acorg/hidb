@@ -34,16 +34,16 @@ def main(args):
         else:
             if args.cdcid:
                 r = hidb.find_antigens_by_cdcid(args.cdcid)
-                report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                report(hidb, r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
             elif args.find_antigens:
                 for fn in ["find_antigens", "find_antigens_fuzzy", "find_antigens_extra_fuzzy"]:
                     with timeit(fn):
                         r = getattr(hidb, fn)(args.name.upper())
                     if r:
                         break;
-                report(r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                report(hidb, r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
             else:
-                report(hidb.find_sera(args.name.upper()), find_antigens=False, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                report(hidb, hidb.find_sera(args.name.upper()), find_antigens=False, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
     elif args.countries:
         countries = hidb.all_countries()
         print(len(countries), "\n".join(countries), sep="\n")
@@ -51,7 +51,7 @@ def main(args):
         unrecognized_locations = hidb.unrecognized_locations()
         print(len(unrecognized_locations), "\n".join(unrecognized_locations), sep="\n")
     elif args.country:
-        report(hidb.all_antigens().country(args.country.upper()), #.date_range("2010", "2011"),
+        report(hidb, hidb.all_antigens().country(args.country.upper()), #.date_range("2010", "2011"),
                    find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
     elif args.list_antigens:
         antigens = hidb.list_antigens()
@@ -66,12 +66,18 @@ def main(args):
 
 # ----------------------------------------------------------------------
 
-def report(data, find_antigens, report_tables, report_homologous, output_json):
+def report(hidb, data, find_antigens, report_tables, report_homologous, output_json):
     if find_antigens:
         if report_tables:
-            fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+            if report_homologous:
+                fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}\n  Homologous:\n    {homologous}"
+            else:
+                fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}"
         else:
-            fmt = "{full_name} [{date}]"
+            if report_homologous:
+                fmt = "{full_name} [{date}]\n  Homologous:\n    {homologous}"
+            else:
+                fmt = "{full_name} [{date}]"
     else:
         if report_tables:
             if report_homologous:
@@ -89,7 +95,7 @@ def report(data, find_antigens, report_tables, report_homologous, output_json):
     else:
         if find_antigens:
             def homologous(e):
-                return ""
+                return "\n    ".join([repr(e2) for e2 in hidb.find_homologous_sera(e)])
             def date(e):
                 return e.date()
         else:
@@ -125,7 +131,7 @@ try:
     parser.add_argument('--score', dest="report_score", action="store_true", default=False)
     parser.add_argument('--tables', dest="report_tables", action="store_true", default=False)
     parser.add_argument('-s', '--sera', dest="find_antigens", action="store_false", default=True)
-    parser.add_argument('--homologous', dest="report_homologous", action="store_true", default=False, help='Report homologous antigens for each serum')
+    parser.add_argument('--homologous', dest="report_homologous", action="store_true", default=False, help='Report homologous antigens/sera for each serum/antigen')
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()

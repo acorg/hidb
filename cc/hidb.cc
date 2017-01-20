@@ -6,6 +6,7 @@
 #include "hidb-export.hh"
 #include "hidb-import.hh"
 #include "acmacs-base/string-matcher.hh"
+#include "acmacs-base/stream.hh"
 
 using namespace hidb;
 
@@ -499,6 +500,24 @@ std::vector<std::string> HiDb::list_sera() const
     return result;
 
 } // HiDb::list_sera
+
+// ----------------------------------------------------------------------
+
+std::vector<const SerumData*> HiDb::find_homologous_sera(const AntigenData& aAntigen) const
+{
+    std::vector<const SerumData*> result;
+    const std::string antigen_name = aAntigen.data().name();
+    const std::string antigen_variant_id = aAntigen.data().variant_id();
+    std::cerr << antigen_name << " vi:" << antigen_variant_id << std::endl;
+    for (const auto& serum: sera()) {
+        if (serum.data().name() == antigen_name && serum.has_homologous_variant_id(antigen_variant_id)) {
+            result.push_back(&serum);
+            std::cerr << "  " << serum.data().full_name() << std::endl;
+        }
+    }
+    return result;
+
+} // HiDb::find_homologous_sera
 
 // ----------------------------------------------------------------------
 

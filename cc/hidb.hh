@@ -100,6 +100,24 @@ namespace hidb
                 return result;
             }
 
+        inline std::vector<std::string> homologous_variant_ids() const
+            {
+                std::vector<std::string> result;
+                for (const auto& t: mTables) {
+                    if (!t.homologous().empty())
+                        result.push_back(t.homologous());
+                }
+                std::sort(result.begin(), result.end());
+                result.erase(std::unique(result.begin(), result.end()), result.end());
+                return result;
+            }
+
+          // returns if serum has passed variant_id among variant ids of its homologous antigens
+        inline bool has_homologous_variant_id(std::string variant_id) const
+            {
+                return std::find_if(mTables.begin(), mTables.end(), [&variant_id](const auto& t) -> bool { return t.homologous() == variant_id; }) != mTables.end();
+            }
+
           // returns isolation date (or empty string, if not available), if multiple dates are found in different tables, returns the most recent date
         inline std::string date() const
             {
@@ -306,6 +324,7 @@ namespace hidb
         const SerumData& find_serum_exactly(std::string name_reassortant_annotations_serum_id) const; // throws NotFound if serum with this very set of data not found
         std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
         std::vector<std::string> list_sera() const;
+        std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
 
           // name is just (international) name without reassortant/passage
 

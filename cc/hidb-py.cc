@@ -118,6 +118,13 @@ PYBIND11_PLUGIN(hidb_backend)
         return result;
     };
 
+    auto find_homologous_sera = [](const HiDb& aHiDb, const AntigenData& aAntigen) {
+        const auto source = aHiDb.find_homologous_sera(aAntigen);
+        std::vector<SerumData> result;
+        std::transform(source.begin(), source.end(), std::back_inserter(result), [](const auto& e) { return *e; });
+        return result;
+    };
+
     auto find_sera_with_score = [](const HiDb& aHiDb, std::string name) {
         const auto source = aHiDb.find_sera_with_score(name);
         std::vector<std::pair<SerumData, size_t>> result;
@@ -148,6 +155,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("find_antigens_by_cdcid", find_antigens_by_cdcid, py::arg("cdcid"))
             .def("list_sera", &HiDb::list_sera)
             .def("find_sera", find_sera, py::arg("name"))
+            .def("find_homologous_sera", find_homologous_sera, py::arg("antigen"))
             .def("find_sera_with_score", find_sera_with_score, py::arg("name"))
             ;
 
