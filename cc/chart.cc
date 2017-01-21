@@ -13,57 +13,7 @@ using namespace hidb;
 
 AntigenSerum::~AntigenSerum()
 {
-
 } // AntigenSerum::~AntigenSerum
-
-// ----------------------------------------------------------------------
-
-std::string Antigen::variant_id() const
-{
-    std::string n;
-    if (is_reassortant()) {
-        n.append(reassortant());
-    }
-    if (!annotations().empty()) {
-        for (const auto& ann: annotations()) {
-            if (!n.empty())
-                n.append(1, ' ');
-            n.append(ann);
-        }
-    }
-    if (has_passage()) {
-        if (!n.empty())
-            n.append(1, ' ');
-        n.append(passage());
-    }
-
-    return n;
-
-} // Antigen::variant_id
-
-// ----------------------------------------------------------------------
-
-std::string Serum::variant_id() const
-{
-    std::string n;
-    if (is_reassortant()) {
-        n.append(reassortant());
-    }
-    if (!mSerumId.empty()) {
-        if (!n.empty())
-            n.append(1, ' ');
-        n.append(mSerumId);
-    }
-    if (!annotations().empty()) {
-        for (const auto& ann: annotations()) {
-            if (!n.empty())
-                n.append(1, ' ');
-            n.append(ann);
-        }
-    }
-    return n;
-
-} // Serum::variant_id
 
 // ----------------------------------------------------------------------
 
@@ -75,37 +25,6 @@ std::string AntigenSerum::passage_without_date() const
         return mPassage;
 
 } // AntigenSerum::passage_without_date
-
-// ----------------------------------------------------------------------
-
-std::string Serum::full_name() const
-{
-    std::string n = name_for_exact_matching();
-    if (has_passage()) {
-        n.append(1, ' ');
-        n.append(passage());
-    }
-    if (!mSerumSpecies.empty()) {
-        n.append(1, ' ');
-        n.append(mSerumSpecies);
-    }
-    return n;
-
-} // Serum::full_name
-
-// ----------------------------------------------------------------------
-
-std::string Serum::name_for_exact_matching() const // full_name without passage, serum species
-{
-    std::string n = name();
-    const auto vi = variant_id();
-    if (!vi.empty()) {
-        n.append(1, ' ');
-        n.append(vi);
-    }
-    return n;
-
-} // Serum::name_for_exact_matching
 
 // ----------------------------------------------------------------------
 

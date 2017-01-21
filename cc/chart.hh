@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "acmacs-base/string.hh"
 #include "acmacs-base/virus-name.hh"
 
 // ----------------------------------------------------------------------
@@ -55,6 +56,7 @@ class Annotations : public std::vector<std::string>
 
     inline void sort() { std::sort(begin(), end()); }
     inline void sort() const { const_cast<Annotations*>(this)->sort(); }
+    inline std::string join() const { return string::join(" ", begin(), end()); }
 
       // note annotations has to be sorted (regardless of const) to compare
     inline bool operator == (const Annotations& aNother) const
@@ -68,7 +70,7 @@ class Annotations : public std::vector<std::string>
             return equal;
         }
 
-};
+}; // class Annotations
 
 // ----------------------------------------------------------------------
 
@@ -78,8 +80,9 @@ class AntigenSerum
     virtual ~AntigenSerum();
     inline AntigenSerum& operator=(const AntigenSerum&) = default;
 
+    virtual std::string variant_id() const = 0;
     virtual std::string full_name() const = 0;
-    virtual std::string name_for_exact_matching() const = 0;
+    virtual inline std::string name_for_exact_matching() const { return string::join({name(), variant_id()}); }
 
     inline const std::string name() const { return mName; }
     inline std::string& name() { return mName; }
@@ -100,7 +103,6 @@ class AntigenSerum
     inline const std::string semantic() const { return mSemanticAttributes; }
     inline std::string& semantic() { return mSemanticAttributes; }
 
-    virtual std::string variant_id() const = 0;
     virtual AntigenSerumMatch match(const AntigenSerum& aNother) const;
 
       // returned cdc abbreviation starts with #
@@ -137,8 +139,8 @@ class Antigen : public AntigenSerum
  public:
       // inline Antigen(Chart& aChart) : AntigenSerum(aChart) {}
     inline Antigen() = default;
+    virtual inline std::string variant_id() const { return string::join({reassortant(), annotations().join(), passage()}); }
     virtual inline std::string full_name() const { return name_for_exact_matching(); }
-    virtual inline std::string name_for_exact_matching() const { const auto vi = variant_id(); std::string n = name(); if (!vi.empty()) { n.append(1, ' '); n.append(vi); } return n; }
 
     inline const std::string date() const { return mDate; }
     inline std::string& date() { return mDate; }
@@ -146,7 +148,6 @@ class Antigen : public AntigenSerum
     inline const std::vector<std::string>& lab_id() const { return mLabId; }
     inline std::vector<std::string>& lab_id() { return mLabId; }
     inline bool has_lab_id(std::string aLabId) const { return std::find(mLabId.begin(), mLabId.end(), aLabId) != mLabId.end(); }
-    virtual std::string variant_id() const;
     inline const std::vector<std::string>& clades() const { return mClades; }
     inline std::vector<std::string>& clades() { return mClades; }
 
@@ -168,14 +169,13 @@ class Serum : public AntigenSerum
  public:
       // inline Serum(Chart& aChart) : AntigenSerum(aChart), mHomologous(-1) {}
     inline Serum() : mHomologous(-1) {}
-    virtual std::string full_name() const;
-    virtual std::string name_for_exact_matching() const; // full_name without passage, serum species
+    virtual inline std::string variant_id() const { return string::join({reassortant(), serum_id(), annotations().join()}); }
+    virtual inline std::string full_name() const { return string::join({name_for_exact_matching(), passage(), serum_species()}); }
 
     inline const std::string serum_id() const { return mSerumId; }
     inline std::string& serum_id() { return mSerumId; }
     inline const std::string serum_species() const { return mSerumSpecies; }
     inline std::string& serum_species() { return mSerumSpecies; }
-    virtual std::string variant_id() const;
 
     template <typename No> inline void set_homologous(No ag_no) { mHomologous = static_cast<decltype(mHomologous)>(ag_no); }
     inline bool has_homologous() const { return mHomologous >= 0; }
