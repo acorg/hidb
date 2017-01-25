@@ -443,6 +443,19 @@ std::vector<std::pair<const AntigenData*, size_t>> HiDb::find_antigens_with_scor
 
 // ----------------------------------------------------------------------
 
+std::vector<const AntigenData*> HiDb::list_antigens(std::string aLab) const
+{
+    std::vector<const AntigenData*> result;
+    for (const auto& antigen: antigens()) {
+        if (aLab.empty() || antigen.has_lab(*this, aLab))
+            result.push_back(&antigen);
+    }
+    return result;
+
+} // HiDb::list_antigens
+
+// ----------------------------------------------------------------------
+
 std::vector<std::string> HiDb::list_antigen_names(std::string aLab, bool aFullName) const
 {
     auto extract_name = [&aFullName](const auto& ag) -> std::string {
@@ -501,6 +514,19 @@ std::vector<std::pair<const SerumData*, size_t>> HiDb::find_sera_with_score(std:
     return result;
 
 } // HiDb::find_sera_with_score
+
+// ----------------------------------------------------------------------
+
+std::vector<const SerumData*> HiDb::list_sera(std::string aLab) const
+{
+    std::vector<const SerumData*> result;
+    for (const auto& serum: sera()) {
+        if (aLab.empty() || serum.has_lab(*this, aLab))
+            result.push_back(&serum);
+    }
+    return result;
+
+} // HiDb::list_sera
 
 // ----------------------------------------------------------------------
 

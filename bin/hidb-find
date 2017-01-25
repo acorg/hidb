@@ -23,7 +23,7 @@ def main(args):
     if args.path_to_locdb is not None:
         with timeit("Reading locationdb"):
             hidb.import_locdb(args.path_to_locdb)
-    if args.name or args.cdcid:
+    if args.name or args.cdcid or args.all:
         if args.report_score:
             if args.find_antigens:
                 scores = hidb.find_antigens_with_score(args.name.upper())
@@ -34,16 +34,23 @@ def main(args):
         else:
             if args.cdcid:
                 r = hidb.find_antigens_by_cdcid(args.cdcid)
-                report(hidb, r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                report(hidb, r, find_antigens=True, report_tables=args.report_tables, report_oldest_table=args.oldest_table, report_homologous=args.report_homologous, output_json=args.output_json)
             elif args.find_antigens:
-                for fn in ["find_antigens", "find_antigens_fuzzy", "find_antigens_extra_fuzzy"]:
-                    with timeit(fn):
-                        r = getattr(hidb, fn)(args.name.upper())
-                    if r:
-                        break;
-                report(hidb, r, find_antigens=True, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                if args.all:
+                    r = hidb.list_antigens(lab=args.lab)
+                else:
+                    for fn in ["find_antigens", "find_antigens_fuzzy", "find_antigens_extra_fuzzy"]:
+                        with timeit(fn):
+                            r = getattr(hidb, fn)(args.name.upper())
+                        if r:
+                            break;
+                report(hidb, r, find_antigens=True, report_tables=args.report_tables, report_oldest_table=args.oldest_table, report_homologous=args.report_homologous, output_json=args.output_json)
             else:
-                report(hidb, hidb.find_sera(args.name.upper()), find_antigens=False, report_tables=args.report_tables, report_homologous=args.report_homologous, output_json=args.output_json)
+                if args.all:
+                    r = hidb.list_sera(lab=args.lab)
+                else:
+                    r = hidb.find_sera(args.name.upper())
+                report(hidb, r, find_antigens=False, report_tables=args.report_tables, report_oldest_table=args.oldest_table, report_homologous=args.report_homologous, output_json=args.output_json)
     elif args.countries:
         countries = hidb.all_countries()
         print(len(countries), "\n".join(countries), sep="\n")
@@ -52,12 +59,12 @@ def main(args):
         print(len(unrecognized_locations), "\n".join(unrecognized_locations), sep="\n")
     elif args.country:
         report(hidb, hidb.all_antigens().country(args.country.upper()), #.date_range("2010", "2011"),
-                   find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
-    elif args.list_antigens:
+                   find_antigens=True, report_tables=args.report_tables, report_oldest_table=args.oldest_table, report_homologous=False, output_json=args.output_json)
+    elif args.list_antigen_names:
         antigens = hidb.list_antigen_names(lab=args.lab, full_name=args.full_name)
         print(len(antigens))
         print("\n".join(antigens))
-    elif args.list_sera:
+    elif args.list_serum_names:
         sera = hidb.list_serum_names(lab=args.lab, full_name=args.full_name)
         print(len(sera))
         print("\n".join(sera))
@@ -66,13 +73,18 @@ def main(args):
 
 # ----------------------------------------------------------------------
 
-def report(hidb, data, find_antigens, report_tables, report_homologous, output_json):
+def report(hidb, data, find_antigens, report_tables, report_oldest_table, report_homologous, output_json):
     if find_antigens:
         if report_tables:
             if report_homologous:
                 fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
             else:
                 fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+        elif report_oldest_table:
+            if report_homologous:
+                fmt = "{full_name} [{date}] oldest:{oldest} {homologous}"
+            else:
+                fmt = "{full_name} [{date}] oldest:{oldest}"
         else:
             if report_homologous:
                 fmt = "{full_name} [{date}]{homologous}"
@@ -84,6 +96,11 @@ def report(hidb, data, find_antigens, report_tables, report_homologous, output_j
                 fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
             else:
                 fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+        elif report_oldest_table:
+            if report_homologous:
+                fmt = "{full_name} oldest:{oldest}{homologous}"
+            else:
+                fmt = "oldest:{oldest:40s} {lineage} {full_name}"
         else:
             if report_homologous:
                 fmt = "{full_name}{homologous}"
@@ -114,7 +131,15 @@ def report(hidb, data, find_antigens, report_tables, report_homologous, output_j
         class NoMostRecentTable:
             def table_id(self):
                 return "*no-most-recent-table*"
-        print("\n".join(fmt.format(full_name=e.data().full_name(), tables=e.number_of_tables(), recent=(e.most_recent_table() or NoMostRecentTable()).table_id(), date=date(e),
+        class NoOldestTable:
+            def table_id(self):
+                return "*no-oldest-table*"
+        print("\n".join(fmt.format(full_name=e.data().full_name(),
+                                       lineage=e.data().lineage(),
+                                       tables=e.number_of_tables(),
+                                       recent=(e.most_recent_table() or NoMostRecentTable()).table_id(),
+                                       date=date(e),
+                                       oldest=(e.oldest_table() or NoOldestTable()).table_id(),
                                        all_tables=[t.table_id() for t in e.tables()],
                                        homologous=homologous(e)) for e in data))
 
@@ -132,8 +157,9 @@ try:
     parser.add_argument('--country', dest="country", default=None, help='Find antigens isolated in the country.')
     parser.add_argument('--unrecognized-locations', dest="unrecognized_locations", action="store_true", default=False, help='List all unrecognized locations.')
     parser.add_argument('--stat', dest="stat", action="store_true", default=False, help='Report stat (for SSM).')
-    parser.add_argument('--list-antigens', dest="list_antigens", action="store_true", default=False, help='List all antigen names.')
-    parser.add_argument('--list-sera', dest="list_sera", action="store_true", default=False, help='List all serum names.')
+    parser.add_argument('--all', dest="all", action="store_true", default=False, help='List all antigens/sera.')
+    parser.add_argument('--list-antigen-names', dest="list_antigen_names", action="store_true", default=False, help='List all antigen names.')
+    parser.add_argument('--list-serum-names', dest="list_serum_names", action="store_true", default=False, help='List all serum names.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
     parser.add_argument('--locdb', action='store', dest='path_to_locdb', default=os.environ["ACMACSD_ROOT"] + "/data/locationdb.json.xz")
     parser.add_argument('--score', dest="report_score", action="store_true", default=False)
@@ -142,6 +168,7 @@ try:
     parser.add_argument('--homologous', dest="report_homologous", action="store_true", default=False, help='Report homologous antigens/sera for each serum/antigen')
     parser.add_argument('--lab', action='store', dest='lab', default="")
     parser.add_argument('--full-name', action='store_true', dest='full_name', default=False, help="report full name when listing antigens/sera")
+    parser.add_argument('--oldest-table', action='store_true', dest='oldest_table', default=False, help="report oldest table when listing antigens/sera")
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()

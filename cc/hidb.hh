@@ -90,6 +90,7 @@ namespace hidb
         inline std::vector<PerTable>& per_table() { return mTables; }
         inline size_t number_of_tables() const { return mTables.size(); }
         inline const PerTable& most_recent_table() const { return *std::max_element(mTables.begin(), mTables.end()); }
+        inline const PerTable& oldest_table() const { return *std::min_element(mTables.begin(), mTables.end()); }
         inline bool has_lab_id(std::string aLabId) const { return std::any_of(mTables.begin(), mTables.end(), [&](const auto& e) -> bool { return e.has_lab_id(aLabId); }); }
         void labs(const HiDb& aHiDb, std::vector<std::string>& aLabs) const;
         bool has_lab(const HiDb& aHiDb, std::string aLab) const;
@@ -322,10 +323,12 @@ namespace hidb
 
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
         std::vector<std::string> list_antigen_names(std::string aLab, bool aFullName) const;
+        std::vector<const AntigenData*> list_antigens(std::string aLab) const;
         std::vector<const SerumData*> find_sera(std::string name) const;
         const SerumData& find_serum_exactly(std::string name_reassortant_annotations_serum_id) const; // throws NotFound if serum with this very set of data not found
         std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
         std::vector<std::string> list_serum_names(std::string aLab, bool aFullName) const;
+        std::vector<const SerumData*> list_sera(std::string aLab) const;
         std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
 
           // name is just (international) name without reassortant/passage
