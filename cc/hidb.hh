@@ -15,6 +15,8 @@
 namespace hidb
 {
 
+    class HiDb;
+
 // ----------------------------------------------------------------------
 
     class PerTable
@@ -89,6 +91,8 @@ namespace hidb
         inline size_t number_of_tables() const { return mTables.size(); }
         inline const PerTable& most_recent_table() const { return *std::max_element(mTables.begin(), mTables.end()); }
         inline bool has_lab_id(std::string aLabId) const { return std::any_of(mTables.begin(), mTables.end(), [&](const auto& e) -> bool { return e.has_lab_id(aLabId); }); }
+        void labs(const HiDb& aHiDb, std::vector<std::string>& aLabs) const;
+        bool has_lab(const HiDb& aHiDb, std::string aLab) const;
 
         inline std::vector<std::pair<std::string, std::string>> homologous() const
             {
@@ -190,8 +194,6 @@ namespace hidb
     }; // class Tables
 
 // ----------------------------------------------------------------------
-
-    class HiDb;
 
     class AntigenRefs : public std::vector<const AntigenData*>
     {
@@ -319,11 +321,11 @@ namespace hidb
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
 
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
-        std::vector<std::string> list_antigens() const;
+        std::vector<std::string> list_antigens(std::string aLab, bool aFullName) const;
         std::vector<const SerumData*> find_sera(std::string name) const;
         const SerumData& find_serum_exactly(std::string name_reassortant_annotations_serum_id) const; // throws NotFound if serum with this very set of data not found
         std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
-        std::vector<std::string> list_sera() const;
+        std::vector<std::string> list_sera(std::string aLab, bool aFullName) const;
         std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
 
           // name is just (international) name without reassortant/passage
@@ -354,6 +356,20 @@ namespace hidb
             out << aPrefix << ag->data().full_name() << std::endl;
         }
         return out.str();
+    }
+
+// ----------------------------------------------------------------------
+
+    template <typename AS> void AntigenSerumData<AS>::labs(const HiDb& aHiDb, std::vector<std::string>& aLabs) const
+    {
+        std::transform(per_table().begin(), per_table().end(), std::back_inserter(aLabs), [&aHiDb](const auto& pt) -> std::string { return aHiDb.charts()[pt.table_id()].chart_info().lab(); });
+        std::sort(aLabs.begin(), aLabs.end());
+        aLabs.erase(std::unique(aLabs.begin(), aLabs.end()), aLabs.end());
+    }
+
+    template <typename AS> bool AntigenSerumData<AS>::has_lab(const HiDb& aHiDb, std::string aLab) const
+    {
+        return std::find_if(per_table().begin(), per_table().end(), [&aHiDb,&aLab](const auto& pt) -> bool { return aHiDb.charts()[pt.table_id()].chart_info().lab() == aLab; }) != per_table().end();
     }
 
 // ----------------------------------------------------------------------

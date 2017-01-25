@@ -54,11 +54,11 @@ def main(args):
         report(hidb, hidb.all_antigens().country(args.country.upper()), #.date_range("2010", "2011"),
                    find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
     elif args.list_antigens:
-        antigens = hidb.list_antigens()
+        antigens = hidb.list_antigens(lab=args.lab, full_name=args.full_name)
         print(len(antigens))
         print("\n".join(antigens))
     elif args.list_sera:
-        sera = hidb.list_sera()
+        sera = hidb.list_sera(lab=args.lab, full_name=args.full_name)
         print(len(sera))
         print("\n".join(sera))
     elif args.stat:
@@ -140,6 +140,8 @@ try:
     parser.add_argument('--tables', dest="report_tables", action="store_true", default=False)
     parser.add_argument('-s', '--sera', dest="find_antigens", action="store_false", default=True)
     parser.add_argument('--homologous', dest="report_homologous", action="store_true", default=False, help='Report homologous antigens/sera for each serum/antigen')
+    parser.add_argument('--lab', action='store', dest='lab', default="")
+    parser.add_argument('--full-name', action='store_true', dest='full_name', default=False, help="report full name when listing antigens/sera")
     # parser.add_argument('output', nargs="?", help='hidb to write.')
 
     args = parser.parse_args()

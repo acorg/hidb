@@ -443,11 +443,23 @@ std::vector<std::pair<const AntigenData*, size_t>> HiDb::find_antigens_with_scor
 
 // ----------------------------------------------------------------------
 
-std::vector<std::string> HiDb::list_antigens() const
+std::vector<std::string> HiDb::list_antigens(std::string aLab, bool aFullName) const
 {
+    auto extract_name = [&aFullName](const auto& ag) -> std::string {
+        return aFullName ? ag.data().full_name() : ag.data().name();
+    };
     std::vector<std::string> result;
-    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return ag.data().name(); });
-    result.erase(std::unique(result.begin(), result.end()), result.end());
+    if (!aLab.empty()) {
+        for (const auto& antigen: antigens()) {
+            if (antigen.has_lab(*this, aLab)) {
+                result.push_back(extract_name(antigen));
+            }
+        }
+    }
+    else {
+        std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), extract_name);
+    }
+    result.erase(std::unique(result.begin(), result.end()), result.end()); // remove duplicates
     return result;
 
 } // HiDb::list_antigens
@@ -492,10 +504,22 @@ std::vector<std::pair<const SerumData*, size_t>> HiDb::find_sera_with_score(std:
 
 // ----------------------------------------------------------------------
 
-std::vector<std::string> HiDb::list_sera() const
+std::vector<std::string> HiDb::list_sera(std::string aLab, bool aFullName) const
 {
+    auto extract_name = [&aFullName](const auto& sr) -> std::string {
+        return aFullName ? sr.data().full_name() : sr.data().name();
+    };
     std::vector<std::string> result;
-    std::transform(sera().begin(), sera().end(), std::back_inserter(result), [](const auto& sr) -> std::string { return sr.data().name(); });
+    if (!aLab.empty()) {
+        for (const auto& serum: sera()) {
+            if (serum.has_lab(*this, aLab)) {
+                result.push_back(extract_name(serum));
+            }
+        }
+    }
+    else {
+        std::transform(sera().begin(), sera().end(), std::back_inserter(result), extract_name);
+    }
     result.erase(std::unique(result.begin(), result.end()), result.end());
     return result;
 
