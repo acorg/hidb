@@ -54,11 +54,11 @@ def main(args):
         report(hidb, hidb.all_antigens().country(args.country.upper()), #.date_range("2010", "2011"),
                    find_antigens=True, report_tables=args.report_tables, report_homologous=False, output_json=args.output_json)
     elif args.list_antigens:
-        antigens = hidb.list_antigens(lab=args.lab, full_name=args.full_name)
+        antigens = hidb.list_antigen_names(lab=args.lab, full_name=args.full_name)
         print(len(antigens))
         print("\n".join(antigens))
     elif args.list_sera:
-        sera = hidb.list_sera(lab=args.lab, full_name=args.full_name)
+        sera = hidb.list_serum_names(lab=args.lab, full_name=args.full_name)
         print(len(sera))
         print("\n".join(sera))
     elif args.stat:

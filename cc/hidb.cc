@@ -443,7 +443,7 @@ std::vector<std::pair<const AntigenData*, size_t>> HiDb::find_antigens_with_scor
 
 // ----------------------------------------------------------------------
 
-std::vector<std::string> HiDb::list_antigens(std::string aLab, bool aFullName) const
+std::vector<std::string> HiDb::list_antigen_names(std::string aLab, bool aFullName) const
 {
     auto extract_name = [&aFullName](const auto& ag) -> std::string {
         return aFullName ? ag.data().full_name() : ag.data().name();
@@ -504,7 +504,7 @@ std::vector<std::pair<const SerumData*, size_t>> HiDb::find_sera_with_score(std:
 
 // ----------------------------------------------------------------------
 
-std::vector<std::string> HiDb::list_sera(std::string aLab, bool aFullName) const
+std::vector<std::string> HiDb::list_serum_names(std::string aLab, bool aFullName) const
 {
     auto extract_name = [&aFullName](const auto& sr) -> std::string {
         return aFullName ? sr.data().full_name() : sr.data().name();

@@ -321,11 +321,11 @@ namespace hidb
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
 
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
-        std::vector<std::string> list_antigens(std::string aLab, bool aFullName) const;
+        std::vector<std::string> list_antigen_names(std::string aLab, bool aFullName) const;
         std::vector<const SerumData*> find_sera(std::string name) const;
         const SerumData& find_serum_exactly(std::string name_reassortant_annotations_serum_id) const; // throws NotFound if serum with this very set of data not found
         std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
-        std::vector<std::string> list_sera(std::string aLab, bool aFullName) const;
+        std::vector<std::string> list_serum_names(std::string aLab, bool aFullName) const;
         std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
 
           // name is just (international) name without reassortant/passage
