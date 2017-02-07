@@ -7,7 +7,7 @@
 #include <map>
 #include <algorithm>
 
-#include "hidb/chart.hh"
+#include "acmacs-chart/chart.hh"
 #include "locationdb/locdb.hh"
 
 // ----------------------------------------------------------------------
@@ -81,8 +81,8 @@ namespace hidb
                 }
             }
 
-        inline bool operator < (const AntigenSerumData& aNother) const { return mData < aNother.mData; }
-        inline bool operator == (const AntigenSerumData& aNother) const { return mData == aNother.mData; }
+        // inline bool operator < (const AntigenSerumData& aNother) const { return mData < aNother.mData; }
+        // inline bool operator == (const AntigenSerumData& aNother) const { return mData == aNother.mData; }
 
         inline const AS& data() const { return mData; }
         inline AS& data() { return mData; }

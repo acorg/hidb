@@ -2,12 +2,31 @@
 
 #include <string>
 
-#include "hidb.hh"
-#include "chart-export.hh"
+#include "acmacs-chart/ace.hh"
+#include "hidb/hidb.hh"
+#include "hidb/json-keys.hh"
 
 // ----------------------------------------------------------------------
 
 void hidb_export(std::string aFilename, const hidb::HiDb& aHiDb, size_t aIndent);
+
+// ----------------------------------------------------------------------
+
+template <typename RW> inline jsw::writer<RW>& operator <<(jsw::writer<RW>& writer, const hidb::PerTable& per_table)
+{
+    return writer << jsw::start_object << JsonKey::TableId << per_table.table_id() << jsw::if_not_empty(JsonKey::Date, per_table.date())
+                  << jsw::if_not_empty(JsonKey::LabId, per_table.lab_id()) << jsw::if_not_empty(JsonKey::HomologousAntigen, per_table.homologous()) << jsw::end_object;
+}
+
+// ----------------------------------------------------------------------
+
+template <typename RW> inline json_writer::writer<RW>& operator <<(json_writer::writer<RW>& aWriter, const std::vector<hidb::PerTable>& aList)
+{
+    aWriter << json_writer::start_array;
+    for (const auto& e: aList)
+        aWriter << e;
+    return aWriter << json_writer::end_array;
+}
 
 // ----------------------------------------------------------------------
 
@@ -41,14 +60,6 @@ template <typename RW> inline jsw::writer<RW>& operator <<(jsw::writer<RW>& writ
                   << JsonKey::Sera << chart.sera()
                   << JsonKey::Titers << chart.titers()
                   << jsw::end_object;
-}
-
-// ----------------------------------------------------------------------
-
-template <typename RW> inline jsw::writer<RW>& operator <<(jsw::writer<RW>& writer, const hidb::PerTable& per_table)
-{
-    return writer << jsw::start_object << JsonKey::TableId << per_table.table_id() << jsw::if_not_empty(JsonKey::Date, per_table.date())
-                  << jsw::if_not_empty(JsonKey::LabId, per_table.lab_id()) << jsw::if_not_empty(JsonKey::HomologousAntigen, per_table.homologous()) << jsw::end_object;
 }
 
 // ----------------------------------------------------------------------

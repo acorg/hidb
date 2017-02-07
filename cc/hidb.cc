@@ -2,24 +2,25 @@
 #include <regex>
 #include <cctype>
 
+#include "acmacs-base/string-matcher.hh"
+#include "acmacs-base/stream.hh"
+#include "variant-id.hh"
 #include "hidb.hh"
 #include "hidb-export.hh"
 #include "hidb-import.hh"
-#include "acmacs-base/string-matcher.hh"
-#include "acmacs-base/stream.hh"
 
 using namespace hidb;
 
 // ----------------------------------------------------------------------
 
 ChartData::ChartData(const Chart& aChart)
-    : mTableId(aChart.table_id()), mChartInfo(aChart.chart_info()), mTiters(aChart.titers().as_list())
+    : mTableId(hidb::table_id(aChart)), mChartInfo(aChart.chart_info()), mTiters(aChart.titers().list())
 {
     for (const auto& antigen: aChart.antigens()) {
-        mAntigens.emplace_back(antigen.name(), antigen.variant_id());
+        mAntigens.emplace_back(antigen.name(), variant_id(antigen));
     }
     for (const auto& serum: aChart.sera()) {
-        mSera.emplace_back(serum.name(), serum.variant_id());
+        mSera.emplace_back(serum.name(), variant_id(serum));
     }
 }
 
@@ -29,7 +30,7 @@ AntigenRefs& AntigenRefs::country(std::string aCountry)
 {
     auto not_in_country = [this,&aCountry](const auto& e) -> bool {
         try {
-            return mHiDb->locdb().country(e->data().location()) != aCountry;
+            return mHiDb->locdb().country(virus_name::location(e->data().name())) != aCountry;
         }
         catch (LocationNotFound&) {
             return true;
@@ -73,7 +74,7 @@ AntigenRefs& AntigenRefs::date_range(std::string aBegin, std::string aEnd)
 
 // ----------------------------------------------------------------------
 
-void Antigens::make_index(const HiDb& aHiDb)
+void hidb::Antigens::make_index(const HiDb& aHiDb)
 {
     std::smatch m;
     for (const auto& antigen: *this) {
@@ -90,11 +91,11 @@ void Antigens::make_index(const HiDb& aHiDb)
     }
       // std::cerr << size() << " antigens " << mIndex.size() << " index entries" << std::endl;
 
-} // Antigens::make_index
+} // hidb::Antigens::make_index
 
 // ----------------------------------------------------------------------
 
-AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
+AntigenRefs hidb::Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
 {
     AntigenRefs result;
     try {
@@ -126,11 +127,11 @@ AntigenRefs Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
     }
     return result;
 
-} // Antigens::find_by_index
+} // hidb::Antigens::find_by_index
 
 // ----------------------------------------------------------------------
 
-void Antigens::find_by_index_cdc_name(std::string name, AntigenRefs& aResult) const
+void hidb::Antigens::find_by_index_cdc_name(std::string name, AntigenRefs& aResult) const
 {
     const std::string key = index_key(name);
     const AntigenRefs* fk = for_key(key);
@@ -159,11 +160,11 @@ void Antigens::find_by_index_cdc_name(std::string name, AntigenRefs& aResult) co
           // Not a recognized name, ignore it
     }
 
-} // Antigens::find_by_index_cdc_name
+} // hidb::Antigens::find_by_index_cdc_name
 
 // ----------------------------------------------------------------------
 
-AntigenRefs Antigens::find_by_cdcid(std::string cdcid) const
+AntigenRefs hidb::Antigens::find_by_cdcid(std::string cdcid) const
 {
     if (std::isdigit(cdcid[0]))
         cdcid = "CDC#" + cdcid;
@@ -174,7 +175,7 @@ AntigenRefs Antigens::find_by_cdcid(std::string cdcid) const
     }
     return result;
 
-} // Antigens::find_by_cdcid
+} // hidb::Antigens::find_by_cdcid
 
 // ----------------------------------------------------------------------
 
@@ -186,12 +187,12 @@ void HiDb::add(const Chart& aChart)
 
     aChart.find_homologous_antigen_for_sera_const();
 
-    const auto table_id = aChart.table_id();
+    const std::string tbl_id = table_id(aChart);
     for (const auto& antigen: aChart.antigens()) {
-        add_antigen(antigen, table_id);
+        add_antigen(antigen, tbl_id);
     }
     for (const auto& serum: aChart.sera()) {
-        add_serum(serum, table_id, aChart.antigens());
+        add_serum(serum, tbl_id, aChart.antigens());
     }
 
     // std::cout << "Chart: antigens:" << aChart.number_of_antigens() << " sera:" << aChart.number_of_sera() << std::endl;
@@ -205,8 +206,9 @@ void HiDb::add_antigen(const Antigen& aAntigen, std::string aTableId)
 {
     if (!aAntigen.distinct()) {
         AntigenData antigen_data(aAntigen);
-        auto insert_at = std::lower_bound(mAntigens.begin(), mAntigens.end(), aAntigen);
-        if (insert_at != mAntigens.end() && *insert_at == antigen_data) {
+        auto cmp = [](const hidb::AntigenSerumData<Antigen>& a, const Antigen& b) -> bool { return a.data().name() == b.name() ? variant_id(a.data()) < variant_id(b) : a.data().name() < b.name(); };
+        auto insert_at = std::lower_bound(mAntigens.begin(), mAntigens.end(), aAntigen, cmp);
+        if (insert_at != mAntigens.end() && insert_at->data().name() == antigen_data.data().name() && variant_id(insert_at->data()) == variant_id(antigen_data.data())) {
               // update
               // std::cout << "Common antigen " << aAntigen.full_name() << std::endl;
         }
@@ -224,8 +226,9 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
 {
     if (!aSerum.distinct()) {
         SerumData serum_data(aSerum);
-        auto insert_at = std::lower_bound(mSera.begin(), mSera.end(), aSerum);
-        if (insert_at != mSera.end() && *insert_at == serum_data) {
+        auto cmp = [](const hidb::AntigenSerumData<Serum>& a, const Serum& b) -> bool { return a.data().name() == b.name() ? variant_id(a.data()) < variant_id(b) : a.data().name() < b.name(); };
+        auto insert_at = std::lower_bound(mSera.begin(), mSera.end(), aSerum, cmp);
+        if (insert_at != mSera.end() && insert_at->data().name() == serum_data.data().name() && variant_id(insert_at->data()) == variant_id(serum_data.data())) {
               // update
         }
         else {
@@ -233,7 +236,7 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
         }
         insert_at->update(aTableId, aSerum);
         if (aSerum.has_homologous())
-            insert_at->set_homologous(aTableId, aAntigens[static_cast<size_t>(aSerum.homologous())].variant_id());
+            insert_at->set_homologous(aTableId, variant_id(aAntigens[static_cast<size_t>(aSerum.homologous())]));
     }
 
 } // HiDb::add_serum
@@ -393,7 +396,7 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant
 const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annotations_passage) const
 {
     AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
-    auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == a->data().name_for_exact_matching(); });
+    auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == name_for_exact_matching(a->data()); });
     if (found == by_name.end())
         throw NotFound(name_reassortant_annotations_passage, by_name);
     return **found;
@@ -492,7 +495,7 @@ std::vector<const SerumData*> HiDb::find_sera(std::string name) const
 
 const SerumData& HiDb::find_serum_exactly(std::string name_reassortant_annotations_serum_id) const
 {
-    const auto found = std::find_if(mSera.begin(), mSera.end(), [&](const auto& sr) -> bool { return name_reassortant_annotations_serum_id == sr.data().name_for_exact_matching(); });
+    const auto found = std::find_if(mSera.begin(), mSera.end(), [&](const auto& sr) -> bool { return name_reassortant_annotations_serum_id == name_for_exact_matching(sr.data()); });
     if (found == mSera.end()) {
         // std::cerr << "find_serum_exactly \"" << name_reassortant_annotations_serum_id << '"' << std::endl;
         // for (const auto& sr: mSera) std::cerr << "  \"" << sr.data().name_for_exact_matching() << '"' << std::endl;
@@ -557,7 +560,7 @@ std::vector<const SerumData*> HiDb::find_homologous_sera(const AntigenData& aAnt
 {
     std::vector<const SerumData*> result;
     const std::string antigen_name = aAntigen.data().name();
-    const std::string antigen_variant_id = aAntigen.data().variant_id();
+    const std::string antigen_variant_id = variant_id(aAntigen.data());
     for (const auto& serum: sera()) {
         if (serum.data().name() == antigen_name && serum.has_homologous_variant_id(antigen_variant_id)) {
             result.push_back(&serum);
@@ -572,7 +575,7 @@ std::vector<const SerumData*> HiDb::find_homologous_sera(const AntigenData& aAnt
 std::vector<std::string> HiDb::all_countries() const
 {
     std::vector<std::string> result;
-    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return ag.data().location(); });
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return virus_name::location(ag.data().name()); });
       // Note: cdc_abbreviation starts with #
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
@@ -590,8 +593,8 @@ std::vector<std::string> HiDb::all_countries() const
 std::vector<std::string> HiDb::unrecognized_locations() const
 {
     std::vector<std::string> result;
-    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return ag.data().location(); });
-    std::transform(sera().begin(), sera().end(), std::back_inserter(result), [](const auto& sr) -> std::string { return sr.data().location(); });
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return virus_name::location(ag.data().name()); });
+    std::transform(sera().begin(), sera().end(), std::back_inserter(result), [](const auto& sr) -> std::string { return virus_name::location(sr.data().name()); });
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
     last = std::remove(result.begin(), last, std::string()); // remove empty name meaning no location in the name detected, i.e. unrecognized name
@@ -614,10 +617,10 @@ HiDbAntigenStat HiDb::stat() const
     std::string previous_name;
     for (const auto& antigen: antigens()) {
         if (antigen.data().name() != previous_name) {
-            const auto continent = locdb().continent(antigen.data().location(), "UNKNOWN");
+            const auto continent = locdb().continent(virus_name::location(antigen.data().name()), "UNKNOWN");
             YearMonth date = antigen.date();
             if (date.empty()) {
-                date = antigen.data().year();
+                date = virus_name::year(antigen.data().name());
                 if (date.empty())
                     date = "????";
             }
