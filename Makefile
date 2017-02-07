@@ -49,17 +49,19 @@ DIST = $(abspath dist)
 
 all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
 
-install: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
+install: check-acmacsd-root install-headers $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
 	ln -sf $(HIDB_LIB) $(ACMACSD_ROOT)/lib
 	if [ $$(uname) = "Darwin" ]; then /usr/bin/install_name_tool -id $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)) $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)); fi
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(ACMACSD_ROOT)/py
-	if [ ! -d $(ACMACSD_ROOT)/include/hidb ]; then mkdir $(ACMACSD_ROOT)/include/hidb; fi
-	ln -sf $(abspath cc)/hidb.hh $(abspath cc)/chart.hh $(ACMACSD_ROOT)/include/hidb
 	ln -sf $(abspath py)/* $(ACMACSD_ROOT)/py
 	ln -sf $(abspath bin)/hidb-night-build $(ACMACSD_ROOT)/bin
 	ln -sf $(abspath bin)/hidb-update $(ACMACSD_ROOT)/bin
 	ln -sf $(abspath bin)/hidb-find $(ACMACSD_ROOT)/bin
 	ln -sf $(abspath bin)/hidb-stat-for-ssm-report $(ACMACSD_ROOT)/bin
+
+install-headers:
+	if [ ! -d $(ACMACSD_ROOT)/include/hidb ]; then mkdir $(ACMACSD_ROOT)/include/hidb; fi
+	ln -sf $(abspath cc)/*.hh $(ACMACSD_ROOT)/include/hidb
 
 test: install
 	test/test
@@ -88,7 +90,7 @@ distclean: clean
 
 # ----------------------------------------------------------------------
 
-$(BUILD)/%.o: cc/%.cc | $(BUILD)
+$(BUILD)/%.o: cc/%.cc | $(BUILD) install-headers
 	@echo $<
 	@g++ $(CXXFLAGS) -c -o $@ $<
 
