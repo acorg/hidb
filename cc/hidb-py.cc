@@ -1,6 +1,7 @@
 #include "acmacs-base/pybind11.hh"
 #include "acmacs-chart/ace.hh"
 #include "variant-id.hh"
+#include "hidb.hh"
 #include "hidb-export.hh"
 
 using namespace hidb;
@@ -164,13 +165,6 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("find_homologous_sera", find_homologous_sera, py::arg("antigen"))
             .def("find_sera_with_score", find_sera_with_score, py::arg("name"))
             ;
-
-      // ----------------------------------------------------------------------
-
-    m.def("json", &jsw::json<Antigen>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
-    m.def("json", &jsw::json<AntigenData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
-    m.def("json", &jsw::json<Serum>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
-    m.def("json", &jsw::json<SerumData>, py::arg("value"), py::arg("keyword") = "chart", py::arg("indent") = 1, py::arg("insert_emacs_indent_hint") = true);
 
       // ----------------------------------------------------------------------
 
