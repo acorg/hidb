@@ -2,9 +2,21 @@
 
 #include <string>
 
-#include "acmacs-chart/ace.hh"
 #include "hidb/hidb.hh"
 #include "hidb/json-keys.hh"
+
+namespace json_writer
+{
+    template <typename RW> class writer;
+}
+namespace jsw = json_writer;
+
+template <typename RW> jsw::writer<RW>& operator <<(jsw::writer<RW>& writer, const hidb::HiDb& aHiDb);
+template <typename RW> jsw::writer<RW>& operator <<(jsw::writer<RW>& writer, const hidb::ChartData& chart);
+
+// ----------------------------------------------------------------------
+
+#include "acmacs-chart/ace.hh"
 
 // ----------------------------------------------------------------------
 
@@ -59,6 +71,18 @@ template <typename RW> inline jsw::writer<RW>& operator <<(jsw::writer<RW>& writ
                   << JsonKey::Antigens << chart.antigens()
                   << JsonKey::Sera << chart.sera()
                   << JsonKey::Titers << chart.titers()
+                  << jsw::end_object;
+}
+
+// ----------------------------------------------------------------------
+
+template <typename RW> inline jsw::writer<RW>& operator <<(jsw::writer<RW>& writer, const hidb::HiDb& aHiDb)
+{
+    return writer << jsw::start_object
+                  << jsw::key("  version") << "hidb-v4"
+                  << JsonKey::Antigens << aHiDb.antigens()
+                  << JsonKey::Sera << aHiDb.sera()
+                  << JsonKey::Tables << aHiDb.charts()
                   << jsw::end_object;
 }
 
