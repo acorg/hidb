@@ -21,7 +21,7 @@ sAcmacsSuffixes = {".acd1", ".acp1", ".acmacs-txt"}
 def get_ace(temp_dir :Path, source1 :Path):
     if set(source1.suffixes) & sAcmacsSuffixes:
         source2 = temp_dir.joinpath(source1.stem + ".ace")
-        subprocess.run("{acmacs_env} python3 $HOME/ac/acmacs/bin/convert.py -q '{source1}' '{source2}'".format(acmacs_env=acmacs_env, source1=source1, source2=source2), shell=True, check=True)
+        subprocess.run("{acmacs_env} python3 $HOME/ac/acmacs/bin/convert.py -q '{source1}' '{source2}'".format(acmacs_env=acmacs_env(), source1=source1, source2=source2), shell=True, check=True)
     elif source1.suffixes[-1] == ".ace":
         source2 = source1
     else:
