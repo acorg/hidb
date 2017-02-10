@@ -4,7 +4,7 @@
 """
 """
 
-import sys, os, traceback
+import sys, os, time, traceback
 if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
 from pathlib import Path
 sys.path[:0] = [str(Path(os.environ["ACMACSD_ROOT"]).resolve().joinpath("py"))]
@@ -26,6 +26,10 @@ def main(args):
         print(source)
         hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
         print("------------")
+    if Path(args.path_to_hidb).exists():
+        backup_dir = Path(args.path_to_hidb).parent.joinpath(".backup")
+        backup_dir.mkdir(mode=0o755, exist_ok=True)
+        Path(args.path_to_hidb).rename(backup_dir.joinpath(Path(args.path_to_hidb).stem + "." + time.strftime("%Y%m%d-%H%M", time.localtime(Path(args.path_to_hidb).stat().st_mtime)) + ".xz"))
     with timeit("Writing hidb"):
         hidb.export_to(args.path_to_hidb, pretty=args.pretty)
 
