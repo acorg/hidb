@@ -54,10 +54,7 @@ install: check-acmacsd-root install-headers $(DIST)/hidb_backend$(PYTHON_MODULE_
 	if [ $$(uname) = "Darwin" ]; then /usr/bin/install_name_tool -id $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)) $(ACMACSD_ROOT)/lib/$(notdir $(HIDB_LIB)); fi
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(ACMACSD_ROOT)/py
 	ln -sf $(abspath py)/* $(ACMACSD_ROOT)/py
-	ln -sf $(abspath bin)/hidb-night-build $(ACMACSD_ROOT)/bin
-	ln -sf $(abspath bin)/hidb-update $(ACMACSD_ROOT)/bin
-	ln -sf $(abspath bin)/hidb-find $(ACMACSD_ROOT)/bin
-	ln -sf $(abspath bin)/hidb-stat-for-ssm-report $(ACMACSD_ROOT)/bin
+	ln -sf $(abspath bin)/hidb-* $(ACMACSD_ROOT)/bin
 
 install-headers:
 	if [ ! -d $(ACMACSD_ROOT)/include/hidb ]; then mkdir $(ACMACSD_ROOT)/include/hidb; fi
