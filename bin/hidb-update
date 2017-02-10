@@ -23,9 +23,10 @@ def main(args):
         with timeit("Reading hidb"):
             hidb.import_from(args.path_to_hidb)
     for source in (Path(f).resolve() for f in args.input):
-        print(source)
-        hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
-        print("------------")
+        if "~" not in source:             # ignore backups
+            print(source)
+            hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
+            # print("------------")
     if Path(args.path_to_hidb).exists():
         backup_dir = Path(args.path_to_hidb).parent.joinpath(".backup")
         backup_dir.mkdir(mode=0o755, exist_ok=True)
