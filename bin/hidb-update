@@ -23,7 +23,7 @@ def main(args):
         with timeit("Reading hidb"):
             hidb.import_from(args.path_to_hidb)
     for source in (Path(f).resolve() for f in args.input):
-        if "~" not in source:             # ignore backups
+        if "~" not in str(source):             # ignore backups
             print(source)
             hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
             # print("------------")
