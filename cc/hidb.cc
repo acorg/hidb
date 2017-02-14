@@ -482,6 +482,72 @@ std::vector<std::string> HiDb::list_antigen_names(std::string aLab, bool aFullNa
 
 // ----------------------------------------------------------------------
 
+// throws if not found
+const AntigenData& HiDb::find_antigen_of_chart(const Antigen& aAntigen) const
+{
+    const std::string name = aAntigen.full_name();
+    try {
+        const auto& found = find_antigen_exactly(name);
+          // std::cerr << "find_in_hidb: " << full_name() << " --> " << found.most_recent_table().table_id() << " tables:" << found.number_of_tables() << std::endl;
+        return found;
+    }
+    catch (NotFound& err) {
+        if (aAntigen.passage() == "X?") {
+            try {
+                return find_antigen_exactly(aAntigen.full_name_without_passage());
+            }
+            catch (NotFound&) {
+            }
+        }
+        else if (!err.suggestions().empty()) {
+            return find_antigen_in_suggestions(name, err.suggestions());
+        }
+        else {
+            // std::cerr << "ERROR: not found and no suggestions for " << name << std::endl
+            //           << hidb::report(aHiDb.find_antigens(name), "  ") << std::endl;
+        }
+        throw;
+    }
+
+} // HiDb::find_antigen_of_chart
+
+// ----------------------------------------------------------------------
+
+const AntigenData& HiDb::find_antigen_in_suggestions(std::string aName, const AntigenRefs& aSuggestions) const
+{
+    const std::regex wrongly_converted{" (SECM|VIR)(-)"};
+    std::smatch m;
+
+    if (aName.find(" DISTINCT") != std::string::npos) { // DISTINCT antigens are not stored in hidb
+        throw NotFound(aName);
+    }
+    else if (std::regex_search(aName, m, wrongly_converted)) {
+        // std::cerr << "SECM Suggestions for " << aName << std::endl
+        //           << hidb::report(aSuggestions, "  ") << std::endl;
+        std::string name = aName;   // to avoid aName changing
+        name[static_cast<size_t>(m[2].first - aName.begin())] = '0';
+        for (const auto& e: aSuggestions) {
+            if (e->data().full_name() == name)
+                return *e;
+        }
+    }
+    else if (aName[2] == ' ') {
+          // some cdc names were incorrectly used before, e.g. "CO CO-9-2718" was used as "CO 9-2718"
+        std::string fixed = aName.substr(0, 3) + aName.substr(0, 2) + "-" + aName.substr(3);
+        // std::cerr << "FIXED: " << fixed << std::endl; // << report(*fk, "  ") << std::endl;
+        const auto found = std::find_if(aSuggestions.begin(), aSuggestions.end(), [&fixed](const auto& e) -> bool { return e->data().full_name() == fixed; });
+        if (found != aSuggestions.end())
+            return **found;
+    }
+
+    // std::cerr << "Suggestions for " << aName << std::endl
+    //           << hidb::report(aSuggestions, "  "); // << std::endl;
+    throw NotFound(aName, aSuggestions);
+
+} // HiDb::find_antigen_in_suggestions
+
+// ----------------------------------------------------------------------
+
 std::vector<const SerumData*> HiDb::find_sera(std::string name) const
 {
     std::vector<FindSerumScore> scores;
@@ -569,6 +635,24 @@ std::vector<const SerumData*> HiDb::find_homologous_sera(const AntigenData& aAnt
     return result;
 
 } // HiDb::find_homologous_sera
+
+// ----------------------------------------------------------------------
+
+// throws if not found
+const SerumData& HiDb::find_serum_of_chart(const Serum& aSerum) const
+{
+    try {
+        const auto& found = find_serum_exactly(aSerum.full_name());
+          // std::cerr << "find_in_hidb: " << aSerum.full_name() << " --> " << found.most_recent_table().table_id() << " tables:" << found.number_of_tables() << std::endl;
+        return found;
+    }
+    catch (NotFound& err) {
+        std::cerr << "ERROR: not found " << err.what() << std::endl;
+        std::cerr << report(find_sera(aSerum.full_name()), "  ") << std::endl;
+        throw;
+    }
+
+} // HiDb::find_serum_of_chart
 
 // ----------------------------------------------------------------------
 

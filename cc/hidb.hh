@@ -320,6 +320,7 @@ namespace hidb
         std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name_reassortant_annotations_passage) const;
         inline std::vector<const AntigenData*> find_antigens_by_name(std::string name) const { return mAntigens.find_by_index(name, *this); }
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
+        const AntigenData& find_antigen_of_chart(const Antigen& aAntigen) const; // throws if not found
 
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
         std::vector<std::string> list_antigen_names(std::string aLab, bool aFullName) const;
@@ -330,6 +331,7 @@ namespace hidb
         std::vector<std::string> list_serum_names(std::string aLab, bool aFullName) const;
         std::vector<const SerumData*> list_sera(std::string aLab) const;
         std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
+        const SerumData& find_serum_of_chart(const Serum& aSerum) const; // throws if not found
 
           // name is just (international) name without reassortant/passage
 
@@ -349,6 +351,7 @@ namespace hidb
 
         void add_antigen(const Antigen& aAntigen, std::string aTableId);
         void add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens);
+        const AntigenData& find_antigen_in_suggestions(std::string aName, const AntigenRefs& aSuggestions) const;
 
     }; // class HiDb
 
