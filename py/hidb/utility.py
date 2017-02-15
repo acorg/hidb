@@ -17,7 +17,7 @@ def tempdir():
 
 # ----------------------------------------------------------------------
 
-sAcmacsSuffixes = {".acd1", ".acp1", ".acmacs-txt"}
+sAcmacsSuffixes = {".acd1", ".acd2", ".acp1", ".acmacs-txt"}
 def get_ace(temp_dir :Path, source1 :Path):
     if set(source1.suffixes) & sAcmacsSuffixes:
         source2 = temp_dir.joinpath(source1.stem + ".ace")
@@ -39,8 +39,8 @@ def get_ace_data(source :Path):
     else:
         data = None
         module_logger.warning('Unsupported suffix in {}'.format(source1))
-    if isinstance(data, bytes):
-        data = data.decode("utf-8")
+    # if isinstance(data, bytes):
+    #     data = data.decode("utf-8")
     return data
 
 # ----------------------------------------------------------------------

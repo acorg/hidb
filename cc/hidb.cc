@@ -313,7 +313,7 @@ template <typename Data> class FindScore
             if (mName >= aNameScoreThreshold) {
                 const auto full_name = mAntigen->data().full_name();
                 mFull = std::max({
-                    for_subst(full_name, antigen_name.size(), name, " CELL", {" MDCK", " SIAT"}, {}),
+                    for_subst(full_name, antigen_name.size(), name, " CELL", {" MDCK", " SIAT", " QMC"}, {}),
                     for_subst(full_name, antigen_name.size(), name, " EGG", {" E"}, {"NYMC", "IVR", "NIB", "RESVIR", "RG", "VI", "REASSORTANT"}),
                     for_subst(full_name, antigen_name.size(), name, " REASSORTANT", {" NYMC", " IVR", " NIB", " RESVIR", " RG", " VI", " REASSORTANT"}, {})
                     });
