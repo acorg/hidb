@@ -39,6 +39,8 @@ def get_ace_data(source :Path):
     else:
         data = None
         module_logger.warning('Unsupported suffix in {}'.format(source1))
+    if isinstance(data, bytes):
+        data = data.decode("utf-8")
     return data
 
 # ----------------------------------------------------------------------
