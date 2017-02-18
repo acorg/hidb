@@ -86,6 +86,8 @@ namespace hidb
 
         inline const AS& data() const { return mData; }
         inline AS& data() { return mData; }
+        inline std::string name() const { return mData.name(); }
+        inline std::string full_name() const { return mData.full_name(); }
         inline const std::vector<PerTable>& per_table() const { return mTables; }
         inline std::vector<PerTable>& per_table() { return mTables; }
         inline size_t number_of_tables() const { return mTables.size(); }
