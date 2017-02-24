@@ -17,6 +17,8 @@ from acmacs_base import timeit
 # ----------------------------------------------------------------------
 
 def main(args):
+    if args.output_filename and len(args.input) != 1:
+        raise RuntimeError('Cannot write output chart when multiple input charts provided')
     hidb = hidb_m.HiDb()
     with timeit("Reading hidb"):
         hidb.import_from(args.path_to_hidb)
@@ -24,12 +26,12 @@ def main(args):
         for source1 in (Path(f).resolve() for f in args.input):
             print(source1)
             source2 = utility.get_ace(Path(temp_dir), source1)
-            process(source2, hidb)
+            process(source2, hidb, args.output_filename)
             print("------------")
 
 # ----------------------------------------------------------------------
 
-def process(source, hidb):
+def process(source, hidb, output_filename):
     chart = hidb_m.import_chart(str(source))
     print(chart.table_id())
     hidb.find_homologous_antigens_for_sera_of_chart(chart)
@@ -47,6 +49,10 @@ def process(source, hidb):
         else:
             print("    no homologous")
 
+    if output_filename:
+        with timeit("Writing " + output_filename):
+            hidb_m.export_chart(output_filename, chart)
+
 # ----------------------------------------------------------------------
 
 try:
@@ -56,7 +62,7 @@ try:
 
     parser.add_argument('input', nargs="+", help='Source files to process.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
-    parser.add_argument('--save', action="store", dest="output_chart", help='save updated chart.')
+    parser.add_argument('--save', action="store", dest="output_filename", help='save updated chart.')
 
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")
