@@ -10,7 +10,7 @@ MAKEFLAGS = -w
 # ----------------------------------------------------------------------
 
 HIDB_SOURCES = hidb.cc hidb-export.cc hidb-import.cc variant-id.cc
-HIDB_PY_SOURCES = hidb-py.cc $(HIDB_SOURCES)
+HIDB_PY_SOURCES = py.cc $(HIDB_SOURCES)
 
 # ----------------------------------------------------------------------
 

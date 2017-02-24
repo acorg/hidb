@@ -333,7 +333,8 @@ namespace hidb
         std::vector<std::string> list_serum_names(std::string aLab, bool aFullName) const;
         std::vector<const SerumData*> list_sera(std::string aLab) const;
         std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
-        const SerumData& find_serum_of_chart(const Serum& aSerum) const; // throws if not found
+        const SerumData& find_serum_of_chart(const Serum& aSerum, bool report_if_not_found = false) const; // throws if not found
+        void find_homologous_antigens_for_sera_of_chart(Chart& aChart);
 
           // name is just (international) name without reassortant/passage
 

@@ -652,7 +652,7 @@ std::vector<const SerumData*> HiDb::find_homologous_sera(const AntigenData& aAnt
 // ----------------------------------------------------------------------
 
 // throws if not found
-const SerumData& HiDb::find_serum_of_chart(const Serum& aSerum) const
+const SerumData& HiDb::find_serum_of_chart(const Serum& aSerum, bool report_if_not_found) const
 {
     try {
         const auto& found = find_serum_exactly(aSerum.full_name());
@@ -661,11 +661,37 @@ const SerumData& HiDb::find_serum_of_chart(const Serum& aSerum) const
     }
     catch (NotFound& err) {
         std::cerr << "ERROR: not found " << err.what() << std::endl;
-        std::cerr << report(find_sera(aSerum.full_name()), "  ") << std::endl;
+        if (report_if_not_found)
+            std::cerr << report(find_sera(aSerum.full_name()), "  ") << std::endl;
         throw;
     }
 
 } // HiDb::find_serum_of_chart
+
+// ----------------------------------------------------------------------
+
+void HiDb::find_homologous_antigens_for_sera_of_chart(Chart& aChart)
+{
+    for (Serum& serum: aChart.sera()) {
+        try {
+            const SerumData& serum_data = find_serum_of_chart(serum);
+            const auto homologous = serum_data.homologous_variant_ids();
+            if (!homologous.empty()) {
+                std::vector<size_t> antigen_indices;
+                aChart.antigens().find_by_name(serum.name(), antigen_indices);
+                for (size_t antigen_index: antigen_indices) {
+                    const std::string v_id = variant_id(aChart.antigens()[antigen_index]);
+                    if (std::find(homologous.begin(), homologous.end(), v_id) != homologous.end()) {
+                        serum.add_homologous(antigen_index);
+                    }
+                }
+            }
+        }
+        catch (NotFound&) {
+        }
+    }
+
+} // HiDb::find_homologous_antigens_for_sera_of_chart
 
 // ----------------------------------------------------------------------
 
