@@ -236,7 +236,7 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
         }
         insert_at->update(aTableId, aSerum);
         if (aSerum.has_homologous())
-            insert_at->set_homologous(aTableId, variant_id(aAntigens[static_cast<size_t>(aSerum.homologous())]));
+            insert_at->set_homologous(aTableId, variant_id(aAntigens[aSerum.homologous()[0]]));
     }
 
 } // HiDb::add_serum
