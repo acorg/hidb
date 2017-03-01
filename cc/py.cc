@@ -1,6 +1,7 @@
 #include "acmacs-base/pybind11.hh"
 #include "acmacs-chart/ace.hh"
 #include "variant-id.hh"
+#include "vaccines.hh"
 #include "hidb.hh"
 #include "hidb-export.hh"
 
@@ -59,6 +60,35 @@ PYBIND11_PLUGIN(hidb_backend)
     m.def("import_chart", &import_chart, py::arg("data"), py::doc("Imports chart from a buffer or file in the ace format."));
     m.def("import_chart", [](py::bytes data) { return import_chart(data); }, py::arg("data"), py::doc("Imports chart from a buffer or file in the ace format."));
     m.def("export_chart", &export_chart, py::arg("filename"), py::arg("chart"), py::doc("Exports chart into a file in the ace format."));
+
+      // ----------------------------------------------------------------------
+      // Vaccines
+      // ----------------------------------------------------------------------
+
+    py::class_<Vaccines::HomologousSerum>(m, "Vaccines_HomologousSerum")
+            .def_readonly("serum", &Vaccines::HomologousSerum::serum)
+            .def_readonly("serum_index", &Vaccines::HomologousSerum::serum_index)
+            .def_readonly("most_recent_table", &Vaccines::HomologousSerum::most_recent_table_date)
+            .def("number_of_tables", &Vaccines::HomologousSerum::number_of_tables)
+            ;
+
+    py::class_<Vaccines::Entry>(m, "Vaccines_Entry")
+            .def_readonly("antigen", &Vaccines::Entry::antigen)
+            .def_readonly("antigen_index", &Vaccines::Entry::antigen_index)
+            .def_readonly("homologous_sera", &Vaccines::Entry::homologous_sera, py::return_value_policy::reference)
+            ;
+
+    py::class_<Vaccines>(m, "Vaccines")
+            .def("report", &Vaccines::report, py::arg("indent") = 0)
+            .def("egg", &Vaccines::egg, py::arg("no") = 0, py::return_value_policy::reference)
+            .def("cell", &Vaccines::cell, py::arg("no") = 0, py::return_value_policy::reference)
+            .def("reassortant", &Vaccines::reassortant, py::arg("no") = 0, py::return_value_policy::reference)
+            .def("number_of_eggs", &Vaccines::number_of_eggs)
+            .def("number_of_cells", &Vaccines::number_of_cells)
+            .def("number_of_reassortants", &Vaccines::number_of_reassortants)
+            ;
+
+    m.def("find_vaccines_in_chart", &find_vaccines_in_chart, py::arg("name"), py::arg("chart"), py::arg("hidb"));
 
       // ----------------------------------------------------------------------
       // HiDb

@@ -9,7 +9,7 @@ MAKEFLAGS = -w
 
 # ----------------------------------------------------------------------
 
-HIDB_SOURCES = hidb.cc hidb-export.cc hidb-import.cc variant-id.cc
+HIDB_SOURCES = hidb.cc hidb-export.cc hidb-import.cc variant-id.cc vaccines.cc
 HIDB_PY_SOURCES = py.cc $(HIDB_SOURCES)
 
 # ----------------------------------------------------------------------
