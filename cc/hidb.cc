@@ -660,9 +660,10 @@ const SerumData& HiDb::find_serum_of_chart(const Serum& aSerum, bool report_if_n
         return found;
     }
     catch (NotFound& err) {
-        std::cerr << "ERROR: not found " << err.what() << std::endl;
-        if (report_if_not_found)
+        if (report_if_not_found) {
+            std::cerr << "ERROR: serum not found in hidb " << err.what() << std::endl;
             std::cerr << report(find_sera(aSerum.full_name()), "  ") << std::endl;
+        }
         throw;
     }
 
