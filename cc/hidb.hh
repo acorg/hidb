@@ -209,6 +209,7 @@ namespace hidb
 
      private:
         const HiDb* mHiDb;
+
     }; // class AntigenRefs
 
 // ----------------------------------------------------------------------
