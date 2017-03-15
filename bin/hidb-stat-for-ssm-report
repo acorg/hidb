@@ -24,7 +24,7 @@ def main(args):
         with timeit("Reading locationdb"):
             hidb.import_locdb(str(Path(os.environ["ACMACSD_ROOT"]).joinpath("data", "locationdb.json.xz")))
         with timeit("Making stat"):
-            stat.update(hidb.stat())
+            stat.update(hidb.stat(start_date=args.start_date, end_date=args.end_date))
     print(json.dumps(stat, sort_keys=True, indent=1))
 
 # ----------------------------------------------------------------------
@@ -33,6 +33,8 @@ try:
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-d', '--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging output.')
+    parser.add_argument('--start', action='store', dest='start_date', default="")
+    parser.add_argument('--end', action='store', dest='end_date', default="")
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")
     exit_code = main(args)

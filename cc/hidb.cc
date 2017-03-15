@@ -734,8 +734,12 @@ std::vector<std::string> HiDb::unrecognized_locations() const
 
 // ----------------------------------------------------------------------
 
-HiDbAntigenStat HiDb::stat() const
+HiDbAntigenStat HiDb::stat(std::string aStart, std::string aEnd) const
 {
+    auto fix_date = [](std::string date) -> std::string { return string::replace(date, "-", ""); };
+    aStart = fix_date(aStart);
+    aEnd = fix_date(aEnd);
+
     size_t total = 0;
 
     HiDbAntigenStat stat;
@@ -757,21 +761,23 @@ HiDbAntigenStat HiDb::stat() const
                     }
                     catch (virus_name::Unrecognized&) {
                     }
-                    if (date.empty())
-                        date = "????";
                 }
                 else {
                     date = date.substr(0, 4) + date.substr(5, 2);
                 }
-                const auto& table = mCharts[antigen.per_table().front().table_id()].chart_info();
-                ++stat[table.virus_type()][table.lab()][date][continent];
-                ++total;
-                previous_name = antigen.data().name();
+                if ((aStart.empty() || (!date.empty() && date >= aStart)) && (aEnd.empty() || (!date.empty() && date < aEnd))) {
+                    if (date.empty())
+                        date = "????";
+                    const auto& table = mCharts[antigen.per_table().front().table_id()].chart_info();
+                    ++stat[table.virus_type()][table.lab()][date][continent];
+                    ++total;
+                }
             }
             catch (std::exception& err) {
                 std::cerr << "HiDb::stat ERROR: " << typeid(err).name() << ": " << err.what() << std::endl;
                 throw;
             }
+            previous_name = antigen.data().name();
         }
     }
     std::cerr << "Total: " << total << std::endl;
