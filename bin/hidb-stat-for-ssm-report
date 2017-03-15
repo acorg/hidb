@@ -16,7 +16,9 @@ from acmacs_base import timeit, json
 # ----------------------------------------------------------------------
 
 def main(args):
-    stat_antigens = hidb_m.HiDbAntigenStat()
+    stat_antigens = hidb_m.HiDbStat()
+    stat_sera = hidb_m.HiDbStat()
+    stat_sera_unique = hidb_m.HiDbStat()
     for db_file in Path(os.environ["ACMACSD_ROOT"]).joinpath("data").glob("hidb4.*.json.xz"):
         hidb = hidb_m.HiDb()
         with timeit("Reading hidb from " + str(db_file)):
@@ -24,10 +26,14 @@ def main(args):
         with timeit("Reading locationdb"):
             hidb.import_locdb(str(Path(os.environ["ACMACSD_ROOT"]).joinpath("data", "locationdb.json.xz")))
         with timeit("Making stat"):
-            hidb.stat(stat=stat_antigens, start_date=args.start_date, end_date=args.end_date)
+            hidb.stat_antigens(stat=stat_antigens, start_date=args.start_date, end_date=args.end_date)
+            hidb.stat_sera(stat=stat_sera, unique=False, start_date=args.start_date, end_date=args.end_date)
+            hidb.stat_sera(stat=stat_sera_unique, unique=True, start_date=args.start_date, end_date=args.end_date)
     with timeit("Computing totals"):
         stat_antigens.compute_totals()
-    stat = {"antigens": stat_antigens.as_dict(), "sera": {}, "date": datetime.date.today().strftime("%Y-%m-%d")}
+        stat_sera.compute_totals()
+        stat_sera_unique.compute_totals()
+    stat = {"antigens": stat_antigens.as_dict(), "sera": stat_sera.as_dict(), "sera_unique": stat_sera_unique.as_dict(), "date": datetime.date.today().strftime("%Y-%m-%d")}
     print(json.dumps(stat, sort_keys=True, indent=1))
 
 # ----------------------------------------------------------------------

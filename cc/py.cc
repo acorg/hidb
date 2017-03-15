@@ -182,10 +182,10 @@ PYBIND11_PLUGIN(hidb_backend)
 
       // --------------------------------------------------
 
-    py::class_<HiDbAntigenStat>(m, "HiDbAntigenStat")
+    py::class_<HiDbStat>(m, "HiDbStat")
             .def(py::init<>())
-            .def("compute_totals", &HiDbAntigenStat::compute_totals)
-            .def("as_dict", [](HiDbAntigenStat& aStat) -> HiDbAntigenStatContainer& { return aStat; }, py::return_value_policy::reference)
+            .def("compute_totals", &HiDbStat::compute_totals)
+            .def("as_dict", [](HiDbStat& aStat) -> HiDbStatContainer& { return aStat; }, py::return_value_policy::reference)
             ;
 
       // --------------------------------------------------
@@ -200,7 +200,9 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("all_antigens", &HiDb::all_antigens, py::return_value_policy::reference)
             .def("all_countries", &HiDb::all_countries)
             .def("unrecognized_locations", &HiDb::unrecognized_locations, py::doc("returns unrecognized locations found in all antigen/serum names"))
-            .def("stat", &HiDb::stat, py::arg("stat"), py::arg("start_date") = "", py::arg("end_date") = "")
+
+            .def("stat_antigens", &HiDb::stat_antigens, py::arg("stat"), py::arg("start_date") = "", py::arg("end_date") = "")
+            .def("stat_sera", &HiDb::stat_sera, py::arg("stat"), py::arg("unique"), py::arg("start_date") = "", py::arg("end_date") = "")
 
             .def("list_antigen_names", &HiDb::list_antigen_names, py::arg("lab") = "", py::arg("full_name") = false)
             .def("list_antigens", &HiDb::list_antigens, py::arg("lab"))

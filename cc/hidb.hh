@@ -136,8 +136,8 @@ namespace hidb
         std::vector<PerTable> mTables;
     };
 
-    typedef AntigenSerumData<Antigen> AntigenData;
-    typedef AntigenSerumData<Serum> SerumData;
+    using AntigenData = AntigenSerumData<Antigen>;
+    using SerumData = AntigenSerumData<Serum>;
 
 // ----------------------------------------------------------------------
 
@@ -277,13 +277,19 @@ namespace hidb
 
 // ----------------------------------------------------------------------
 
+    class Sera : public std::vector<SerumData>
+    {
+    }; // class Sera
+
+// ----------------------------------------------------------------------
+
     using VirusType = std::string;
     using Lab = std::string;
     using YearMonth = std::string;
     using Continent = std::string;
-    using HiDbAntigenStatContainer = std::map<VirusType, std::map<Lab, std::map<YearMonth, std::map<Continent, size_t>>>>;
+    using HiDbStatContainer = std::map<VirusType, std::map<Lab, std::map<YearMonth, std::map<Continent, size_t>>>>;
 
-    class HiDbAntigenStat : public HiDbAntigenStatContainer
+    class HiDbStat : public HiDbStatContainer
     {
      public:
         void compute_totals();
@@ -314,8 +320,8 @@ namespace hidb
 
         const Antigens& antigens() const { return mAntigens; }
         Antigens& antigens() { return mAntigens; }
-        const std::vector<SerumData>& sera() const { return mSera; }
-        std::vector<SerumData>& sera() { return mSera; }
+        const Sera& sera() const { return mSera; }
+        Sera& sera() { return mSera; }
         const Tables& charts() const { return mCharts; }
         Tables& charts() { return mCharts; }
 
@@ -338,6 +344,7 @@ namespace hidb
         std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
         const SerumData& find_serum_of_chart(const Serum& aSerum, bool report_if_not_found = false) const; // throws if not found
         void find_homologous_antigens_for_sera_of_chart(Chart& aChart);
+        std::string serum_date(const SerumData& aSerum) const;
 
           // name is just (international) name without reassortant/passage
 
@@ -345,13 +352,14 @@ namespace hidb
 
         std::vector<std::string> all_countries() const;
         std::vector<std::string> unrecognized_locations() const;
-        void stat(HiDbAntigenStat& aStat, std::string aStart, std::string aEnd) const;
+        void stat_antigens(HiDbStat& aStat, std::string aStart, std::string aEnd) const;
+        void stat_sera(HiDbStat& aStat, bool aUnique, std::string aStart, std::string aEnd) const;
 
         const LocDb& locdb() const { return mLocDb; }
 
      private:
         Antigens mAntigens;
-        std::vector<SerumData> mSera;
+        Sera mSera;
         Tables mCharts;
         LocDb mLocDb;
 
