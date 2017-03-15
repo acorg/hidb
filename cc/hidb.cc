@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <regex>
 #include <cctype>
+#include <typeinfo>
 
 #include "acmacs-base/stream.hh"
 #include "acmacs-chart/antigen-serum-match.hh"
@@ -741,20 +742,36 @@ HiDbAntigenStat HiDb::stat() const
     std::string previous_name;
     for (const auto& antigen: antigens()) {
         if (antigen.data().name() != previous_name) {
-            const auto continent = locdb().continent(virus_name::location(antigen.data().name()), "UNKNOWN");
-            YearMonth date = antigen.date();
-            if (date.empty()) {
-                date = virus_name::year(antigen.data().name());
-                if (date.empty())
-                    date = "????";
+            try {
+                std::string continent{"UNKNOWN"};
+                try {
+                   continent = locdb().continent(virus_name::location(antigen.data().name()), "UNKNOWN");
+                }
+                catch (virus_name::Unrecognized& /*err*/) {
+                      // std::cerr << "ERROR: " << err.what() << std::endl;
+                }
+                YearMonth date = antigen.date();
+                if (date.empty()) {
+                    try {
+                        date = virus_name::year(antigen.data().name());
+                    }
+                    catch (virus_name::Unrecognized&) {
+                    }
+                    if (date.empty())
+                        date = "????";
+                }
+                else {
+                    date = date.substr(0, 4) + date.substr(5, 2);
+                }
+                const auto& table = mCharts[antigen.per_table().front().table_id()].chart_info();
+                ++stat[table.virus_type()][table.lab()][date][continent];
+                ++total;
+                previous_name = antigen.data().name();
             }
-            else {
-                date = date.substr(0, 4) + date.substr(5, 2);
+            catch (std::exception& err) {
+                std::cerr << "HiDb::stat ERROR: " << typeid(err).name() << ": " << err.what() << std::endl;
+                throw;
             }
-            const auto& table = mCharts[antigen.per_table().front().table_id()].chart_info();
-            ++stat[table.virus_type()][table.lab()][date][continent];
-            ++total;
-            previous_name = antigen.data().name();
         }
     }
     std::cerr << "Total: " << total << std::endl;
