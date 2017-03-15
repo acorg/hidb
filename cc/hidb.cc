@@ -739,8 +739,11 @@ std::string HiDb::serum_date(const SerumData& aSerum) const
     std::string date;
     for (const auto& antigen: find_antigens_by_name(aSerum.name())) {
         date = antigen->date();
-        if (!date.empty())
+        if (!date.empty()) {
+            // if (date >= "2016")
+            //     std::cerr << aSerum.name() << " " << date << std::endl;
             break;
+        }
     }
     return date;
 
@@ -748,35 +751,41 @@ std::string HiDb::serum_date(const SerumData& aSerum) const
 
 // ----------------------------------------------------------------------
 
-template <typename AS> static void _stat_antigen_serum(HiDbStat& aStat, const LocDb& aLocDb, const Tables& aCharts, const AS& aAntigenSerum, std::string aStart, std::string aEnd, std::function<std::string (const AS&)> aYearMonth)
+struct AntigenSerumInfo
+{
+    VirusType virus_type;
+    Lab lab;
+    YearMonth year_month;
+    Continent continent;
+    std::string lineage;
+
+    inline AntigenSerumInfo() = default;
+    inline operator bool() const { return !lab.empty(); }
+    inline void reset() { virus_type.clear(); lab.clear(); year_month.clear(); continent.clear(); lineage.clear(); }
+
+}; // struct AntigenSerumInfo
+
+template <typename AS> static void _stat_antigen_serum(AntigenSerumInfo& aInfo, const LocDb& aLocDb, const Tables& aCharts, const AS& aAntigenSerum, std::string aStart, std::string aEnd, std::function<std::string (const AS&)> aYearMonth)
 {
     const std::string name = aAntigenSerum.data().name();
-    Continent continent;
     try {
-        continent = aLocDb.continent(virus_name::location(name));
+        aInfo.continent = aLocDb.continent(virus_name::location(name));
     }
     catch (LocationNotFound&) {
     }
     catch (virus_name::Unrecognized& /*err*/) {
           // std::cerr << "ERROR: " << err.what() << std::endl;
     }
-    if (!continent.empty()) {                      // Unknown continent not counted to avoid stat inconsistency and questions
-        YearMonth year_month = aYearMonth(aAntigenSerum);
-        if ((aStart.empty() || (!year_month.empty() && year_month >= aStart)) && (aEnd.empty() || (!year_month.empty() && year_month < aEnd))) {
-            if (year_month.empty())
-                year_month = "????";
+    if (!aInfo.continent.empty()) {                      // Unknown continent not counted to avoid stat inconsistency and questions
+        aInfo.year_month = aYearMonth(aAntigenSerum);
+        if ((aStart.empty() || (!aInfo.year_month.empty() && aInfo.year_month >= aStart)) && (aEnd.empty() || (!aInfo.year_month.empty() && aInfo.year_month < aEnd))) {
+            if (aInfo.year_month.empty())
+                aInfo.year_month = "????";
             const auto& table = aCharts[aAntigenSerum.per_table().front().table_id()].chart_info();
-            const VirusType virus_type = table.virus_type();
-            const Lab lab = table.lab();
-            ++aStat[virus_type][lab][year_month][continent];
-            ++aStat["all"][lab][year_month][continent];
-            if (virus_type == "B") {
-                const std::string lineage = aAntigenSerum.data().lineage();
-                if (!lineage.empty())
-                    ++aStat[virus_type + lineage][lab][year_month][continent];
-                  // else
-                  //     std::cerr << "No lineage: " << name << std::endl;
-            }
+            aInfo.virus_type = table.virus_type();
+            aInfo.lab = table.lab();
+            if (aInfo.virus_type == "B")
+                aInfo.lineage = aAntigenSerum.data().lineage();
         }
     }
 }
@@ -791,7 +800,7 @@ static inline std::string _fix_date(std::string date)
 // ----------------------------------------------------------------------
 
 // returns YYYYMM if date is available or YYYY if there is year in name
-static inline std::string _year_month(std::string date, std::string name)
+static inline std::string _year_month(std::string date, std::string name /* , bool verbose = false */)
 {
     if (date.empty()) {
         try {
@@ -803,7 +812,21 @@ static inline std::string _year_month(std::string date, std::string name)
     else {
         date = date.substr(0, 4) + date.substr(5, 2);
     }
+    // if (verbose && date >= "2016" && name[0] == 'B')
+    //     std::cerr << name << " " << date << std::endl;
     return date;
+}
+
+// ----------------------------------------------------------------------
+
+static inline void _update_stat(const AntigenSerumInfo& aInfo, HiDbStat& aStat)
+{
+    if (aInfo) {
+        ++aStat[aInfo.virus_type][aInfo.lab][aInfo.year_month][aInfo.continent];
+        ++aStat["all"][aInfo.lab][aInfo.year_month][aInfo.continent];
+        if (!aInfo.lineage.empty())
+            ++aStat[aInfo.virus_type + aInfo.lineage][aInfo.lab][aInfo.year_month][aInfo.continent];
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -817,7 +840,9 @@ void HiDb::stat_antigens(HiDbStat& aStat, std::string aStart, std::string aEnd) 
     for (const auto& antigen: antigens()) {
         const std::string name = antigen.data().name();
         if (name != previous_name) {
-            _stat_antigen_serum<AntigenData>(aStat, locdb(), mCharts, antigen, aStart, aEnd, [&name](const AntigenData& ag) -> std::string { return _year_month(ag.date(), name); });
+            AntigenSerumInfo info;
+            _stat_antigen_serum<AntigenData>(info, locdb(), mCharts, antigen, aStart, aEnd, [&name](const AntigenData& ag) -> std::string { return _year_month(ag.date(), name); });
+            _update_stat(info, aStat);
             previous_name = name;
         }
     }
@@ -826,17 +851,23 @@ void HiDb::stat_antigens(HiDbStat& aStat, std::string aStart, std::string aEnd) 
 
 // ----------------------------------------------------------------------
 
-void HiDb::stat_sera(HiDbStat& aStat, bool aUnique, std::string aStart, std::string aEnd) const
+void HiDb::stat_sera(HiDbStat& aStat, HiDbStat* aStatUnique, std::string aStart, std::string aEnd) const
 {
     aStart = _fix_date(aStart);
     aEnd = _fix_date(aEnd);
 
     std::string previous_name;
+    AntigenSerumInfo info;
     for (const auto& serum: sera()) {
         const std::string name = serum.data().name();
         if (name != previous_name) {
-            _stat_antigen_serum<SerumData>(aStat, locdb(), mCharts, serum, aStart, aEnd, [&name,this](const auto& sr) -> std::string { return _year_month(serum_date(sr), name); });
+            info.reset();
+            _stat_antigen_serum<SerumData>(info, locdb(), mCharts, serum, aStart, aEnd, [&name,this](const auto& sr) -> std::string { return _year_month(serum_date(sr), name); });
+            _update_stat(info, aStat);
             previous_name = name;
+        }
+        if (aStatUnique) {
+            _update_stat(info, *aStatUnique);
         }
     }
 

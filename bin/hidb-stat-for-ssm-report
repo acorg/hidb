@@ -27,8 +27,7 @@ def main(args):
             hidb.import_locdb(str(Path(os.environ["ACMACSD_ROOT"]).joinpath("data", "locationdb.json.xz")))
         with timeit("Making stat"):
             hidb.stat_antigens(stat=stat_antigens, start_date=args.start_date, end_date=args.end_date)
-            hidb.stat_sera(stat=stat_sera, unique=False, start_date=args.start_date, end_date=args.end_date)
-            hidb.stat_sera(stat=stat_sera_unique, unique=True, start_date=args.start_date, end_date=args.end_date)
+            hidb.stat_sera(stat=stat_sera, stat_unique=stat_sera_unique, start_date=args.start_date, end_date=args.end_date)
     with timeit("Computing totals"):
         stat_antigens.compute_totals()
         stat_sera.compute_totals()

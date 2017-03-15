@@ -353,7 +353,7 @@ namespace hidb
         std::vector<std::string> all_countries() const;
         std::vector<std::string> unrecognized_locations() const;
         void stat_antigens(HiDbStat& aStat, std::string aStart, std::string aEnd) const;
-        void stat_sera(HiDbStat& aStat, bool aUnique, std::string aStart, std::string aEnd) const;
+        void stat_sera(HiDbStat& aStat, HiDbStat* aStatUnique, std::string aStart, std::string aEnd) const;
 
         const LocDb& locdb() const { return mLocDb; }
 
