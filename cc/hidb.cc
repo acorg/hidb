@@ -744,10 +744,11 @@ void HiDb::stat(HiDbAntigenStat& aStat, std::string aStart, std::string aEnd) co
 
     std::string previous_name;
     for (const auto& antigen: antigens()) {
-        if (antigen.data().name() != previous_name) {
-            std::string continent;
+        const std::string name = antigen.data().name();
+        if (name != previous_name) {
+            Continent continent;
             try {
-                continent = locdb().continent(virus_name::location(antigen.data().name()));
+                continent = locdb().continent(virus_name::location(name));
             }
             catch (LocationNotFound&) {
             }
@@ -758,7 +759,7 @@ void HiDb::stat(HiDbAntigenStat& aStat, std::string aStart, std::string aEnd) co
                 YearMonth date = antigen.date();
                 if (date.empty()) {
                     try {
-                        date = virus_name::year(antigen.data().name());
+                        date = virus_name::year(name);
                     }
                     catch (virus_name::Unrecognized&) {
                     }
@@ -770,14 +771,23 @@ void HiDb::stat(HiDbAntigenStat& aStat, std::string aStart, std::string aEnd) co
                     if (date.empty())
                         date = "????";
                     const auto& table = mCharts[antigen.per_table().front().table_id()].chart_info();
-                    ++aStat[table.virus_type()][table.lab()][date][continent];
+                    const VirusType virus_type = table.virus_type();
+                    const Lab lab = table.lab();
+                    ++aStat[virus_type][lab][date][continent];
+                    ++aStat["all"][lab][date][continent];
                     ++total;
+                    if (virus_type == "B") {
+                        const std::string lineage = antigen.data().lineage();
+                        if (!lineage.empty())
+                            ++aStat[virus_type + lineage][lab][date][continent];
+                        // else
+                        //     std::cerr << "No lineage: " << name << std::endl;
+                    }
                 }
             }
-            previous_name = antigen.data().name();
+            previous_name = name;
         }
     }
-    aStat.compute_totals();
     std::cerr << "Total: " << total << std::endl;
 
 } // HiDb::stat
@@ -804,13 +814,15 @@ void HiDbAntigenStat::compute_totals()
             for (auto& date_entry: lab_entry.second) {
                 date_entry.second["all"] = std::accumulate(date_entry.second.begin(), date_entry.second.end(), 0U, continent_sum);
                 for (const auto& continent_entry: date_entry.second) {
-                    continent_total[continent_entry.first] += continent_entry.second;
+                    if (continent_entry.first != "all")
+                        continent_total[continent_entry.first] += continent_entry.second;
                 }
             }
             lab_entry.second["all"] = continent_total;
             lab_entry.second["all"]["all"] = std::accumulate(lab_entry.second["all"].begin(), lab_entry.second["all"].end(), 0U, continent_sum);
         }
     }
+    std::cerr << "Total: " << (*this)["all"]["all"]["all"]["all"] << std::endl;
 
 } // HiDbAntigenStat::compute_totals
 
@@ -840,8 +852,6 @@ const hidb::HiDb& HiDbSet::get(std::string aVirusType) const
     return *h->second;
 
 } // HiDbSet::get
-
-// ----------------------------------------------------------------------
 
 // ----------------------------------------------------------------------
 /// Local Variables:

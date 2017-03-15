@@ -4,7 +4,7 @@
 """
 """
 
-import sys, os, traceback, pprint
+import sys, os, traceback, datetime, pprint
 if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
 from pathlib import Path
 sys.path[:0] = [str(Path(os.environ["ACMACSD_ROOT"]).resolve().joinpath("py"))]
@@ -16,7 +16,7 @@ from acmacs_base import timeit, json
 # ----------------------------------------------------------------------
 
 def main(args):
-    stat = {}
+    stat_antigens = hidb_m.HiDbAntigenStat()
     for db_file in Path(os.environ["ACMACSD_ROOT"]).joinpath("data").glob("hidb4.*.json.xz"):
         hidb = hidb_m.HiDb()
         with timeit("Reading hidb from " + str(db_file)):
@@ -24,7 +24,10 @@ def main(args):
         with timeit("Reading locationdb"):
             hidb.import_locdb(str(Path(os.environ["ACMACSD_ROOT"]).joinpath("data", "locationdb.json.xz")))
         with timeit("Making stat"):
-            stat.update(hidb.stat(start_date=args.start_date, end_date=args.end_date))
+            hidb.stat(stat=stat_antigens, start_date=args.start_date, end_date=args.end_date)
+    with timeit("Computing totals"):
+        stat_antigens.compute_totals()
+    stat = {"antigens": stat_antigens.as_dict(), "sera": {}, "date": datetime.date.today().strftime("%Y-%m-%d")}
     print(json.dumps(stat, sort_keys=True, indent=1))
 
 # ----------------------------------------------------------------------
