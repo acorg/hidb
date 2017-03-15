@@ -734,7 +734,7 @@ std::vector<std::string> HiDb::unrecognized_locations() const
 
 // ----------------------------------------------------------------------
 
-HiDbAntigenStat HiDb::stat(std::string aStart, std::string aEnd) const
+void HiDb::stat(HiDbAntigenStat& aStat, std::string aStart, std::string aEnd) const
 {
     auto fix_date = [](std::string date) -> std::string { return string::replace(date, "-", ""); };
     aStart = fix_date(aStart);
@@ -742,18 +742,19 @@ HiDbAntigenStat HiDb::stat(std::string aStart, std::string aEnd) const
 
     size_t total = 0;
 
-    HiDbAntigenStat stat;
     std::string previous_name;
     for (const auto& antigen: antigens()) {
         if (antigen.data().name() != previous_name) {
+            std::string continent;
             try {
-                std::string continent{"UNKNOWN"};
-                try {
-                   continent = locdb().continent(virus_name::location(antigen.data().name()), "UNKNOWN");
-                }
-                catch (virus_name::Unrecognized& /*err*/) {
-                      // std::cerr << "ERROR: " << err.what() << std::endl;
-                }
+                continent = locdb().continent(virus_name::location(antigen.data().name()));
+            }
+            catch (LocationNotFound&) {
+            }
+            catch (virus_name::Unrecognized& /*err*/) {
+                  // std::cerr << "ERROR: " << err.what() << std::endl;
+            }
+            if (!continent.empty()) {                      // Unknown continent not counted to avoid stat inconsistency and questions
                 YearMonth date = antigen.date();
                 if (date.empty()) {
                     try {
@@ -769,21 +770,49 @@ HiDbAntigenStat HiDb::stat(std::string aStart, std::string aEnd) const
                     if (date.empty())
                         date = "????";
                     const auto& table = mCharts[antigen.per_table().front().table_id()].chart_info();
-                    ++stat[table.virus_type()][table.lab()][date][continent];
+                    ++aStat[table.virus_type()][table.lab()][date][continent];
                     ++total;
                 }
-            }
-            catch (std::exception& err) {
-                std::cerr << "HiDb::stat ERROR: " << typeid(err).name() << ": " << err.what() << std::endl;
-                throw;
             }
             previous_name = antigen.data().name();
         }
     }
+    aStat.compute_totals();
     std::cerr << "Total: " << total << std::endl;
-    return stat;
 
 } // HiDb::stat
+
+// ----------------------------------------------------------------------
+
+void HiDbAntigenStat::compute_totals()
+{
+    auto continent_sum = [](size_t sum, const auto& continent_count) -> size_t { return sum + continent_count.second; };
+
+    for (auto& vt_entry: *this) {
+        std::map<YearMonth, std::map<Continent, size_t>> all_labs;
+        for (auto& lab_entry: vt_entry.second) {
+            for (auto& date_entry: lab_entry.second) {
+                for (const auto& continent_entry: date_entry.second) {
+                    all_labs[date_entry.first][continent_entry.first] += continent_entry.second;
+                }
+            }
+        }
+        vt_entry.second["all"] = all_labs;
+
+        for (auto& lab_entry: vt_entry.second) {
+            std::map<Continent, size_t> continent_total;
+            for (auto& date_entry: lab_entry.second) {
+                date_entry.second["all"] = std::accumulate(date_entry.second.begin(), date_entry.second.end(), 0U, continent_sum);
+                for (const auto& continent_entry: date_entry.second) {
+                    continent_total[continent_entry.first] += continent_entry.second;
+                }
+            }
+            lab_entry.second["all"] = continent_total;
+            lab_entry.second["all"]["all"] = std::accumulate(lab_entry.second["all"].begin(), lab_entry.second["all"].end(), 0U, continent_sum);
+        }
+    }
+
+} // HiDbAntigenStat::compute_totals
 
 // ----------------------------------------------------------------------
 

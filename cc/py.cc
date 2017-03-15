@@ -192,7 +192,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("all_antigens", &HiDb::all_antigens, py::return_value_policy::reference)
             .def("all_countries", &HiDb::all_countries)
             .def("unrecognized_locations", &HiDb::unrecognized_locations, py::doc("returns unrecognized locations found in all antigen/serum names"))
-            .def("stat", &HiDb::stat, py::arg("start_date") = "", py::arg("end_date") = "")
+            .def("stat", [](const HiDb& aHiDb, std::string aStart, std::string aEnd) -> HiDbAntigenStatContainer* {auto* stat = new HiDbAntigenStat{}; aHiDb.stat(*stat, aStart, aEnd); return stat; }, py::arg("start_date") = "", py::arg("end_date") = "")
 
             .def("list_antigen_names", &HiDb::list_antigen_names, py::arg("lab") = "", py::arg("full_name") = false)
             .def("list_antigens", &HiDb::list_antigens, py::arg("lab"))

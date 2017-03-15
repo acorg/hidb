@@ -277,15 +277,17 @@ namespace hidb
 
 // ----------------------------------------------------------------------
 
-    typedef std::string VirusType;
-    typedef std::string Lab;
-    typedef std::string YearMonth;
-    typedef std::string Continent;
-    typedef std::map<VirusType, std::map<Lab, std::map<YearMonth, std::map<Continent, size_t>>>> HiDbAntigenStat;
+    using VirusType = std::string;
+    using Lab = std::string;
+    using YearMonth = std::string;
+    using Continent = std::string;
+    using HiDbAntigenStatContainer = std::map<VirusType, std::map<Lab, std::map<YearMonth, std::map<Continent, size_t>>>>;
 
-// class HiDbAntigenStat : public std::map<Lab, std::map<YearMonth, std::map<Continent, size_t>>>
-// {
-// };
+    class HiDbAntigenStat : public HiDbAntigenStatContainer
+    {
+     public:
+        void compute_totals();
+    };
 
 // ----------------------------------------------------------------------
 
@@ -343,7 +345,7 @@ namespace hidb
 
         std::vector<std::string> all_countries() const;
         std::vector<std::string> unrecognized_locations() const;
-        HiDbAntigenStat stat(std::string aStart, std::string aEnd) const;
+        void stat(HiDbAntigenStat& aStat, std::string aStart, std::string aEnd) const;
 
         const LocDb& locdb() const { return mLocDb; }
 
