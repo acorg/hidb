@@ -862,7 +862,7 @@ void HiDb::stat_sera(HiDbStat& aStat, HiDbStat* aStatUnique, std::string aStart,
         const std::string name = serum.data().name();
         if (name != previous_name) {
             info.reset();
-            _stat_antigen_serum<SerumData>(info, locdb(), mCharts, serum, aStart, aEnd, [&name,this](const auto& sr) -> std::string { return _year_month(serum_date(sr), name); });
+            _stat_antigen_serum<SerumData>(info, locdb(), mCharts, serum, aStart, aEnd, [&name,this](const auto& sr) -> std::string { return _year_month(this->serum_date(sr), name); });
             _update_stat(info, aStat);
             previous_name = name;
         }
