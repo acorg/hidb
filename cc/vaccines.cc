@@ -99,9 +99,9 @@ Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const h
     std::vector<size_t> by_name;
     aChart.antigens().find_by_name(aName, by_name);
     for (size_t ag_no: by_name) {
-          // std::cerr << ag->full_name() << std::endl;
         try {
             const Antigen& ag = aChart.antigens()[ag_no];
+              // std::cerr << ag.full_name() << std::endl;
             const auto& data = aHiDb.find_antigen_of_chart(ag);
             std::vector<Vaccines::HomologousSerum> homologous_sera;
             for (const auto* sd: aHiDb.find_homologous_sera(data)) {

@@ -903,7 +903,7 @@ void HiDbStat::compute_totals()
             lab_entry.second["all"]["all"] = std::accumulate(lab_entry.second["all"].begin(), lab_entry.second["all"].end(), 0U, continent_sum);
         }
     }
-    std::cerr << "Total: " << (*this)["all"]["all"]["all"]["all"] << std::endl;
+    // std::cerr << "Total: " << (*this)["all"]["all"]["all"]["all"] << std::endl;
 
 } // HiDbStat::compute_totals
 

@@ -14,52 +14,12 @@ PYBIND11_PLUGIN(hidb_backend)
     py::module m("hidb_backend", "HiDB access plugin");
 
       // ----------------------------------------------------------------------
-      // Antigen, Serum
+      // acmacs_chart_backend
       // ----------------------------------------------------------------------
 
-    py::class_<AntigenSerum>(m, "AntigenSerum")
-            .def("full_name", &AntigenSerum::full_name)
-            .def("abbreviated_name", &AntigenSerum::abbreviated_name, py::arg("locdb"), py::doc("includes passage, reassortant, annotations"))
-            .def("name_abbreviated", &AntigenSerum::name_abbreviated, py::arg("locdb"), py::doc("just name without passage, reassortant, annotations"))
-            .def("location_abbreviated", &AntigenSerum::location_abbreviated, py::arg("locdb"))
-            .def("name", py::overload_cast<>(&AntigenSerum::name, py::const_))
-            .def("lineage", py::overload_cast<>(&AntigenSerum::lineage, py::const_))
-            .def("passage", py::overload_cast<>(&AntigenSerum::passage, py::const_))
-            .def("passage_type", &AntigenSerum::passage_type)
-            .def("reassortant", py::overload_cast<>(&AntigenSerum::reassortant, py::const_))
-            .def("semantic", py::overload_cast<>(&AntigenSerum::semantic, py::const_))
-            .def("annotations", [](const AntigenSerum &as) { py::list list; for (const auto& anno: as.annotations()) { list.append(py::str(anno)); } return list; }, py::doc("returns a copy of the annotation list, modifications to the returned list are not applied"))
-            ;
-
-    py::class_<Antigen, AntigenSerum>(m, "Antigen")
-            .def("date", py::overload_cast<>(&Antigen::date, py::const_))
-            .def("lab_id", [](const Antigen &a) { py::list list; for (const auto& li: a.lab_id()) { list.append(py::str(li)); } return list; }, py::doc("returns a copy of the lab_id list, modifications to the returned list are not applied"))
-            .def("variant_id", [](const Antigen &a) { return variant_id(a); })
-            ;
-
-    py::class_<Serum, AntigenSerum>(m, "Serum")
-            .def("variant_id", [](const Serum &s) { return variant_id(s); })
-            .def("serum_id", py::overload_cast<>(&Serum::serum_id, py::const_))
-            .def("serum_species", py::overload_cast<>(&Serum::serum_species, py::const_))
-            .def("homologous", py::overload_cast<>(&Serum::homologous, py::const_))
-            ;
-
-      // ----------------------------------------------------------------------
-      // Chart
-      // ----------------------------------------------------------------------
-
-    py::class_<Chart>(m, "Chart")
-            .def("number_of_antigens", &Chart::number_of_antigens)
-            .def("number_of_sera", &Chart::number_of_sera)
-            .def("antigen", &Chart::antigen, py::arg("no"))
-            .def("serum", &Chart::serum, py::arg("no"))
-            .def("table_id", [](const Chart& aChart) { return table_id(aChart); })
-            .def("find_homologous_antigen_for_sera", &Chart::find_homologous_antigen_for_sera)
-            ;
-
-    m.def("import_chart", &import_chart, py::arg("data"), py::doc("Imports chart from a buffer or file in the ace format."));
-    m.def("import_chart", [](py::bytes data) { return import_chart(data); }, py::arg("data"), py::doc("Imports chart from a buffer or file in the ace format."));
-    m.def("export_chart", &export_chart, py::arg("filename"), py::arg("chart"), py::doc("Exports chart into a file in the ace format."));
+    auto acmacs_chart_backend = py::module::import("acmacs_chart_backend");
+    py::class_<Antigen>(m, "Antigen", acmacs_chart_backend.attr("Antigen"));
+    py::class_<Serum>(m, "Serum", acmacs_chart_backend.attr("Serum"));
 
       // ----------------------------------------------------------------------
       // Vaccines
@@ -99,7 +59,7 @@ PYBIND11_PLUGIN(hidb_backend)
             ;
 
     py::class_<AntigenData>(m, "AntigenData")
-            .def("data", static_cast<const Antigen& (AntigenData::*)() const>(&AntigenData::data))
+            .def("data", py::overload_cast<>(&AntigenData::data))
             .def("number_of_tables", &AntigenData::number_of_tables)
             .def("most_recent_table", &AntigenData::most_recent_table)
             .def("oldest_table", &AntigenData::oldest_table)
@@ -108,7 +68,7 @@ PYBIND11_PLUGIN(hidb_backend)
             ;
 
     py::class_<SerumData>(m, "SerumData")
-            .def("data", static_cast<const Serum& (SerumData::*)() const>(&SerumData::data))
+            .def("data", py::overload_cast<>(&SerumData::data))
             .def("number_of_tables", &SerumData::number_of_tables)
             .def("most_recent_table", &SerumData::most_recent_table)
             .def("oldest_table", &SerumData::oldest_table)
@@ -218,6 +178,13 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("find_homologous_sera", find_homologous_sera, py::arg("antigen"))
             .def("find_sera_with_score", find_sera_with_score, py::arg("name"))
             .def("find_homologous_antigens_for_sera_of_chart", &HiDb::find_homologous_antigens_for_sera_of_chart, py::arg("chart"))
+            ;
+
+      // ----------------------------------------------------------------------
+
+    py::class_<hidb::HiDbSet>(m, "HiDbSet")
+            .def(py::init<std::string>(), py::arg("hidb_dir"))
+            .def("get", &hidb::HiDbSet::get, py::arg("virus_type"), py::return_value_policy::reference)
             ;
 
       // ----------------------------------------------------------------------

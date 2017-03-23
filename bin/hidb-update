@@ -12,6 +12,7 @@ sys.path[:0] = [str(Path(os.environ["ACMACSD_ROOT"]).resolve().joinpath("py"))]
 import logging; module_logger = logging.getLogger(__name__)
 
 import hidb as hidb_m
+import acmacs_chart
 from hidb import utility
 from acmacs_base import timeit
 
@@ -25,7 +26,7 @@ def main(args):
     for source in (Path(f).resolve() for f in args.input):
         if "~" not in str(source):             # ignore backups
             print(source)
-            hidb.add(hidb_m.import_chart(utility.get_ace_data(source)))
+            hidb.add(acmacs_chart.import_chart(utility.get_ace_data(source)))
             # print("------------")
     if Path(args.path_to_hidb).exists():
         backup_dir = Path(args.path_to_hidb).parent.joinpath(".backup")
