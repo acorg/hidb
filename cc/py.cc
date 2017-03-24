@@ -63,7 +63,8 @@ PYBIND11_PLUGIN(hidb_backend)
             ;
 
     py::class_<AntigenData>(m, "AntigenData")
-            .def("data", py::overload_cast<>(&AntigenData::data))
+              // .def("data", py::overload_cast<>(&AntigenData::data))
+            .def("data", [](AntigenData& antigen_data) -> hidb_Antigen& { return static_cast<hidb_Antigen&>(antigen_data.data()); })
             .def("number_of_tables", &AntigenData::number_of_tables)
             .def("most_recent_table", &AntigenData::most_recent_table)
             .def("oldest_table", &AntigenData::oldest_table)
