@@ -18,8 +18,12 @@ PYBIND11_PLUGIN(hidb_backend)
       // ----------------------------------------------------------------------
 
     auto acmacs_chart_backend = py::module::import("acmacs_chart_backend");
-    py::class_<Antigen>(m, "Antigen", acmacs_chart_backend.attr("Antigen"));
-    py::class_<Serum>(m, "Serum", acmacs_chart_backend.attr("Serum"));
+      //class hidb_Antigen : public Antigen {};
+    using hidb_Antigen = Antigen;
+    py::class_<hidb_Antigen>(m, "Antigen", acmacs_chart_backend.attr("Antigen"));
+    // m.attr("Antigen") = acmacs_chart_backend.attr("Antigen");
+    // py::class_<Antigen>(m, "Antigen", acmacs_chart_backend.attr("Antigen"));
+    // py::class_<Serum>(m, "Serum", acmacs_chart_backend.attr("Serum"));
 
       // ----------------------------------------------------------------------
       // Vaccines
