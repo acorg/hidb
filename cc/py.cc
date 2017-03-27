@@ -36,6 +36,7 @@ PYBIND11_PLUGIN(hidb_backend)
 
     py::class_<Vaccines::Entry>(m, "Vaccines_Entry")
             .def_readonly("antigen", &Vaccines::Entry::antigen)
+            .def_readonly("antigen_data", &Vaccines::Entry::antigen_data)
             .def_readonly("antigen_index", &Vaccines::Entry::antigen_index)
             .def_readonly("homologous_sera", &Vaccines::Entry::homologous_sera, py::return_value_policy::reference)
             ;
