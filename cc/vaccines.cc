@@ -44,6 +44,21 @@ static std::map<std::string, std::vector<Vaccine>> sVaccines = {
 
 // ----------------------------------------------------------------------
 
+static inline std::string vaccine_type_as_string(Vaccine::Type aType)
+{
+    switch (aType) {
+      case Vaccine::Previous:
+          return "previous";
+      case Vaccine::Current:
+          return "current";
+      case Vaccine::Surrogate:
+          return "surrogate";
+    }
+    return {};
+}
+
+// ----------------------------------------------------------------------
+
 const std::vector<Vaccine>& vaccines(std::string aSubtype, std::string aLineage)
 {
     return sVaccines.at(aSubtype + aLineage);
@@ -62,15 +77,7 @@ const std::vector<Vaccine>& vaccines(const Chart& aChart)
 
 std::string Vaccine::type_as_string() const
 {
-    switch (type) {
-      case Previous:
-          return "previous";
-      case Current:
-          return "current";
-      case Surrogate:
-          return "surrogate";
-    }
-    return {};
+    return vaccine_type_as_string(type);
 
 } // Vaccine::type_as_string
 
@@ -142,19 +149,19 @@ std::string Vaccines::report(size_t aIndent) const
     };
 
     if (!mCell.empty()) {
-        out << indent << "CELL" << std::endl;
+        out << indent << "Vaccine " << type_as_string() << " Cell (" << mCell.size() << ')' << std::endl;
         for (size_t no = 0; no < mCell.size(); ++no)
             entry_report(no, mCell[no]);
     }
 
     if (!mEgg.empty()) {
-        out << indent << "EGG" << std::endl;
+        out << indent << "Vaccine " << type_as_string() << " Egg (" << mEgg.size() << ')' << std::endl;
         for (size_t no = 0; no < mEgg.size(); ++no)
             entry_report(no, mEgg[no]);
     }
 
     if (!mReassortant.empty()) {
-        out << indent << "REASSORTANT" << std::endl;
+        out << indent << "Vaccine " << type_as_string() << " Reassortant (" << mReassortant.size() << ')' << std::endl;
         for (size_t no = 0; no < mReassortant.size(); ++no)
             entry_report(no, mReassortant[no]);
     }
@@ -164,9 +171,16 @@ std::string Vaccines::report(size_t aIndent) const
 
 // ----------------------------------------------------------------------
 
-Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
+std::string Vaccines::type_as_string() const
 {
-    Vaccines* result = new Vaccines();
+    return vaccine_type_as_string(mType);
+
+} // Vaccines::type_as_string
+
+// ----------------------------------------------------------------------
+
+void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
+{
     std::vector<size_t> by_name;
     aChart.antigens().find_by_name(aName, by_name);
     for (size_t ag_no: by_name) {
@@ -181,16 +195,51 @@ Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const h
                 if (sr_no != static_cast<size_t>(-1))
                     homologous_sera.emplace_back(sr_no, &aChart.sera()[sr_no], sd, aHiDb.charts()[sd->most_recent_table().table_id()].chart_info().date());
             }
-            result->add(ag_no, ag, &data, std::move(homologous_sera), aHiDb.charts()[data.most_recent_table().table_id()].chart_info().date());
+            aVaccines.add(ag_no, ag, &data, std::move(homologous_sera), aHiDb.charts()[data.most_recent_table().table_id()].chart_info().date());
         }
         catch (hidb::HiDb::NotFound&) {
         }
     }
-    result->sort();
-    result->report();
+    aVaccines.sort();
+
+} // vaccines_for_name
+
+// ----------------------------------------------------------------------
+
+Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
+{
+    Vaccines* result = new Vaccines(Vaccine::Previous);
+    vaccines_for_name(*result, aName, aChart, aHiDb);
     return result;
 
 } // find_vaccines_in_chart
+
+// ----------------------------------------------------------------------
+
+VaccinesOfChart* vaccines(const Chart& aChart, const hidb::HiDb& aHiDb)
+{
+    auto* result = new VaccinesOfChart{};
+    for (const auto& name_type: vaccines(aChart)) {
+        result->emplace_back(name_type.type);
+        vaccines_for_name(result->back(), name_type.name, aChart, aHiDb);
+    }
+    return result;
+
+} // vaccines
+
+// ----------------------------------------------------------------------
+
+std::string VaccinesOfChart::report(size_t aIndent) const
+{
+    std::string result;
+    for (const auto& v: *this)
+        result += v.report(aIndent);
+    return result;
+
+} // VaccinesOfChart::report
+
+// ----------------------------------------------------------------------
+
 
 // ----------------------------------------------------------------------
 /// Local Variables:

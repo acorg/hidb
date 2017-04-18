@@ -18,6 +18,22 @@ class Chart;
 
 // ----------------------------------------------------------------------
 
+class Vaccine
+{
+ public:
+    enum Type { Previous, Current, Surrogate };
+
+    inline Vaccine(std::string aName, Type aType) : name(aName), type(aType) {}
+
+    std::string name;
+    Type type;
+
+    std::string type_as_string() const;
+
+}; // class Vaccine
+
+// ----------------------------------------------------------------------
+
 class Vaccines
 {
  public:
@@ -50,7 +66,7 @@ class Vaccines
         std::string most_recent_table_date;
     };
 
-    inline Vaccines() {}
+    inline Vaccines(Vaccine::Type aType) : mType(aType) {}
 
     inline size_t number_of_eggs() const { return mEgg.size(); }
     inline size_t number_of_cells() const { return mCell.size(); }
@@ -60,14 +76,16 @@ class Vaccines
     inline const Entry* cell(size_t aNo = 0) const { return mCell.size() > aNo ? &mCell[aNo] : nullptr; }
     inline const Entry* reassortant(size_t aNo = 0) const { return mReassortant.size() > aNo ? &mReassortant[aNo] : nullptr; }
 
+    std::string type_as_string() const;
     std::string report(size_t aIndent = 0) const;
 
  private:
+    Vaccine::Type mType;
     std::vector<Entry> mEgg;
     std::vector<Entry> mCell;
     std::vector<Entry> mReassortant;
 
-    friend Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
+    friend void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
 
     void add(size_t aAntigenIndex, const Antigen& aAntigen, const hidb::AntigenSerumData<Antigen>* aAntigenData, std::vector<HomologousSerum>&& aSera, std::string aMostRecentTableDate);
     void sort();
@@ -76,25 +94,21 @@ class Vaccines
 
 // ----------------------------------------------------------------------
 
-class Vaccine
+class VaccinesOfChart : public std::vector<Vaccines>
 {
  public:
-    enum Type { Previous, Current, Surrogate };
+    using std::vector<Vaccines>::vector;
 
-    inline Vaccine(std::string aName, Type aType) : name(aName), type(aType) {}
-
-    std::string name;
-    Type type;
-
-    std::string type_as_string() const;
-
-}; // class Vaccine
+    std::string report(size_t aIndent = 0) const;
+};
 
 // ----------------------------------------------------------------------
 
 const std::vector<Vaccine>& vaccines(std::string aSubtype, std::string aLineage);
 const std::vector<Vaccine>& vaccines(const Chart& aChart);
 Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
+void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
+VaccinesOfChart* vaccines(const Chart& aChart, const hidb::HiDb& aHiDb);
 
 // ----------------------------------------------------------------------
 /// Local Variables:
