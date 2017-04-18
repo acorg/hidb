@@ -14,6 +14,7 @@ namespace hidb
 
 class Antigen;
 class Serum;
+class Chart;
 
 // ----------------------------------------------------------------------
 
@@ -75,6 +76,24 @@ class Vaccines
 
 // ----------------------------------------------------------------------
 
+class Vaccine
+{
+ public:
+    enum Type { Previous, Current, Surrogate };
+
+    inline Vaccine(std::string aName, Type aType) : name(aName), type(aType) {}
+
+    std::string name;
+    Type type;
+
+    std::string type_as_string() const;
+
+}; // class Vaccine
+
+// ----------------------------------------------------------------------
+
+const std::vector<Vaccine>& vaccines(std::string aSubtype, std::string aLineage);
+const std::vector<Vaccine>& vaccines(const Chart& aChart);
 Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
 
 // ----------------------------------------------------------------------
