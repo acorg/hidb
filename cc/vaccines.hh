@@ -107,6 +107,9 @@ class Vaccines
                 throw std::runtime_error("Vaccines::remove: Unrecognized passage type: " + aPassageType);
         }
 
+    inline std::string type() const { return mNameType.type_as_string(); }
+    inline std::string name() const { return mNameType.name; }
+
  private:
     Vaccine mNameType;
     std::vector<Entry> mEgg;

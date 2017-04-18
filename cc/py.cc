@@ -43,12 +43,16 @@ PYBIND11_PLUGIN(hidb_backend)
 
     py::class_<Vaccines>(m, "Vaccines")
             .def("report", &Vaccines::report, py::arg("indent") = 0)
+            .def("type", &Vaccines::type)
+            .def("name", &Vaccines::name)
             .def("egg", &Vaccines::egg, py::arg("no") = 0, py::return_value_policy::reference)
             .def("cell", &Vaccines::cell, py::arg("no") = 0, py::return_value_policy::reference)
             .def("reassortant", &Vaccines::reassortant, py::arg("no") = 0, py::return_value_policy::reference)
             .def("number_of_eggs", &Vaccines::number_of_eggs)
             .def("number_of_cells", &Vaccines::number_of_cells)
             .def("number_of_reassortants", &Vaccines::number_of_reassortants)
+            .def("match", &Vaccines::match, py::arg("name") = "", py::arg("type") = "")
+            .def("remove", &Vaccines::remove, py::arg("passage_type") = "")
             ;
 
     m.def("find_vaccines_in_chart", &find_vaccines_in_chart, py::arg("name"), py::arg("chart"), py::arg("hidb"));
@@ -56,6 +60,8 @@ PYBIND11_PLUGIN(hidb_backend)
     py::class_<VaccinesOfChart>(m, "VaccinesOfChart")
             .def("report", &VaccinesOfChart::report, py::arg("indent") = 0)
             .def("remove", &VaccinesOfChart::remove, py::arg("name") = "", py::arg("type") = "", py::arg("passage_type") = "")
+            .def("__len__", &VaccinesOfChart::size)
+            .def("__iter__", [](VaccinesOfChart& v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
             ;
 
     py::class_<Vaccine>(m, "Vaccine")

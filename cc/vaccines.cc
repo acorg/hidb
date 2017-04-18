@@ -159,7 +159,7 @@ void Vaccines::sort()
 std::string Vaccines::report(size_t aIndent) const
 {
     std::ostringstream out;
-    if (!mCell.empty() || !mEgg.empty() || !mReassortant.empty()) {
+    if (!empty()) {
         const std::string indent(aIndent, ' ');
         auto entry_report = [&out,&indent](size_t aNo, const auto& entry) {
             out << indent << "    " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
