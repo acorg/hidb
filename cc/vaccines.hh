@@ -30,6 +30,9 @@ class Vaccine
 
     std::string type_as_string() const;
 
+    static std::string type_as_string(Type aType);
+    static Type type_from_string(std::string aType);
+
 }; // class Vaccine
 
 // ----------------------------------------------------------------------
@@ -66,21 +69,46 @@ class Vaccines
         std::string most_recent_table_date;
     };
 
-    inline Vaccines(Vaccine::Type aType) : mType(aType) {}
+    inline Vaccines(const Vaccine& aNameType) : mNameType(aNameType) {}
+    // inline Vaccines(const Vaccines&) = default;
+    // inline Vaccines& operator=(const Vaccines&) = default;
 
     inline size_t number_of_eggs() const { return mEgg.size(); }
     inline size_t number_of_cells() const { return mCell.size(); }
     inline size_t number_of_reassortants() const { return mReassortant.size(); }
+    inline bool empty() const { return mEgg.empty() && mCell.empty() && mReassortant.empty(); }
 
     inline const Entry* egg(size_t aNo = 0) const { return mEgg.size() > aNo ? &mEgg[aNo] : nullptr; }
     inline const Entry* cell(size_t aNo = 0) const { return mCell.size() > aNo ? &mCell[aNo] : nullptr; }
     inline const Entry* reassortant(size_t aNo = 0) const { return mReassortant.size() > aNo ? &mReassortant[aNo] : nullptr; }
 
-    std::string type_as_string() const;
+    inline std::string type_as_string() const { return mNameType.type_as_string(); }
     std::string report(size_t aIndent = 0) const;
 
+    inline bool match(std::string aName, std::string aType) const
+        {
+            return (aName.empty() || mNameType.name.find(aName) != std::string::npos) && (aType.empty() || mNameType.type == Vaccine::type_from_string(aType));
+        }
+
+    inline void remove(std::string aPassageType)
+        {
+            if (aPassageType == "egg")
+                mEgg.clear();
+            else if (aPassageType == "cell")
+                mCell.clear();
+            else if (aPassageType == "reassortant")
+                mReassortant.clear();
+            else if (aPassageType.empty()) {
+                mEgg.clear();
+                mCell.clear();
+                mReassortant.clear();
+            }
+            else
+                throw std::runtime_error("Vaccines::remove: Unrecognized passage type: " + aPassageType);
+        }
+
  private:
-    Vaccine::Type mType;
+    Vaccine mNameType;
     std::vector<Entry> mEgg;
     std::vector<Entry> mCell;
     std::vector<Entry> mReassortant;
@@ -99,7 +127,9 @@ class VaccinesOfChart : public std::vector<Vaccines>
  public:
     using std::vector<Vaccines>::vector;
 
+    void remove(std::string aName, std::string aType, std::string aPassageType);
     std::string report(size_t aIndent = 0) const;
+
 };
 
 // ----------------------------------------------------------------------

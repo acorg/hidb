@@ -55,11 +55,12 @@ PYBIND11_PLUGIN(hidb_backend)
 
     py::class_<VaccinesOfChart>(m, "VaccinesOfChart")
             .def("report", &VaccinesOfChart::report, py::arg("indent") = 0)
+            .def("remove", &VaccinesOfChart::remove, py::arg("name") = "", py::arg("type") = "", py::arg("passage_type") = "")
             ;
 
     py::class_<Vaccine>(m, "Vaccine")
             .def_property_readonly("name", [](const Vaccine& aVaccine) -> std::string { return aVaccine.name; })
-            .def_property_readonly("type", &Vaccine::type_as_string)
+            .def_property_readonly("type", [](const Vaccine& aVaccine) { return aVaccine.type_as_string(); })
             ;
 
     m.def("vaccines", py::overload_cast<std::string, std::string>(&vaccines), py::arg("subtype"), py::arg("lineage") = "", py::return_value_policy::reference);

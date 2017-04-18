@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <functional>
+
 #include "acmacs-chart/chart.hh"
 #include "hidb.hh"
 #include "variant-id.hh"
@@ -44,18 +47,33 @@ static std::map<std::string, std::vector<Vaccine>> sVaccines = {
 
 // ----------------------------------------------------------------------
 
-static inline std::string vaccine_type_as_string(Vaccine::Type aType)
+std::string Vaccine::type_as_string(Vaccine::Type aType)
 {
     switch (aType) {
-      case Vaccine::Previous:
+      case Previous:
           return "previous";
-      case Vaccine::Current:
+      case Current:
           return "current";
-      case Vaccine::Surrogate:
+      case Surrogate:
           return "surrogate";
     }
     return {};
-}
+
+} // Vaccine::type_as_string
+
+// ----------------------------------------------------------------------
+
+Vaccine::Type Vaccine::type_from_string(std::string aType)
+{
+    if (aType == "previous")
+        return Previous;
+    else if (aType == "current")
+        return Current;
+    else if (aType == "surrogate")
+        return Surrogate;
+    return Previous;
+
+} // Vaccine::type_from_string
 
 // ----------------------------------------------------------------------
 
@@ -77,7 +95,7 @@ const std::vector<Vaccine>& vaccines(const Chart& aChart)
 
 std::string Vaccine::type_as_string() const
 {
-    return vaccine_type_as_string(type);
+    return type_as_string(type);
 
 } // Vaccine::type_as_string
 
@@ -140,42 +158,37 @@ void Vaccines::sort()
 
 std::string Vaccines::report(size_t aIndent) const
 {
-    const std::string indent(aIndent, ' ');
     std::ostringstream out;
-    auto entry_report = [&out,&indent](size_t aNo, const auto& entry) {
-        out << indent << "  " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
-        for (const auto& hs: entry.homologous_sera)
-            out << indent << "    " << hs.serum->full_name() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
-    };
+    if (!mCell.empty() || !mEgg.empty() || !mReassortant.empty()) {
+        const std::string indent(aIndent, ' ');
+        auto entry_report = [&out,&indent](size_t aNo, const auto& entry) {
+            out << indent << "    " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
+            for (const auto& hs: entry.homologous_sera)
+                out << indent << "        " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
+        };
 
-    if (!mCell.empty()) {
-        out << indent << "Vaccine " << type_as_string() << " Cell (" << mCell.size() << ')' << std::endl;
-        for (size_t no = 0; no < mCell.size(); ++no)
-            entry_report(no, mCell[no]);
-    }
+        out << indent << "Vaccine " << type_as_string() << ' ' << mNameType.name << std::endl;
+        if (!mCell.empty()) {
+            out << indent << "  Cell (" << mCell.size() << ')' << std::endl;
+            for (size_t no = 0; no < mCell.size(); ++no)
+                entry_report(no, mCell[no]);
+        }
 
-    if (!mEgg.empty()) {
-        out << indent << "Vaccine " << type_as_string() << " Egg (" << mEgg.size() << ')' << std::endl;
-        for (size_t no = 0; no < mEgg.size(); ++no)
-            entry_report(no, mEgg[no]);
-    }
+        if (!mEgg.empty()) {
+            out << indent << "  Egg (" << mEgg.size() << ')' << std::endl;
+            for (size_t no = 0; no < mEgg.size(); ++no)
+                entry_report(no, mEgg[no]);
+        }
 
-    if (!mReassortant.empty()) {
-        out << indent << "Vaccine " << type_as_string() << " Reassortant (" << mReassortant.size() << ')' << std::endl;
-        for (size_t no = 0; no < mReassortant.size(); ++no)
-            entry_report(no, mReassortant[no]);
+        if (!mReassortant.empty()) {
+            out << indent << "  Reassortant (" << mReassortant.size() << ')' << std::endl;
+            for (size_t no = 0; no < mReassortant.size(); ++no)
+                entry_report(no, mReassortant[no]);
+        }
     }
     return out.str();
 
 } // Vaccines::report
-
-// ----------------------------------------------------------------------
-
-std::string Vaccines::type_as_string() const
-{
-    return vaccine_type_as_string(mType);
-
-} // Vaccines::type_as_string
 
 // ----------------------------------------------------------------------
 
@@ -208,7 +221,7 @@ void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aCha
 
 Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
 {
-    Vaccines* result = new Vaccines(Vaccine::Previous);
+    Vaccines* result = new Vaccines(Vaccine(aName, Vaccine::Previous));
     vaccines_for_name(*result, aName, aChart, aHiDb);
     return result;
 
@@ -220,13 +233,14 @@ VaccinesOfChart* vaccines(const Chart& aChart, const hidb::HiDb& aHiDb)
 {
     auto* result = new VaccinesOfChart{};
     for (const auto& name_type: vaccines(aChart)) {
-        result->emplace_back(name_type.type);
+        result->emplace_back(name_type);
         vaccines_for_name(result->back(), name_type.name, aChart, aHiDb);
     }
     return result;
 
 } // vaccines
 
+// ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 
 std::string VaccinesOfChart::report(size_t aIndent) const
@@ -237,6 +251,18 @@ std::string VaccinesOfChart::report(size_t aIndent) const
     return result;
 
 } // VaccinesOfChart::report
+
+// ----------------------------------------------------------------------
+
+void VaccinesOfChart::remove(std::string aName, std::string aType, std::string aPassageType)
+{
+    for (auto& v: *this) {
+        if (v.match(aName, aType))
+            v.remove(aPassageType);
+    }
+    erase(std::remove_if(begin(), end(), std::mem_fn(&Vaccines::empty)), end());
+
+} // VaccinesOfChart::remove
 
 // ----------------------------------------------------------------------
 
