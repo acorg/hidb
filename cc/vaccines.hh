@@ -90,7 +90,7 @@ namespace hidb
 
         inline std::string type_as_string() const { return mNameType.type_as_string(); }
         std::string report(size_t aIndent = 0) const;
-        std::string report(PassageType aPassageType, size_t aIndent = 0) const;
+        std::string report(PassageType aPassageType, size_t aIndent = 0, size_t aMark = static_cast<size_t>(-1)) const;
 
         inline bool match(std::string aName, std::string aType) const
             {

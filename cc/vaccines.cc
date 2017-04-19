@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <functional>
+#include <iomanip>
 
 #include "hidb.hh"
 #include "variant-id.hh"
@@ -132,72 +133,12 @@ size_t hidb::Vaccines::HomologousSerum::number_of_tables() const
 
 // ----------------------------------------------------------------------
 
-// void hidb::Vaccines::add(size_t aAntigenIndex, const Antigen& aAntigen, const hidb::AntigenSerumData<Antigen>* aAntigenData, std::vector<HomologousSerum>&& aSera, std::string aMostRecentTableDate)
-// {
-//     if (aAntigen.is_reassortant())
-//         mReassortant.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
-//     else if (aAntigen.is_egg())
-//         mEgg.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
-//     else
-//         mCell.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
-
-// } // hidb::Vaccines::add
-
-// ----------------------------------------------------------------------
-
-// void hidb::Vaccines::sort()
-// {
-//     std::sort(mCell.begin(), mCell.end());
-//     std::sort(mEgg.begin(), mEgg.end());
-//     std::sort(mReassortant.begin(), mReassortant.end());
-
-// } // hidb::Vaccines::sort
-
-// ----------------------------------------------------------------------
-
 std::string hidb::Vaccines::report(size_t aIndent) const
 {
     std::ostringstream out;
     if (!empty()) {
         out << std::string(aIndent, ' ') << "Vaccine " << type_as_string() << ' ' << mNameType.name << std::endl;
-        for_each_passage_type([&](PassageType pt) { out << this->report(pt, aIndent); });
-
-        // const std::string indent(aIndent, ' ');
-        // auto entry_report = [&out,&indent](size_t aNo, const auto& entry) {
-        //     out << indent << "    " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
-        //     for (const auto& hs: entry.homologous_sera)
-        //         out << indent << "        " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
-        // };
-
-        // auto report_for_passage_type = [&](PassageType pt) {
-        //     const auto& entry = mEntries[pt];
-        //     if (!entry.empty()) {
-        //         out << indent << "  " << passage_type_name(pt) << " (" << entry.size() << ')' << std::endl;
-        //         for (size_t no = 0; no < entry.size(); ++no)
-        //             entry_report(no, entry[no]);
-        //     }
-        // };
-
-        // out << indent << "Vaccine " << type_as_string() << ' ' << mNameType.name << std::endl;
-        // for_each_passage_type(report_for_passage_type);
-
-        // if (!mCell.empty()) {
-        //     out << indent << "  Cell (" << mCell.size() << ')' << std::endl;
-        //     for (size_t no = 0; no < mCell.size(); ++no)
-        //         entry_report(no, mCell[no]);
-        // }
-
-        // if (!mEgg.empty()) {
-        //     out << indent << "  Egg (" << mEgg.size() << ')' << std::endl;
-        //     for (size_t no = 0; no < mEgg.size(); ++no)
-        //         entry_report(no, mEgg[no]);
-        // }
-
-        // if (!mReassortant.empty()) {
-        //     out << indent << "  Reassortant (" << mReassortant.size() << ')' << std::endl;
-        //     for (size_t no = 0; no < mReassortant.size(); ++no)
-        //         entry_report(no, mReassortant[no]);
-        // }
+        for_each_passage_type([&](PassageType pt) { out << this->report(pt, aIndent + 2); });
     }
     return out.str();
 
@@ -205,21 +146,21 @@ std::string hidb::Vaccines::report(size_t aIndent) const
 
 // ----------------------------------------------------------------------
 
-std::string hidb::Vaccines::report(PassageType aPassageType, size_t aIndent) const
+std::string hidb::Vaccines::report(PassageType aPassageType, size_t aIndent, size_t aMark) const
 {
     std::ostringstream out;
     const std::string indent(aIndent, ' ');
-    auto entry_report = [&](size_t aNo, const auto& entry) {
-        out << indent << "    " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
+    auto entry_report = [&](size_t aNo, const auto& entry, bool aMarkIt) {
+        out << indent << (aMarkIt ? ">>" : "  ") << std::setw(2) << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
         for (const auto& hs: entry.homologous_sera)
-            out << indent << "        " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
+            out << indent << "      " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
     };
 
     const auto& entry = mEntries[aPassageType];
     if (!entry.empty()) {
-        out << indent << "  " << passage_type_name(aPassageType) << " (" << entry.size() << ')' << std::endl;
+        out << indent << passage_type_name(aPassageType) << " (" << entry.size() << ')' << std::endl;
         for (size_t no = 0; no < entry.size(); ++no)
-            entry_report(no, entry[no]);
+            entry_report(no, entry[no], aMark == no);
     }
     return out.str();
 
