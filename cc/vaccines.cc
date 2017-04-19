@@ -228,15 +228,15 @@ std::string hidb::VaccinesOfChart::report(size_t aIndent) const
 
 // ----------------------------------------------------------------------
 
-void hidb::VaccinesOfChart::remove(std::string aName, std::string aType, std::string aPassageType)
-{
-    for (auto& v: *this) {
-        if (v.match(aName, aType))
-            v.remove(aPassageType);
-    }
-    erase(std::remove_if(begin(), end(), std::mem_fn<bool() const>(&hidb::Vaccines::empty)), end());
+// void hidb::VaccinesOfChart::remove(std::string aName, std::string aType, std::string aPassageType)
+// {
+//     for (auto& v: *this) {
+//         if (v.match(aName, aType))
+//             v.remove(aPassageType);
+//     }
+//     erase(std::remove_if(begin(), end(), std::mem_fn<bool() const>(&hidb::Vaccines::empty)), end());
 
-} // hidb::VaccinesOfChart::remove
+// } // hidb::VaccinesOfChart::remove
 
 // ----------------------------------------------------------------------
 

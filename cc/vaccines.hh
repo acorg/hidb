@@ -97,14 +97,14 @@ namespace hidb
                 return (aName.empty() || mNameType.name.find(aName) != std::string::npos) && (aType.empty() || mNameType.type == Vaccine::type_from_string(aType));
             }
 
-        inline void remove(std::string aPassageType)
-            {
-                const PassageType pt = passage_type(aPassageType);
-                if (pt != PassageTypeSize)
-                    mEntries[pt].clear();
-                else
-                    std::for_each(std::begin(mEntries), std::end(mEntries), [](auto& e) { e.clear(); });
-            }
+        // inline void remove(std::string aPassageType)
+        //     {
+        //         const PassageType pt = passage_type(aPassageType);
+        //         if (pt != PassageTypeSize)
+        //             mEntries[pt].clear();
+        //         else
+        //             std::for_each(std::begin(mEntries), std::end(mEntries), [](auto& e) { e.clear(); });
+        //     }
 
         inline std::string type() const { return mNameType.type_as_string(); }
         inline std::string name() const { return mNameType.name; }
@@ -169,7 +169,7 @@ namespace hidb
      public:
         using std::vector<Vaccines>::vector;
 
-        void remove(std::string aName, std::string aType, std::string aPassageType);
+        // void remove(std::string aName, std::string aType, std::string aPassageType);
         std::string report(size_t aIndent = 0) const;
 
     };
