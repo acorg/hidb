@@ -109,6 +109,20 @@ namespace hidb
         inline std::string type() const { return mNameType.type_as_string(); }
         inline std::string name() const { return mNameType.name; }
 
+        static inline PassageType passage_type(std::string pt)
+            {
+                if (pt == "egg")
+                    return Egg;
+                else if (pt == "cell")
+                    return Cell;
+                else if (pt == "reassortant")
+                    return Reassortant;
+                else if (pt.empty())
+                    return PassageTypeSize;
+                else
+                    throw std::runtime_error("Unrecognized passage type: " + pt);
+            }
+
      private:
         Vaccine mNameType;
         std::vector<Entry> mEntries[PassageTypeSize];
@@ -122,20 +136,6 @@ namespace hidb
                 else if (aAntigen.is_egg())
                     return Egg;
                 return Cell;
-            }
-
-        static inline PassageType passage_type(std::string pt)
-            {
-                if (pt == "egg")
-                    return Egg;
-                else if (pt == "cell")
-                    return Cell;
-                else if (pt == "reassortant")
-                    return Reassortant;
-                else if (pt.empty())
-                    return PassageTypeSize;
-                else
-                    throw std::runtime_error("Unrecognized passage type: " + pt);
             }
 
         static inline const char* passage_type_name(PassageType pt)
