@@ -27,22 +27,22 @@ PYBIND11_PLUGIN(hidb_backend)
       // Vaccines
       // ----------------------------------------------------------------------
 
-    py::class_<Vaccines::HomologousSerum>(m, "Vaccines_HomologousSerum")
+    py::class_<Vaccines::HomologousSerum>(m, "hidb_Vaccines_HomologousSerum")
             .def_readonly("serum", &Vaccines::HomologousSerum::serum)
             .def_readonly("serum_index", &Vaccines::HomologousSerum::serum_index)
             .def_readonly("most_recent_table", &Vaccines::HomologousSerum::most_recent_table_date)
             .def("number_of_tables", &Vaccines::HomologousSerum::number_of_tables)
             ;
 
-    py::class_<Vaccines::Entry>(m, "Vaccines_Entry")
+    py::class_<Vaccines::Entry>(m, "hidb_Vaccines_Entry")
             .def_readonly("antigen", &Vaccines::Entry::antigen)
             .def_readonly("antigen_data", &Vaccines::Entry::antigen_data)
             .def_readonly("antigen_index", &Vaccines::Entry::antigen_index)
             .def_readonly("homologous_sera", &Vaccines::Entry::homologous_sera, py::return_value_policy::reference)
             ;
 
-    py::class_<Vaccines>(m, "Vaccines")
-            .def("report", &Vaccines::report, py::arg("indent") = 0)
+    py::class_<Vaccines>(m, "hidb_Vaccines")
+            .def("report", py::overload_cast<size_t>(&Vaccines::report, py::const_), py::arg("indent") = 0)
             .def("type", &Vaccines::type)
             .def("name", &Vaccines::name)
             .def("egg", &Vaccines::egg, py::arg("no") = 0, py::return_value_policy::reference)
@@ -57,14 +57,14 @@ PYBIND11_PLUGIN(hidb_backend)
 
     m.def("find_vaccines_in_chart", &find_vaccines_in_chart, py::arg("name"), py::arg("chart"), py::arg("hidb"));
 
-    py::class_<VaccinesOfChart>(m, "VaccinesOfChart")
+    py::class_<VaccinesOfChart>(m, "hidb_VaccinesOfChart")
             .def("report", &VaccinesOfChart::report, py::arg("indent") = 0)
             .def("remove", &VaccinesOfChart::remove, py::arg("name") = "", py::arg("type") = "", py::arg("passage_type") = "")
             .def("__len__", &VaccinesOfChart::size)
             .def("__iter__", [](VaccinesOfChart& v) { return py::make_iterator(v.begin(), v.end()); }, py::keep_alive<0, 1>())
             ;
 
-    py::class_<Vaccine>(m, "Vaccine")
+    py::class_<Vaccine>(m, "hidb_Vaccine")
             .def_property_readonly("name", [](const Vaccine& aVaccine) -> std::string { return aVaccine.name; })
             .def_property_readonly("type", [](const Vaccine& aVaccine) { return aVaccine.type_as_string(); })
             ;

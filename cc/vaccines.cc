@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <functional>
 
-#include "acmacs-chart/chart.hh"
 #include "hidb.hh"
 #include "variant-id.hh"
 #include "vaccines.hh"
@@ -14,32 +13,32 @@
 #pragma GCC diagnostic ignored "-Wglobal-constructors"
 #endif
 
-static std::map<std::string, std::vector<Vaccine>> sVaccines = {
+static std::map<std::string, std::vector<hidb::Vaccine>> sVaccines = {
     {"A(H1N1)", {
-            {"CALIFORNIA/7/2009",        Vaccine::Previous},
-            {"MICHIGAN/45/2015",         Vaccine::Current},
+            {"CALIFORNIA/7/2009",        hidb::Vaccine::Previous},
+            {"MICHIGAN/45/2015",         hidb::Vaccine::Current},
         }},
     {"A(H3N2)", {
-            {"BRISBANE/10/2007",         Vaccine::Previous},
-            {"PERTH/16/2009",            Vaccine::Previous},
-            {"VICTORIA/361/2011",        Vaccine::Previous},
-            {"TEXAS/50/2012",            Vaccine::Previous},
-            {"SWITZERLAND/9715293/2013", Vaccine::Previous},
-            {"HONG KONG/4801/2014",      Vaccine::Current},
-            {"SAITAMA/103/2014",         Vaccine::Surrogate},
-            {"HONG KONG/7295/2014",      Vaccine::Surrogate},
+            {"BRISBANE/10/2007",         hidb::Vaccine::Previous},
+            {"PERTH/16/2009",            hidb::Vaccine::Previous},
+            {"VICTORIA/361/2011",        hidb::Vaccine::Previous},
+            {"TEXAS/50/2012",            hidb::Vaccine::Previous},
+            {"SWITZERLAND/9715293/2013", hidb::Vaccine::Previous},
+            {"HONG KONG/4801/2014",      hidb::Vaccine::Current},
+            {"SAITAMA/103/2014",         hidb::Vaccine::Surrogate},
+            {"HONG KONG/7295/2014",      hidb::Vaccine::Surrogate},
         }},
     {"BVICTORIA", {
-            {"MALAYSIA/2506/2004",       Vaccine::Previous},
-            {"BRISBANE/60/2008",         Vaccine::Current},
-            {"PARIS/1762/2009",          Vaccine::Current},
-            {"SOUTH AUSTRALIA/81/2012",  Vaccine::Surrogate},
+            {"MALAYSIA/2506/2004",       hidb::Vaccine::Previous},
+            {"BRISBANE/60/2008",         hidb::Vaccine::Current},
+            {"PARIS/1762/2009",          hidb::Vaccine::Current},
+            {"SOUTH AUSTRALIA/81/2012",  hidb::Vaccine::Surrogate},
         }},
     {"BYAMAGATA", {
-            {"FLORIDA/4/2006",           Vaccine::Previous},
-            {"WISCONSIN/1/2010",         Vaccine::Previous},
-            {"MASSACHUSETTS/2/2012",     Vaccine::Previous},
-            {"PHUKET/3073/2013",         Vaccine::Current},
+            {"FLORIDA/4/2006",           hidb::Vaccine::Previous},
+            {"WISCONSIN/1/2010",         hidb::Vaccine::Previous},
+            {"MASSACHUSETTS/2/2012",     hidb::Vaccine::Previous},
+            {"PHUKET/3073/2013",         hidb::Vaccine::Current},
         }},
 };
 
@@ -47,7 +46,7 @@ static std::map<std::string, std::vector<Vaccine>> sVaccines = {
 
 // ----------------------------------------------------------------------
 
-std::string Vaccine::type_as_string(Vaccine::Type aType)
+std::string hidb::Vaccine::type_as_string(hidb::Vaccine::Type aType)
 {
     switch (aType) {
       case Previous:
@@ -59,11 +58,11 @@ std::string Vaccine::type_as_string(Vaccine::Type aType)
     }
     return {};
 
-} // Vaccine::type_as_string
+} // hidb::Vaccine::type_as_string
 
 // ----------------------------------------------------------------------
 
-Vaccine::Type Vaccine::type_from_string(std::string aType)
+hidb::Vaccine::Type hidb::Vaccine::type_from_string(std::string aType)
 {
     if (aType == "previous")
         return Previous;
@@ -73,35 +72,35 @@ Vaccine::Type Vaccine::type_from_string(std::string aType)
         return Surrogate;
     return Previous;
 
-} // Vaccine::type_from_string
+} // hidb::Vaccine::type_from_string
 
 // ----------------------------------------------------------------------
 
-const std::vector<Vaccine>& vaccines(std::string aSubtype, std::string aLineage)
+const std::vector<hidb::Vaccine>& hidb::vaccines(std::string aSubtype, std::string aLineage)
 {
     return sVaccines.at(aSubtype + aLineage);
 
-} // vaccines
+} // hidb::vaccines
 
 // ----------------------------------------------------------------------
 
-const std::vector<Vaccine>& vaccines(const Chart& aChart)
+const std::vector<hidb::Vaccine>& hidb::vaccines(const Chart& aChart)
 {
     return vaccines(aChart.chart_info().virus_type(), aChart.lineage());
 
-} // vaccines
+} // hidb::vaccines
 
 // ----------------------------------------------------------------------
 
-std::string Vaccine::type_as_string() const
+std::string hidb::Vaccine::type_as_string() const
 {
     return type_as_string(type);
 
-} // Vaccine::type_as_string
+} // hidb::Vaccine::type_as_string
 
 // ----------------------------------------------------------------------
 
-inline bool Vaccines::Entry::operator < (const Vaccines::Entry& a) const
+inline bool hidb::Vaccines::Entry::operator < (const hidb::Vaccines::Entry& a) const
 {
     const auto a_nt = a.antigen_data->number_of_tables(), t_nt = antigen_data->number_of_tables();
     return t_nt == a_nt ? most_recent_table_date > a.most_recent_table_date : t_nt > a_nt;
@@ -109,7 +108,7 @@ inline bool Vaccines::Entry::operator < (const Vaccines::Entry& a) const
 
 // ----------------------------------------------------------------------
 
-bool Vaccines::HomologousSerum::operator < (const Vaccines::HomologousSerum& a) const
+bool hidb::Vaccines::HomologousSerum::operator < (const hidb::Vaccines::HomologousSerum& a) const
 {
     bool result = true;
     if (serum->serum_species() == "SHEEP") { // avoid using sheep serum as homologous (NIMR)
@@ -121,78 +120,114 @@ bool Vaccines::HomologousSerum::operator < (const Vaccines::HomologousSerum& a) 
     }
     return result;
 
-} // Vaccines::HomologousSerum::operator <
+} // hidb::Vaccines::HomologousSerum::operator <
 
 // ----------------------------------------------------------------------
 
-size_t Vaccines::HomologousSerum::number_of_tables() const
+size_t hidb::Vaccines::HomologousSerum::number_of_tables() const
 {
     return serum_data->number_of_tables();
 
-} // Vaccines::HomologousSerum::number_of_tables
+} // hidb::Vaccines::HomologousSerum::number_of_tables
 
 // ----------------------------------------------------------------------
 
-void Vaccines::add(size_t aAntigenIndex, const Antigen& aAntigen, const hidb::AntigenSerumData<Antigen>* aAntigenData, std::vector<HomologousSerum>&& aSera, std::string aMostRecentTableDate)
-{
-    if (aAntigen.is_reassortant())
-        mReassortant.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
-    else if (aAntigen.is_egg())
-        mEgg.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
-    else
-        mCell.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
+// void hidb::Vaccines::add(size_t aAntigenIndex, const Antigen& aAntigen, const hidb::AntigenSerumData<Antigen>* aAntigenData, std::vector<HomologousSerum>&& aSera, std::string aMostRecentTableDate)
+// {
+//     if (aAntigen.is_reassortant())
+//         mReassortant.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
+//     else if (aAntigen.is_egg())
+//         mEgg.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
+//     else
+//         mCell.emplace_back(aAntigenIndex, &aAntigen, aAntigenData, std::move(aSera), aMostRecentTableDate);
 
-} // Vaccines::add
-
-// ----------------------------------------------------------------------
-
-void Vaccines::sort()
-{
-    std::sort(mCell.begin(), mCell.end());
-    std::sort(mEgg.begin(), mEgg.end());
-    std::sort(mReassortant.begin(), mReassortant.end());
-
-} // Vaccines::sort
+// } // hidb::Vaccines::add
 
 // ----------------------------------------------------------------------
 
-std::string Vaccines::report(size_t aIndent) const
+// void hidb::Vaccines::sort()
+// {
+//     std::sort(mCell.begin(), mCell.end());
+//     std::sort(mEgg.begin(), mEgg.end());
+//     std::sort(mReassortant.begin(), mReassortant.end());
+
+// } // hidb::Vaccines::sort
+
+// ----------------------------------------------------------------------
+
+std::string hidb::Vaccines::report(size_t aIndent) const
 {
     std::ostringstream out;
     if (!empty()) {
-        const std::string indent(aIndent, ' ');
-        auto entry_report = [&out,&indent](size_t aNo, const auto& entry) {
-            out << indent << "    " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
-            for (const auto& hs: entry.homologous_sera)
-                out << indent << "        " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
-        };
+        out << std::string(aIndent, ' ') << "Vaccine " << type_as_string() << ' ' << mNameType.name << std::endl;
+        for_each_passage_type([&](PassageType pt) { out << this->report(pt, aIndent); });
 
-        out << indent << "Vaccine " << type_as_string() << ' ' << mNameType.name << std::endl;
-        if (!mCell.empty()) {
-            out << indent << "  Cell (" << mCell.size() << ')' << std::endl;
-            for (size_t no = 0; no < mCell.size(); ++no)
-                entry_report(no, mCell[no]);
-        }
+        // const std::string indent(aIndent, ' ');
+        // auto entry_report = [&out,&indent](size_t aNo, const auto& entry) {
+        //     out << indent << "    " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
+        //     for (const auto& hs: entry.homologous_sera)
+        //         out << indent << "        " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
+        // };
 
-        if (!mEgg.empty()) {
-            out << indent << "  Egg (" << mEgg.size() << ')' << std::endl;
-            for (size_t no = 0; no < mEgg.size(); ++no)
-                entry_report(no, mEgg[no]);
-        }
+        // auto report_for_passage_type = [&](PassageType pt) {
+        //     const auto& entry = mEntries[pt];
+        //     if (!entry.empty()) {
+        //         out << indent << "  " << passage_type_name(pt) << " (" << entry.size() << ')' << std::endl;
+        //         for (size_t no = 0; no < entry.size(); ++no)
+        //             entry_report(no, entry[no]);
+        //     }
+        // };
 
-        if (!mReassortant.empty()) {
-            out << indent << "  Reassortant (" << mReassortant.size() << ')' << std::endl;
-            for (size_t no = 0; no < mReassortant.size(); ++no)
-                entry_report(no, mReassortant[no]);
-        }
+        // out << indent << "Vaccine " << type_as_string() << ' ' << mNameType.name << std::endl;
+        // for_each_passage_type(report_for_passage_type);
+
+        // if (!mCell.empty()) {
+        //     out << indent << "  Cell (" << mCell.size() << ')' << std::endl;
+        //     for (size_t no = 0; no < mCell.size(); ++no)
+        //         entry_report(no, mCell[no]);
+        // }
+
+        // if (!mEgg.empty()) {
+        //     out << indent << "  Egg (" << mEgg.size() << ')' << std::endl;
+        //     for (size_t no = 0; no < mEgg.size(); ++no)
+        //         entry_report(no, mEgg[no]);
+        // }
+
+        // if (!mReassortant.empty()) {
+        //     out << indent << "  Reassortant (" << mReassortant.size() << ')' << std::endl;
+        //     for (size_t no = 0; no < mReassortant.size(); ++no)
+        //         entry_report(no, mReassortant[no]);
+        // }
     }
     return out.str();
 
-} // Vaccines::report
+} // hidb::Vaccines::report
 
 // ----------------------------------------------------------------------
 
-void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
+std::string hidb::Vaccines::report(PassageType aPassageType, size_t aIndent) const
+{
+    std::ostringstream out;
+    const std::string indent(aIndent, ' ');
+    auto entry_report = [&](size_t aNo, const auto& entry) {
+        out << indent << "    " << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
+        for (const auto& hs: entry.homologous_sera)
+            out << indent << "        " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
+    };
+
+    const auto& entry = mEntries[aPassageType];
+    if (!entry.empty()) {
+        out << indent << "  " << passage_type_name(aPassageType) << " (" << entry.size() << ')' << std::endl;
+        for (size_t no = 0; no < entry.size(); ++no)
+            entry_report(no, entry[no]);
+    }
+    return out.str();
+
+} // hidb::Vaccines::report
+
+// ----------------------------------------------------------------------
+
+void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
 {
     std::vector<size_t> by_name;
     aChart.antigens().find_by_name(aName, by_name);
@@ -201,7 +236,7 @@ void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aCha
             const Antigen& ag = aChart.antigens()[ag_no];
               // std::cerr << ag.full_name() << std::endl;
             const auto& data = aHiDb.find_antigen_of_chart(ag);
-            std::vector<Vaccines::HomologousSerum> homologous_sera;
+            std::vector<hidb::Vaccines::HomologousSerum> homologous_sera;
             for (const auto* sd: aHiDb.find_homologous_sera(data)) {
                 const size_t sr_no = aChart.sera().find_by_name_for_exact_matching(hidb::name_for_exact_matching(sd->data()));
                   // std::cerr << "   " << sd->data().name_for_exact_matching() << " " << (serum ? "Y" : "N") << std::endl;
@@ -215,13 +250,13 @@ void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aCha
     }
     aVaccines.sort();
 
-} // vaccines_for_name
+} // hidb::vaccines_for_name
 
 // ----------------------------------------------------------------------
 
-Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
+hidb::Vaccines* hidb::find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
 {
-    Vaccines* result = new Vaccines(Vaccine(aName, Vaccine::Previous));
+    Vaccines* result = new Vaccines(Vaccine(aName, hidb::Vaccine::Previous));
     vaccines_for_name(*result, aName, aChart, aHiDb);
     return result;
 
@@ -229,40 +264,38 @@ Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const h
 
 // ----------------------------------------------------------------------
 
-VaccinesOfChart* vaccines(const Chart& aChart, const hidb::HiDb& aHiDb)
+void hidb::vaccines(VaccinesOfChart& aVaccinesOfChart, const Chart& aChart, const hidb::HiDb& aHiDb)
 {
-    auto* result = new VaccinesOfChart{};
     for (const auto& name_type: vaccines(aChart)) {
-        result->emplace_back(name_type);
-        vaccines_for_name(result->back(), name_type.name, aChart, aHiDb);
+        aVaccinesOfChart.emplace_back(name_type);
+        vaccines_for_name(aVaccinesOfChart.back(), name_type.name, aChart, aHiDb);
     }
-    return result;
 
-} // vaccines
+} // hidb::vaccines
 
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 
-std::string VaccinesOfChart::report(size_t aIndent) const
+std::string hidb::VaccinesOfChart::report(size_t aIndent) const
 {
     std::string result;
     for (const auto& v: *this)
         result += v.report(aIndent);
     return result;
 
-} // VaccinesOfChart::report
+} // hidb::VaccinesOfChart::report
 
 // ----------------------------------------------------------------------
 
-void VaccinesOfChart::remove(std::string aName, std::string aType, std::string aPassageType)
+void hidb::VaccinesOfChart::remove(std::string aName, std::string aType, std::string aPassageType)
 {
     for (auto& v: *this) {
         if (v.match(aName, aType))
             v.remove(aPassageType);
     }
-    erase(std::remove_if(begin(), end(), std::mem_fn(&Vaccines::empty)), end());
+    erase(std::remove_if(begin(), end(), std::mem_fn<bool() const>(&hidb::Vaccines::empty)), end());
 
-} // VaccinesOfChart::remove
+} // hidb::VaccinesOfChart::remove
 
 // ----------------------------------------------------------------------
 
