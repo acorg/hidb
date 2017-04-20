@@ -185,15 +185,15 @@ class HiDbReaderEventHandler : public rapidjson::BaseReaderHandler<rapidjson::UT
     bool start_tables(Arg) { state.push(State::Tables); return true; }
     bool start_table(Arg) { mHiDb.charts().emplace_back(); state.push(State::Table); return true; }
     bool table_table_id(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().table_id(); return true; }
-    bool table_virus(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().virus(); return true; }
-    bool table_virus_type(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().virus_type(); return true; }
+    bool table_virus(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().virus_ref(); return true; }
+    bool table_virus_type(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().virus_type_ref(); return true; }
 
-    bool table_assay(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().assay(); return true; }
-    bool table_date(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().date(); return true; }
-    bool table_lab(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().lab(); return true; }
-    bool table_rbc(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().rbc(); return true; }
-    bool table_name(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().name(); return true; }
-    bool table_subset(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().subset(); return true; }
+    bool table_assay(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().assay_ref(); return true; }
+    bool table_date(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().date_ref(); return true; }
+    bool table_lab(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().lab_ref(); return true; }
+    bool table_rbc(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().rbc_ref(); return true; }
+    bool table_name(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().name_ref(); return true; }
+    bool table_subset(Arg) { state.push(State::StringField); string_to_fill = &mHiDb.charts().back().chart_info().subset_ref(); return true; }
 
     bool start_table_antigens(Arg) { state.push(State::TableAntigens); return true; }
     bool start_table_sera(Arg) { state.push(State::TableSera); return true; }
@@ -293,6 +293,7 @@ const HiDbReaderEventHandler::Ptr HiDbReaderEventHandler::transition[][62] = {
 
 void hidb_import(std::string buffer, hidb::HiDb& aHiDb)
 {
+    const std::string filename{buffer, 0, 256};
     if (buffer == "-")
         buffer = acmacs_base::read_stdin();
     else
@@ -308,7 +309,7 @@ void hidb_import(std::string buffer, hidb::HiDb& aHiDb)
             throw Error("internal: not in init state on parsing completion");
     }
     else
-        throw std::runtime_error("cannot import hidb: unrecognized source format");
+        throw std::runtime_error("cannot import hidb from \"" + filename + "\": unrecognized source format");
 
 } // hidb_import
 
