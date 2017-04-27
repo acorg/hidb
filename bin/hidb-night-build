@@ -14,7 +14,7 @@ fi
 
 on_error()
 {
-    (echo $PROG FAILED; echo "LOG: $LOG") | mail -s "$(hostname) $PROG FAILED" eu@antigenic-cartography.org
+    (echo $PROG FAILED; echo "LOG: /scp:$HOSTNAME:$LOG") | mail -s "$(hostname) $PROG FAILED" eu@antigenic-cartography.org
     exit 1
 }
 
@@ -69,4 +69,4 @@ echo
 date
 echo "----------------------------------------------------------------------"
 
-(echo "$PROG completed"; echo "LOG: $LOG") | mail -s "$(hostname) $PROG completed" eu@antigenic-cartography.org
+(echo "$PROG completed"; echo "LOG: /scp:$HOSTNAME:$LOG") | mail -s "$(hostname) $PROG completed" eu@antigenic-cartography.org
