@@ -96,6 +96,8 @@ namespace hidb
         inline bool has_lab_id(std::string aLabId) const { return std::any_of(mTables.begin(), mTables.end(), [&](const auto& e) -> bool { return e.has_lab_id(aLabId); }); }
         void labs(const HiDb& aHiDb, std::vector<std::string>& aLabs) const;
         bool has_lab(const HiDb& aHiDb, std::string aLab) const;
+        bool in_hi_assay(const HiDb& aHiDb) const;
+        bool in_neut_assay(const HiDb& aHiDb) const;
 
         inline std::vector<std::pair<std::string, std::string>> homologous() const
             {
@@ -335,7 +337,7 @@ namespace hidb
 
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
         std::vector<std::string> list_antigen_names(std::string aLab, bool aFullName) const;
-        std::vector<const AntigenData*> list_antigens(std::string aLab) const;
+        std::vector<const AntigenData*> list_antigens(std::string aLab, std::string aAssay) const;
         std::vector<const SerumData*> find_sera(std::string name) const;
         const SerumData& find_serum_exactly(std::string name_reassortant_annotations_serum_id) const; // throws NotFound if serum with this very set of data not found
         std::vector<std::pair<const SerumData*, size_t>> find_sera_with_score(std::string name) const;
@@ -390,6 +392,16 @@ namespace hidb
     template <typename AS> bool AntigenSerumData<AS>::has_lab(const HiDb& aHiDb, std::string aLab) const
     {
         return std::find_if(per_table().begin(), per_table().end(), [&aHiDb,&aLab](const auto& pt) -> bool { return aHiDb.charts()[pt.table_id()].chart_info().lab() == aLab; }) != per_table().end();
+    }
+
+    template <typename AS> bool AntigenSerumData<AS>::in_hi_assay(const HiDb& aHiDb) const
+    {
+        return std::find_if(per_table().begin(), per_table().end(), [&aHiDb](const auto& pt) -> bool { return aHiDb.charts()[pt.table_id()].chart_info().assay() == "HI"; }) != per_table().end();
+    }
+
+    template <typename AS> bool AntigenSerumData<AS>::in_neut_assay(const HiDb& aHiDb) const
+    {
+        return std::find_if(per_table().begin(), per_table().end(), [&aHiDb](const auto& pt) -> bool { return aHiDb.charts()[pt.table_id()].chart_info().assay() != "HI"; }) != per_table().end();
     }
 
 // ----------------------------------------------------------------------

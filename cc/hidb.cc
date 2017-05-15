@@ -460,11 +460,19 @@ std::vector<std::pair<const AntigenData*, size_t>> HiDb::find_antigens_with_scor
 
 // ----------------------------------------------------------------------
 
-std::vector<const AntigenData*> HiDb::list_antigens(std::string aLab) const
+std::vector<const AntigenData*> HiDb::list_antigens(std::string aLab, std::string aAssay) const
 {
+    std::function<bool(const AntigenData&)> assay_check;
+    if (aAssay.empty())
+        assay_check = [](const AntigenData&) { return true; };
+    else if (string::upper(aAssay) == "HI")
+        assay_check = [this](const AntigenData& antigen) { return antigen.in_hi_assay(*this); };
+    else
+        assay_check = [this](const AntigenData& antigen) { return antigen.in_neut_assay(*this); };
+
     std::vector<const AntigenData*> result;
     for (const auto& antigen: antigens()) {
-        if (aLab.empty() || antigen.has_lab(*this, aLab))
+        if ((aLab.empty() || antigen.has_lab(*this, aLab)) && assay_check(antigen))
             result.push_back(&antigen);
     }
     return result;

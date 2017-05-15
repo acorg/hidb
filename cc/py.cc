@@ -190,7 +190,7 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("stat_sera", &HiDb::stat_sera, py::arg("stat"), py::arg("stat_unique"), py::arg("start_date") = "", py::arg("end_date") = "")
 
             .def("list_antigen_names", &HiDb::list_antigen_names, py::arg("lab") = "", py::arg("full_name") = false)
-            .def("list_antigens", &HiDb::list_antigens, py::arg("lab"))
+            .def("list_antigens", &HiDb::list_antigens, py::arg("lab"), py::arg("assay") = "", py::doc("assay: \"hi\", \"neut\", \"\""))
             .def("find_antigens", find_antigens, py::arg("name"))
             .def("find_antigens_fuzzy", find_antigens_fuzzy, py::arg("name"))
             .def("find_antigens_extra_fuzzy", find_antigens_extra_fuzzy, py::arg("name"))

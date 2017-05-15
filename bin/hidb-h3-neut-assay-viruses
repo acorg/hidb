@@ -1,0 +1,52 @@
+#! /usr/bin/env python3
+# -*- Python -*-
+
+"""
+Lists viruses found in H3 neut assays
+"""
+
+import sys, os, traceback, pprint
+if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
+from pathlib import Path
+sys.path[:0] = [str(Path(os.environ["ACMACSD_ROOT"]).resolve().joinpath("py"))]
+import logging; module_logger = logging.getLogger(__name__)
+
+import hidb as hidb_m
+from acmacs_base import timeit, json
+
+# ----------------------------------------------------------------------
+
+def main(args):
+    hidb = hidb_m.HiDb()
+    with timeit("Reading hidb"):
+        hidb.import_from(str(Path(args.path_to_hidb).expanduser().resolve()))
+    antigens = hidb.list_antigens(lab="MELB", assay="neut")
+
+    fmt = "{full_name} tables:{tables} all-tables:{all_tables}"
+    print("\n".join(fmt.format(full_name=e.data().full_name(),
+                                   tables=e.number_of_tables(),
+                                   all_tables=[t.table_id() for t in e.tables()],
+                                   ) for e in antigens))
+
+# ----------------------------------------------------------------------
+
+try:
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging output.')
+
+    parser.add_argument('--db', action='store', dest='path_to_hidb', default="~/AD/data/hidb4.h3.json.xz")
+    parser.add_argument('--list', dest="list_viruses", action="store_true", default=False, help='List viruses.')
+
+    args = parser.parse_args()
+    logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")
+    exit_code = main(args)
+except Exception as err:
+    logging.error('{}\n{}'.format(err, traceback.format_exc()))
+    exit_code = 1
+exit(exit_code)
+
+# ======================================================================
+### Local Variables:
+### eval: (if (fboundp 'eu-rename-buffer) (eu-rename-buffer))
+### End:
