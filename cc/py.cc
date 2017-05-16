@@ -9,6 +9,13 @@ using namespace hidb;
 
 // ----------------------------------------------------------------------
 
+// template <typename AS> inline std::vector<AS*>* copy_AntigenSerumData(std::vector<const AS*>&& src)
+// {
+//     std::vector<AS*>* result  = new std::vector<AS*>{src.size(), nullptr};
+//     std::transform(src.begin(), src.end(), result->begin(), [](const AS* d) { return new AS{*d}; });
+//     return result;
+// }
+
 PYBIND11_PLUGIN(hidb_backend)
 {
     py::module m("hidb_backend", "HiDB access plugin");
@@ -89,6 +96,8 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("oldest_table", &AntigenData::oldest_table)
             .def("date", &AntigenData::date)
             .def("tables", static_cast<const std::vector<PerTable>& (AntigenData::*)() const>(&AntigenData::per_table))
+            .def("in_hi_assay", &AntigenData::in_hi_assay, py::arg("hidb"))
+            .def("in_neut_assay", &AntigenData::in_neut_assay, py::arg("hidb"))
             ;
 
     py::class_<SerumData>(m, "SerumData")
@@ -99,6 +108,8 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("oldest_table", &SerumData::oldest_table)
             .def("tables", static_cast<const std::vector<PerTable>& (SerumData::*)() const>(&SerumData::per_table))
             .def("homologous", &SerumData::homologous)
+            .def("in_hi_assay", &SerumData::in_hi_assay, py::arg("hidb"))
+            .def("in_neut_assay", &SerumData::in_neut_assay, py::arg("hidb"))
             ;
 
     py::class_<AntigenRefs>(m, "AntigenRefs")
@@ -111,26 +122,30 @@ PYBIND11_PLUGIN(hidb_backend)
       // --------------------------------------------------
       // lambdas below are to avoid python GC affecting data
 
-    auto pointer_to_copy = [](const std::vector<const AntigenData*>& source) -> std::vector<AntigenData> {
+    auto pointer_to_copy_antigen = [](const std::vector<const AntigenData*>& source) -> std::vector<AntigenData> {
         std::vector<AntigenData> result;
         std::transform(source.begin(), source.end(), std::back_inserter(result), [](const auto& e) { return *e; });
         return result;
     };
 
-    auto find_antigens_by_name = [&pointer_to_copy](const HiDb& aHiDb, std::string name) -> std::vector<AntigenData> {
-        return pointer_to_copy(aHiDb.find_antigens_by_name(name));
+    auto list_antigens = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string lab, std::string assay) -> std::vector<AntigenData> {
+        return pointer_to_copy_antigen(aHiDb.list_antigens(lab, assay));
     };
 
-    auto find_antigens = [&pointer_to_copy](const HiDb& aHiDb, std::string name) -> std::vector<AntigenData> {
-        return pointer_to_copy(aHiDb.find_antigens(name));
+    auto find_antigens_by_name = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string name) -> std::vector<AntigenData> {
+        return pointer_to_copy_antigen(aHiDb.find_antigens_by_name(name));
     };
 
-    auto find_antigens_fuzzy = [&pointer_to_copy](const HiDb& aHiDb, std::string name) {
-        return pointer_to_copy(aHiDb.find_antigens_fuzzy(name));
+    auto find_antigens = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string name) -> std::vector<AntigenData> {
+        return pointer_to_copy_antigen(aHiDb.find_antigens(name));
     };
 
-    auto find_antigens_extra_fuzzy = [&pointer_to_copy](const HiDb& aHiDb, std::string name) {
-        return pointer_to_copy(aHiDb.find_antigens_extra_fuzzy(name));
+    auto find_antigens_fuzzy = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string name) {
+        return pointer_to_copy_antigen(aHiDb.find_antigens_fuzzy(name));
+    };
+
+    auto find_antigens_extra_fuzzy = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string name) {
+        return pointer_to_copy_antigen(aHiDb.find_antigens_extra_fuzzy(name));
     };
 
     auto find_antigens_with_score = [](const HiDb& aHiDb, std::string name) {
@@ -140,22 +155,26 @@ PYBIND11_PLUGIN(hidb_backend)
         return result;
     };
 
-    auto find_antigens_by_cdcid = [&pointer_to_copy](const HiDb& aHiDb, std::string cdcid) -> std::vector<AntigenData> {
-        return pointer_to_copy(aHiDb.find_antigens_by_cdcid(cdcid));
+    auto find_antigens_by_cdcid = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string cdcid) -> std::vector<AntigenData> {
+        return pointer_to_copy_antigen(aHiDb.find_antigens_by_cdcid(cdcid));
     };
 
-    auto find_sera = [](const HiDb& aHiDb, std::string name) {
-        const auto source = aHiDb.find_sera(name);
+    auto pointer_to_copy_serum = [](const std::vector<const SerumData*>& source) -> std::vector<SerumData> {
         std::vector<SerumData> result;
         std::transform(source.begin(), source.end(), std::back_inserter(result), [](const auto& e) { return *e; });
         return result;
     };
 
-    auto find_homologous_sera = [](const HiDb& aHiDb, const AntigenData& aAntigen) {
-        const auto source = aHiDb.find_homologous_sera(aAntigen);
-        std::vector<SerumData> result;
-        std::transform(source.begin(), source.end(), std::back_inserter(result), [](const auto& e) { return *e; });
-        return result;
+    auto list_sera = [&pointer_to_copy_serum](const HiDb& aHiDb, std::string lab) {
+        return pointer_to_copy_serum(aHiDb.list_sera(lab));
+    };
+
+    auto find_sera = [&pointer_to_copy_serum](const HiDb& aHiDb, std::string name) {
+        return pointer_to_copy_serum(aHiDb.find_sera(name));
+    };
+
+    auto find_homologous_sera = [&pointer_to_copy_serum](const HiDb& aHiDb, const AntigenData& aAntigen) {
+        return pointer_to_copy_serum(aHiDb.find_homologous_sera(aAntigen));
     };
 
     auto find_sera_with_score = [](const HiDb& aHiDb, std::string name) {
@@ -190,15 +209,15 @@ PYBIND11_PLUGIN(hidb_backend)
             .def("stat_sera", &HiDb::stat_sera, py::arg("stat"), py::arg("stat_unique"), py::arg("start_date") = "", py::arg("end_date") = "")
 
             .def("list_antigen_names", &HiDb::list_antigen_names, py::arg("lab") = "", py::arg("full_name") = false)
-            .def("list_antigens", &HiDb::list_antigens, py::arg("lab"), py::arg("assay") = "", py::doc("assay: \"hi\", \"neut\", \"\""))
+            .def("list_antigens", list_antigens, py::arg("lab"), py::arg("assay") = "", py::doc("assay: \"hi\", \"neut\", \"\""))
             .def("find_antigens", find_antigens, py::arg("name"))
             .def("find_antigens_fuzzy", find_antigens_fuzzy, py::arg("name"))
             .def("find_antigens_extra_fuzzy", find_antigens_extra_fuzzy, py::arg("name"))
             .def("find_antigens_with_score", find_antigens_with_score, py::arg("name"))
-            .def("find_antigens_by_name", find_antigens_by_name, py::arg("name"))
+            .def("find_antigens_by_name", find_antigens_by_name, py::arg("name"), py::return_value_policy::reference)
             .def("find_antigens_by_cdcid", find_antigens_by_cdcid, py::arg("cdcid"))
             .def("list_serum_names", &HiDb::list_serum_names, py::arg("lab") = "", py::arg("full_name") = false)
-            .def("list_sera", &HiDb::list_sera, py::arg("lab"))
+            .def("list_sera", list_sera, py::arg("lab"))
             .def("find_sera", find_sera, py::arg("name"))
             .def("find_homologous_sera", find_homologous_sera, py::arg("antigen"))
             .def("find_sera_with_score", find_sera_with_score, py::arg("name"))
