@@ -39,7 +39,7 @@ def main(args):
             print("\n".join("{}\t{}".format(e.data().full_name(), e.in_hi_assay(hidb)) for e in antigens))
     elif args.also_in_hi_without_passage:
         names = sorted(set(e.data().name() for e in antigens))
-        antigens4 = [antigen2 for name in names for antigen2 in hidb.find_antigens_by_name(name)]
+        antigens4 = [antigen2 for name in names for antigen2 in hidb.find_antigens_by_name(name) if not args.lab or antigen2.has_lab(hidb, args.lab.upper())]
         if args.csv:
             wr = csv.writer(sys.stdout)
             wr.writerow(["Name", "HI", "Neut"])
@@ -47,7 +47,7 @@ def main(args):
                 wr.writerow([e2.data().full_name(), e2.in_hi_assay(hidb), e2.in_neut_assay(hidb)])
         else:
             print("Name\tHI\tNeut")
-            print("\n".join("{}\t{}\t{}\t{}".format(e3.data().full_name(), e3.in_hi_assay(hidb), e3.in_neut_assay(hidb), [t.table_id() for t in e3.tables()]) for e3 in antigens4))
+            print("\n".join("{}\t{}\t{}".format(e3.data().full_name(), e3.in_hi_assay(hidb), e3.in_neut_assay(hidb)) for e3 in antigens4))
 
 # ----------------------------------------------------------------------
 
