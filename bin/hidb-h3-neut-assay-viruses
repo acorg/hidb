@@ -5,7 +5,7 @@
 Lists viruses found in H3 neut assays
 """
 
-import sys, os, traceback, pprint
+import sys, os, traceback, pprint, csv
 if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
 from pathlib import Path
 sys.path[:0] = [str(Path(os.environ["ACMACSD_ROOT"]).resolve().joinpath("py"))]
@@ -20,13 +20,34 @@ def main(args):
     hidb = hidb_m.HiDb()
     with timeit("Reading hidb"):
         hidb.import_from(str(Path(args.path_to_hidb).expanduser().resolve()))
-    antigens = hidb.list_antigens(lab="MELB", assay="neut")
-
-    fmt = "{full_name} tables:{tables} all-tables:{all_tables}"
-    print("\n".join(fmt.format(full_name=e.data().full_name(),
-                                   tables=e.number_of_tables(),
-                                   all_tables=[t.table_id() for t in e.tables()],
-                                   ) for e in antigens))
+        hidb.import_locdb(str(Path("~/AD/data/locationdb.json.xz").expanduser().resolve()))
+    antigens = hidb.list_antigens(lab=args.lab.upper(), assay="neut")
+    if args.list_viruses:
+        fmt = "{full_name} tables:{tables} all-tables:{all_tables}"
+        print("\n".join(fmt.format(full_name=e.data().full_name(),
+                                       tables=e.number_of_tables(),
+                                       all_tables=[t.table_id() for t in e.tables()],
+                                       ) for e in antigens))
+    elif args.also_in_hi:
+        if args.csv:
+            wr = csv.writer(sys.stdout)
+            wr.writerow(["Name", "In HI too"])
+            for e in antigens:
+                wr.writerow([e.data().full_name(), e.in_hi_assay(hidb)])
+        else:
+            print("Name\tHI")
+            print("\n".join("{}\t{}".format(e.data().full_name(), e.in_hi_assay(hidb)) for e in antigens))
+    elif args.also_in_hi_without_passage:
+        names = sorted(set(e.data().name() for e in antigens))
+        antigens4 = [antigen2 for name in names for antigen2 in hidb.find_antigens_by_name(name)]
+        if args.csv:
+            wr = csv.writer(sys.stdout)
+            wr.writerow(["Name", "HI", "Neut"])
+            for e2 in antigens4:
+                wr.writerow([e2.data().full_name(), e2.in_hi_assay(hidb), e2.in_neut_assay(hidb)])
+        else:
+            print("Name\tHI\tNeut")
+            print("\n".join("{}\t{}\t{}\t{}".format(e3.data().full_name(), e3.in_hi_assay(hidb), e3.in_neut_assay(hidb), [t.table_id() for t in e3.tables()]) for e3 in antigens4))
 
 # ----------------------------------------------------------------------
 
@@ -36,7 +57,11 @@ try:
     parser.add_argument('-d', '--debug', action='store_const', dest='loglevel', const=logging.DEBUG, default=logging.INFO, help='Enable debugging output.')
 
     parser.add_argument('--db', action='store', dest='path_to_hidb', default="~/AD/data/hidb4.h3.json.xz")
-    parser.add_argument('--list', dest="list_viruses", action="store_true", default=False, help='List viruses.')
+    parser.add_argument('--lab', action='store', dest='lab', default="")
+    parser.add_argument('--list', dest="list_viruses", action="store_true", default=False, help='List viruses found in Neut assay.')
+    parser.add_argument('--also-in-hi', dest="also_in_hi", action="store_true", default=False, help='List viruses with passages, and whether they also exist in the HI assay.')
+    parser.add_argument('--also-in-hi-without-passage', dest="also_in_hi_without_passage", action="store_true", default=False, help='List viruses with passages, and whether they also exist in the HI assay.')
+    parser.add_argument('--csv', dest="csv", action="store_true", default=False, help='Output csv format.')
 
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")
