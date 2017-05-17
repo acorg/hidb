@@ -55,6 +55,7 @@ install: check-acmacsd-root install-headers $(DIST)/hidb_backend$(PYTHON_MODULE_
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(ACMACSD_ROOT)/py
 	ln -sf $(abspath py)/* $(ACMACSD_ROOT)/py
 	ln -sf $(abspath bin)/hidb-* $(ACMACSD_ROOT)/bin
+	$(abspath bin)/hidb-get-from-albertine
 
 install-headers:
 	if [ ! -d $(ACMACSD_ROOT)/include/hidb ]; then mkdir $(ACMACSD_ROOT)/include/hidb; fi

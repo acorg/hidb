@@ -1,0 +1,3 @@
+#! /bin/bash
+mkdir -p ~/AD/data
+scp albertine:AD/data/hidb4.\*.json.xz ~/AD/data
