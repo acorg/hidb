@@ -1,3 +1,5 @@
 #! /bin/bash
-mkdir -p ~/AD/data
-scp albertine:AD/data/hidb4.\*.json.xz ~/AD/data
+if [ "$HOSTNAME" != "i19" ]; then
+    mkdir -p ~/AD/data
+    scp albertine:AD/data/hidb4.\*.json.xz ~/AD/data
+fi
