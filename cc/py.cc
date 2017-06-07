@@ -16,9 +16,9 @@ using namespace hidb;
 //     return result;
 // }
 
-PYBIND11_PLUGIN(hidb_backend)
+PYBIND11_MODULE(hidb_backend, m)
 {
-    py::module m("hidb_backend", "HiDB access plugin");
+    m.doc() = "HiDB access plugin";
 
       // ----------------------------------------------------------------------
       // acmacs_chart_backend
@@ -232,10 +232,6 @@ PYBIND11_PLUGIN(hidb_backend)
             .def(py::init<std::string>(), py::arg("hidb_dir"))
             .def("get", &hidb::HiDbSet::get, py::arg("virus_type"), py::return_value_policy::reference)
             ;
-
-      // ----------------------------------------------------------------------
-
-    return m.ptr();
 }
 
 // ----------------------------------------------------------------------
