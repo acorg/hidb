@@ -85,7 +85,11 @@ PYBIND11_MODULE(hidb_backend, m)
       // ----------------------------------------------------------------------
 
     py::class_<PerTable>(m, "PerTable")
-            .def("table_id", static_cast<const std::string (PerTable::*)() const>(&PerTable::table_id))
+            .def("table_id", py::overload_cast<>(&PerTable::table_id, py::const_))
+            .def("date", py::overload_cast<>(&PerTable::date, py::const_))
+            .def("lab_id", py::overload_cast<>(&PerTable::lab_id, py::const_))
+            .def("has_lab_id", &PerTable::has_lab_id, py::arg("lab_id"))
+            .def("homologous", py::overload_cast<>(&PerTable::homologous, py::const_))
             ;
 
     py::class_<AntigenData>(m, "AntigenData")
@@ -95,7 +99,7 @@ PYBIND11_MODULE(hidb_backend, m)
             .def("most_recent_table", &AntigenData::most_recent_table)
             .def("oldest_table", &AntigenData::oldest_table)
             .def("date", &AntigenData::date)
-            .def("tables", static_cast<const std::vector<PerTable>& (AntigenData::*)() const>(&AntigenData::per_table))
+            .def("tables", py::overload_cast<>(&AntigenData::per_table, py::const_))
             .def("has_lab", &AntigenData::has_lab, py::arg("hidb"), py::arg("lab"))
             .def("in_hi_assay", &AntigenData::in_hi_assay, py::arg("hidb"))
             .def("in_neut_assay", &AntigenData::in_neut_assay, py::arg("hidb"))
@@ -107,7 +111,7 @@ PYBIND11_MODULE(hidb_backend, m)
             .def("number_of_tables", &SerumData::number_of_tables)
             .def("most_recent_table", &SerumData::most_recent_table)
             .def("oldest_table", &SerumData::oldest_table)
-            .def("tables", static_cast<const std::vector<PerTable>& (SerumData::*)() const>(&SerumData::per_table))
+            .def("tables", py::overload_cast<>(&SerumData::per_table, py::const_))
             .def("homologous", &SerumData::homologous)
             .def("has_lab", &AntigenData::has_lab, py::arg("hidb"), py::arg("lab"))
             .def("in_hi_assay", &SerumData::in_hi_assay, py::arg("hidb"))
@@ -119,6 +123,19 @@ PYBIND11_MODULE(hidb_backend, m)
             .def("__getitem__", [](const AntigenRefs& ar, size_t i) { if (i >= ar.size()) throw py::index_error(); return ar[i]; }, py::return_value_policy::reference)
             .def("country", &AntigenRefs::country, py::arg("country"))
             .def("date_range", &AntigenRefs::date_range, py::arg("begin") = "", py::arg("end") = "")
+            ;
+
+      // Already registered! py::class_<ChartInfo>(m, "ChartInfo")
+
+    py::class_<ChartData>(m, "ChartData")
+            .def("table_id", py::overload_cast<>(&ChartData::table_id, py::const_))
+            .def("chart_info", py::overload_cast<>(&ChartData::chart_info, py::const_), py::return_value_policy::reference)
+            .def("number_of_antigens", &ChartData::number_of_antigens)
+            .def("number_of_sera", &ChartData::number_of_sera)
+            .def("antigen_index_by_full_name", &ChartData::antigen_index_by_full_name, py::arg("full_name"))
+            .def("antigen_full_name", &ChartData::antigen_full_name, py::arg("index"))
+            .def("serum_full_name", &ChartData::serum_full_name, py::arg("index"))
+            .def("titer", &ChartData::titer, py::arg("antigen_no"), py::arg("serum_no"))
             ;
 
       // --------------------------------------------------
@@ -203,6 +220,7 @@ PYBIND11_MODULE(hidb_backend, m)
             .def("import_from", &HiDb::importFrom, py::arg("filename"))
             .def("import_locdb", &HiDb::importLocDb, py::arg("filename"))
 
+            .def("table", &HiDb::table, py::arg("table_id"), py::return_value_policy::reference)
             .def("all_antigens", &HiDb::all_antigens, py::return_value_policy::reference)
             .def("all_countries", &HiDb::all_countries)
             .def("unrecognized_locations", &HiDb::unrecognized_locations, py::doc("returns unrecognized locations found in all antigen/serum names"))

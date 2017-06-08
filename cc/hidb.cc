@@ -27,6 +27,22 @@ ChartData::ChartData(const Chart& aChart)
 
 // ----------------------------------------------------------------------
 
+size_t ChartData::antigen_index_by_full_name(std::string full_name) const
+{
+      // std::cerr << full_name << std::endl;
+    size_t result = static_cast<size_t>(-1); // not found
+    for (auto ap = mAntigens.begin(); ap != mAntigens.end(); ++ap) {
+        if (full_name == (ap->first + " " + ap->second)) {
+            result = static_cast<size_t>(ap - mAntigens.begin());
+            break;
+        }
+    }
+    return result;
+
+} // ChartData::antigen_index_by_full_name
+
+// ----------------------------------------------------------------------
+
 AntigenRefs& AntigenRefs::country(std::string aCountry)
 {
     auto not_in_country = [this,&aCountry](const auto& e) -> bool {

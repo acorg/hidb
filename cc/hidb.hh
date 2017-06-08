@@ -154,9 +154,12 @@ namespace hidb
 
         inline const std::string table_id() const { return mTableId; }
         inline const ChartInfo& chart_info() const { return mChartInfo; }
+        inline size_t number_of_antigens() const { return mAntigens.size(); }
+        inline size_t number_of_sera() const { return mSera.size(); }
         inline const std::vector<AgSrRef>& antigens() const { return mAntigens; }
         inline const std::vector<AgSrRef>& sera() const { return mSera; }
         inline const Titers& titers() const { return mTiters; }
+        inline std::string titer(size_t antigen_no, size_t serum_no) const { return titers()[antigen_no][serum_no]; }
 
         inline std::string& table_id() { return mTableId; }
         inline ChartInfo& chart_info() { return mChartInfo; }
@@ -165,6 +168,10 @@ namespace hidb
         inline Titers& titers() { return mTiters; }
 
         inline bool operator <(const ChartData& aNother) const { return table_id() < aNother.table_id(); }
+
+        size_t antigen_index_by_full_name(std::string full_name) const; // returns -1 if not found
+        inline std::string antigen_full_name(size_t index) const { const auto& ag = mAntigens[index]; return ag.first + " " + ag.second; }
+        inline std::string serum_full_name(size_t index) const { const auto& sr = mSera[index]; return sr.first + " " + sr.second; }
 
      private:
         std::string mTableId;
@@ -320,12 +327,13 @@ namespace hidb
         void exportTo(std::string aFilename, bool aPretty) const;
         inline void importLocDb(std::string aFilename) { mLocDb.importFrom(aFilename); }
 
-        const Antigens& antigens() const { return mAntigens; }
-        Antigens& antigens() { return mAntigens; }
-        const Sera& sera() const { return mSera; }
-        Sera& sera() { return mSera; }
-        const Tables& charts() const { return mCharts; }
-        Tables& charts() { return mCharts; }
+        inline const Antigens& antigens() const { return mAntigens; }
+        inline Antigens& antigens() { return mAntigens; }
+        inline const Sera& sera() const { return mSera; }
+        inline Sera& sera() { return mSera; }
+        inline const Tables& charts() const { return mCharts; }
+        inline Tables& charts() { return mCharts; }
+        inline const ChartData& table(std::string table_id) const { return charts()[table_id]; }
 
         std::vector<const AntigenData*> find_antigens(std::string name_reassortant_annotations_passage) const;
         const AntigenData& find_antigen_exactly(std::string name_reassortant_annotations_passage) const; // throws NotFound if antigen with this very set of data not found
