@@ -34,20 +34,49 @@ def main(args):
             wr.writerow(["Name", "In HI too"])
             for e in antigens:
                 wr.writerow([e.data().full_name(), e.in_hi_assay(hidb)])
+        elif args.json:
+            to_dump = {e.data().full_name(): e.in_hi_assay(hidb) for e in antigens}
+            to_dump["  version"] = "h3-neut-virus to present-in-hi-with-this-passage"
+            print(json.dumps(to_dump, indent=1, compact=True, sort_keys=True))
         else:
             print("Name\tHI")
             print("\n".join("{}\t{}".format(e.data().full_name(), e.in_hi_assay(hidb)) for e in antigens))
     elif args.also_in_hi_without_passage:
-        names = sorted(set(e.data().name() for e in antigens))
-        antigens4 = [antigen2 for name in names for antigen2 in hidb.find_antigens_by_name(name) if not args.lab or antigen2.has_lab(hidb, args.lab.upper())]
+        names4 = sorted(set(e.data().name() for e in antigens))
+        antigens4 = [antigen2 for name in names4 for antigen2 in hidb.find_antigens_by_name(name) if not args.lab or antigen2.has_lab(hidb, args.lab.upper())]
         if args.csv:
             wr = csv.writer(sys.stdout)
             wr.writerow(["Name", "HI", "Neut"])
             for e2 in antigens4:
                 wr.writerow([e2.data().full_name(), e2.in_hi_assay(hidb), e2.in_neut_assay(hidb)])
+        elif args.json:
+            to_dump = {e2.data().full_name(): {"hi": e2.in_hi_assay(hidb), "neut": e2.in_neut_assay(hidb)} for e2 in antigens4}
+            to_dump["  version"] = "h3-virus to {hi: present-in-hi, neut: present-in-neut}"
+            print(json.dumps(to_dump, indent=1, compact=True, sort_keys=True))
         else:
             print("Name\tHI\tNeut")
             print("\n".join("{}\t{}\t{}".format(e3.data().full_name(), e3.in_hi_assay(hidb), e3.in_neut_assay(hidb)) for e3 in antigens4))
+    elif args.without_passage_also_in_hi:
+        names5 = sorted(set(e.data().name() for e in antigens))
+        antigens5 = [antigen5 for name in names5 for antigen5 in hidb.find_antigens_by_name(name) if not args.lab or antigen5.has_lab(hidb, args.lab.upper())]
+        to_dump = {}
+        for e5 in antigens5:
+            name5 = e5.data().name()
+            if name5 in to_dump:
+                to_dump[name5] |= e5.in_hi_assay(hidb)
+            else:
+                to_dump[name5] = e5.in_hi_assay(hidb)
+        if args.csv:
+            wr = csv.writer(sys.stdout)
+            wr.writerow(["Name", "HI"])
+            for name6 in sorted(to_dump):
+                wr.writerow([name6, to_dump[name6]])
+        elif args.json:
+            to_dump["  version"] = "h3-virus-without-passage to present-in-hi"
+            print(json.dumps(to_dump, indent=1, compact=True, sort_keys=True))
+        else:
+            print("Name\tHI")
+            print("\n".join("{}\t{}".format(name6, to_dump[name6]) for name6 in sorted(to_dump)))
 
 # ----------------------------------------------------------------------
 
@@ -61,7 +90,9 @@ try:
     parser.add_argument('--list', dest="list_viruses", action="store_true", default=False, help='List viruses found in Neut assay.')
     parser.add_argument('--also-in-hi', dest="also_in_hi", action="store_true", default=False, help='List viruses with passages, and whether they also exist in the HI assay.')
     parser.add_argument('--also-in-hi-without-passage', dest="also_in_hi_without_passage", action="store_true", default=False, help='List viruses with passages, and whether they also exist in the HI assay.')
+    parser.add_argument('--without-passage-also-in-hi', dest="without_passage_also_in_hi", action="store_true", default=False, help='List viruses without passages, and whether they also exist in the HI assay.')
     parser.add_argument('--csv', dest="csv", action="store_true", default=False, help='Output csv format.')
+    parser.add_argument('--json', dest="json", action="store_true", default=False, help='Output json format.')
 
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")
