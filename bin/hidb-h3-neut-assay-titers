@@ -19,6 +19,8 @@ from acmacs_base import timeit, json
 def main(args):
     data = scan_hidb(args)
     scatter_data = make_scatter(data)
+    max_hi, max_neut = find_max(scatter_data)
+    print(max_hi, max_neut)
     pprint.pprint(scatter_data)
 
 # ----------------------------------------------------------------------
@@ -51,11 +53,19 @@ def make_scatter(data):
     scatter_data = []           # list of pairs [hi, neut]
     for antigen, antigen_data in data.items():
         for serum, serum_data in antigen_data.items():
-            if len(serum_data["hi"]) == 1 and len(serum_data["neut"]) == 1:
+            if len(serum_data["hi"]) == 1 and serum_data["hi"][0] != "*" and len(serum_data["neut"]) == 1 and serum_data["neut"][0] != "*":
                 scatter_data.append([serum_data["hi"][0], serum_data["neut"][0]])
     return scatter_data
 
 # ----------------------------------------------------------------------
+
+def find_max(scatter_data):
+    max_hi = 0
+    max_neut = 0
+    for hi, neut in scatter_data:
+        max_hi = max(max_hi, int(hi[1:]) if hi[0] in ["<", ">"] else int(hi))
+        max_neut = max(max_neut, int(neut[1:]) if neut[0] in ["<", ">"] else int(neut))
+    return max_hi, max_neut
 
 # def clean(data):
 #     """Leave only entries where just one hi titer and one neut titer"""
