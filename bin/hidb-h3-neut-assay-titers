@@ -24,10 +24,19 @@ def main(args):
     antigens = hidb.list_antigens(lab=args.lab.upper(), assay="neut")
     antigens = [antigen for antigen in antigens if antigen.in_hi_assay(hidb)]
     data = {}                   # antigen-name -> serum-name -> {hi: [titer], neut: [titer]}
-    print(len(antigens))
+    print("Antigens:", len(antigens))
     for antigen in antigens:
-        print(antigen.data().full_name())
+        antigen_full_name = antigen.data().full_name()
+        # print(antigen_full_name)
+        antigen_data = data.setdefault(antigen_full_name, {})
         for table in antigen.tables():
+            table_data = hidb.table(table.table_id())
+            assay = "hi" if table_data.chart_info().assay() == "HI" else "neut"
+            antigen_no = table_data.antigen_index_by_full_name(antigen_full_name)
+            for serum_no in range(table_data.number_of_sera()):
+                serum_data = antigen_data.setdefault(table_data.serum_full_name(serum_no), {"hi": [], "neut": []})
+                serum_data[assay].append(table_data.titer(antigen_no, serum_no))
+    pprint.pprint(data)
 
 # ----------------------------------------------------------------------
 
