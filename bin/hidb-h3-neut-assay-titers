@@ -19,9 +19,10 @@ from acmacs_base import timeit, json
 def main(args):
     data = scan_hidb(args)
     scatter_data = make_scatter(data)
-    max_hi, max_neut = find_max(scatter_data)
-    print(max_hi, max_neut)
-    pprint.pprint(scatter_data)
+    max_titer = find_max(scatter_data)
+    # print("max_titer:", max_titer)
+    # pprint.pprint(scatter_data)
+    make_scatter_plot(args.output[0], scatter_data=scatter_data, lab=args.lab.upper(), titers=gen_titers(max_titer))
 
 # ----------------------------------------------------------------------
 
@@ -59,13 +60,19 @@ def make_scatter(data):
 
 # ----------------------------------------------------------------------
 
+def titer_value(titer):
+    return int(titer[1:]) if titer[0] in ["<", ">"] else int(titer)
+
+# ----------------------------------------------------------------------
+
 def find_max(scatter_data):
-    max_hi = 0
-    max_neut = 0
+    max_titer = 0
     for hi, neut in scatter_data:
-        max_hi = max(max_hi, int(hi[1:]) if hi[0] in ["<", ">"] else int(hi))
-        max_neut = max(max_neut, int(neut[1:]) if neut[0] in ["<", ">"] else int(neut))
-    return max_hi, max_neut
+        max_titer = max(max_titer, titer_value(hi))
+        max_titer = max(max_titer, titer_value(neut))
+    return max_titer
+
+# ----------------------------------------------------------------------
 
 # def clean(data):
 #     """Leave only entries where just one hi titer and one neut titer"""
@@ -79,6 +86,77 @@ def find_max(scatter_data):
 
 # ----------------------------------------------------------------------
 
+def gen_titers(max_titer):
+    titers = []
+    titer = 10
+    while titer <= max_titer:
+        titers.append(titer)
+        titer *= 2
+    return titers
+
+# ----------------------------------------------------------------------
+
+PDF_WIDTH = 400
+PAGE_WIDTH = 100
+TITLE_SIZE = PAGE_WIDTH / 30
+MARK_TEXT_SIZE = PAGE_WIDTH / 40
+AXIS_LABEL_TEXT_SIZE = MARK_TEXT_SIZE * 1.5
+
+def make_scatter_plot(output, scatter_data, lab, titers):
+    from acmacs_draw_backend import PdfCairo
+    surface = PdfCairo(output, PDF_WIDTH, PDF_WIDTH, PAGE_WIDTH)
+    surface.text_s(PAGE_WIDTH * 0.2, TITLE_SIZE, lab + " HI vs. Neut titers scatter", "black", TITLE_SIZE)
+    sub = surface.subsurface_s(PAGE_WIDTH * 0.1, PAGE_WIDTH * 0.1, PAGE_WIDTH * 0.8, PAGE_WIDTH, PAGE_WIDTH, False)
+    y_step = y_axis(sub, titers)
+    x_step = x_axis(sub, titers)
+    for hi, neut in scatter_data:
+        hi_offset = titers.index(titer_value(hi)) + 1
+        if hi[0] == "<":
+            hi_offset -= 0.5
+        elif hi[0] == ">":
+            hi_offset += 0.5
+        neut_offset = titers.index(titer_value(neut)) + 1
+        if neut[0] == "<":
+            neut_offset -= 0.5
+        elif neut[0] == ">":
+            neut_offset += 0.5
+        sub.circle_p(x_step * hi_offset, PAGE_WIDTH - y_step * neut_offset, 5, "black", 1)
+
+# ----------------------------------------------------------------------
+
+def y_axis(surface, titers):
+    # print(titers)
+    # max_cb = math.ceil(max_cb) + 1
+    # min_cb = math.floor(min_cb)
+    step = PAGE_WIDTH / (len(titers) + 1)
+    surface.line_p(0, 0, 0, PAGE_WIDTH, "black", 1)
+    x = - PAGE_WIDTH / 100
+    for mark in range(1, len(titers) + 1):
+        y = PAGE_WIDTH - step * mark
+        surface.line_p(0, y, x, y, "black", 1)
+        surface.line_p(0, y, PAGE_WIDTH, y, "grey80", 1)
+        surface.text_right_aligned_s(x * 1.5, y + MARK_TEXT_SIZE / 2.7, str(titers[mark - 1]), "black", MARK_TEXT_SIZE)
+    surface.text_right_aligned_s(x * 1.5, AXIS_LABEL_TEXT_SIZE / 2.7, "Neut", "black", AXIS_LABEL_TEXT_SIZE)
+    return step
+
+# ----------------------------------------------------------------------
+
+def x_axis(surface, titers):
+    surface.line_p(0, PAGE_WIDTH, PAGE_WIDTH, PAGE_WIDTH, "black", 1)
+    step = PAGE_WIDTH / (len(titers) + 1)
+    y = PAGE_WIDTH + PAGE_WIDTH / 100
+    for mark in range(1, len(titers) + 1):
+        x = step * mark
+        surface.line_p(x, PAGE_WIDTH, x, y, "black", 1)
+        surface.line_p(x, PAGE_WIDTH, x, 0, "grey80", 1)
+        label = str(titers[mark - 1])
+        surface.text_s(x - MARK_TEXT_SIZE * len(label) / 4, y + MARK_TEXT_SIZE, label, "black", MARK_TEXT_SIZE)
+    surface.text_right_aligned_s(PAGE_WIDTH, y + AXIS_LABEL_TEXT_SIZE, "HI", "black", AXIS_LABEL_TEXT_SIZE)
+    surface.line_p(0, PAGE_WIDTH, PAGE_WIDTH, 0, "grey80", 1)
+    return step
+
+# ----------------------------------------------------------------------
+
 try:
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
@@ -86,6 +164,7 @@ try:
 
     parser.add_argument('--db', action='store', dest='path_to_hidb', default="~/AD/data/hidb4.h3.json.xz")
     parser.add_argument('--lab', action='store', dest='lab', default="")
+    parser.add_argument('output', nargs=1, help='Output pdf file.')
 
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(levelname)s %(asctime)s: %(message)s")
