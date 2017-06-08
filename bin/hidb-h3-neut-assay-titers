@@ -17,6 +17,13 @@ from acmacs_base import timeit, json
 # ----------------------------------------------------------------------
 
 def main(args):
+    data = scan_hidb(args)
+    scatter_data = make_scatter(data)
+    pprint.pprint(scatter_data)
+
+# ----------------------------------------------------------------------
+
+def scan_hidb(args):
     hidb = hidb_m.HiDb()
     with timeit("Reading hidb"):
         hidb.import_from(str(Path(args.path_to_hidb).expanduser().resolve()))
@@ -24,7 +31,7 @@ def main(args):
     antigens = hidb.list_antigens(lab=args.lab.upper(), assay="neut")
     antigens = [antigen for antigen in antigens if antigen.in_hi_assay(hidb)]
     data = {}                   # antigen-name -> serum-name -> {hi: [titer], neut: [titer]}
-    print("Antigens:", len(antigens))
+    # print("Antigens:", len(antigens))
     for antigen in antigens:
         antigen_full_name = antigen.data().full_name()
         # print(antigen_full_name)
@@ -36,7 +43,29 @@ def main(args):
             for serum_no in range(table_data.number_of_sera()):
                 serum_data = antigen_data.setdefault(table_data.serum_full_name(serum_no), {"hi": [], "neut": []})
                 serum_data[assay].append(table_data.titer(antigen_no, serum_no))
-    pprint.pprint(data)
+    return data
+
+# ----------------------------------------------------------------------
+
+def make_scatter(data):
+    scatter_data = []           # list of pairs [hi, neut]
+    for antigen, antigen_data in data.items():
+        for serum, serum_data in antigen_data.items():
+            if len(serum_data["hi"]) == 1 and len(serum_data["neut"]) == 1:
+                scatter_data.append([serum_data["hi"][0], serum_data["neut"][0]])
+    return scatter_data
+
+# ----------------------------------------------------------------------
+
+# def clean(data):
+#     """Leave only entries where just one hi titer and one neut titer"""
+#     for antigen, antigen_data in data.items():
+#         serum_to_remove = [serum for serum, serum_data in antigen_data.items() if len(serum_data["hi"]) != 1 or len(serum_data["neut"]) != 1]
+#         for serum in serum_to_remove:
+#             del antigen_data[serum]
+#     antigen_to_remove = [antigen for antigen, antigen_data in data.items() if not antigen_data]
+#     for antigen in antigen_to_remove:
+#         del data[antigen]
 
 # ----------------------------------------------------------------------
 
