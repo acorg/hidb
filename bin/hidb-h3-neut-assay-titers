@@ -5,7 +5,7 @@
 scatterplot of HI assay titres and neutralisation assay titers
 """
 
-import sys, os, traceback, pprint, csv
+import sys, os, traceback, pprint, csv, math
 if sys.version_info.major != 3: raise RuntimeError("Run script with python3")
 from pathlib import Path
 sys.path[:0] = [str(Path(os.environ["ACMACSD_ROOT"]).resolve().joinpath("py"))]
@@ -22,7 +22,7 @@ def main(args):
     max_titer = find_max(scatter_data)
     # print("max_titer:", max_titer)
     # pprint.pprint(scatter_data)
-    make_scatter_plot(args.output[0], scatter_data=scatter_data, lab=args.lab.upper(), titers=gen_titers(max_titer))
+    make_scatter_plot(args.output[0], scatter_data=scatter_data, lab=args.lab.upper(), titers=gen_titers(scatter_data))
 
 # ----------------------------------------------------------------------
 
@@ -86,20 +86,40 @@ def find_max(scatter_data):
 
 # ----------------------------------------------------------------------
 
-def gen_titers(max_titer):
-    titers = []
-    titer = 10
-    while titer <= max_titer:
-        titers.append(titer)
-        titer *= 2
-    return titers
+def gen_titers(scatter_data):
+    all_titers = set()
+    for hi, neut in scatter_data:
+        all_titers.add(hi)
+        all_titers.add(neut)
+    print("all_titers", all_titers)
+    return ["<10", "10", "<20", "20", "<40", "40", "<80", "80", "160", "320", "640", "1280", "2560", "5120", ">5120"]
+
+# def gen_titers(max_titer):
+#     titers = []
+#     titer = 10
+#     while titer <= max_titer:
+#         titers.append(titer)
+#         titer *= 2
+#     return titers
+
+# ----------------------------------------------------------------------
+
+def titer_offset(titer, titers):
+    try:
+        return titers.index(titer) + 1
+    except ValueError:
+        value = math.log2(int(titer) / 10.0)
+        left = str(int(math.pow(2, math.floor(value)) * 10))
+        offset  = value - math.floor(value)
+        # print(titer, value, left, offset)
+        return titers.index(left) + offset + 1
 
 # ----------------------------------------------------------------------
 
 PDF_WIDTH = 400
 PAGE_WIDTH = 100
 TITLE_SIZE = PAGE_WIDTH / 30
-MARK_TEXT_SIZE = PAGE_WIDTH / 40
+MARK_TEXT_SIZE = PAGE_WIDTH / 45
 AXIS_LABEL_TEXT_SIZE = MARK_TEXT_SIZE * 1.5
 
 def make_scatter_plot(output, scatter_data, lab, titers):
@@ -110,17 +130,7 @@ def make_scatter_plot(output, scatter_data, lab, titers):
     y_step = y_axis(sub, titers)
     x_step = x_axis(sub, titers)
     for hi, neut in scatter_data:
-        hi_offset = titers.index(titer_value(hi)) + 1
-        if hi[0] == "<":
-            hi_offset -= 0.5
-        elif hi[0] == ">":
-            hi_offset += 0.5
-        neut_offset = titers.index(titer_value(neut)) + 1
-        if neut[0] == "<":
-            neut_offset -= 0.5
-        elif neut[0] == ">":
-            neut_offset += 0.5
-        sub.circle_p(x_step * hi_offset, PAGE_WIDTH - y_step * neut_offset, 5, "black", 1)
+        sub.circle_p(x_step * titer_offset(hi, titers), PAGE_WIDTH - y_step * titer_offset(neut, titers), 5, "black", 1)
 
 # ----------------------------------------------------------------------
 
@@ -151,7 +161,7 @@ def x_axis(surface, titers):
         surface.line_p(x, PAGE_WIDTH, x, 0, "grey80", 1)
         label = str(titers[mark - 1])
         surface.text_s(x - MARK_TEXT_SIZE * len(label) / 4, y + MARK_TEXT_SIZE, label, "black", MARK_TEXT_SIZE)
-    surface.text_right_aligned_s(PAGE_WIDTH, y + AXIS_LABEL_TEXT_SIZE, "HI", "black", AXIS_LABEL_TEXT_SIZE)
+    surface.text_s(PAGE_WIDTH, y + AXIS_LABEL_TEXT_SIZE, "HI", "black", AXIS_LABEL_TEXT_SIZE)
     surface.line_p(0, PAGE_WIDTH, PAGE_WIDTH, 0, "grey80", 1)
     return step
 
