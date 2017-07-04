@@ -113,7 +113,7 @@ PYBIND11_MODULE(hidb_backend, m)
             .def("oldest_table", &SerumData::oldest_table)
             .def("tables", py::overload_cast<>(&SerumData::per_table, py::const_))
             .def("homologous", &SerumData::homologous)
-            .def("has_lab", &AntigenData::has_lab, py::arg("hidb"), py::arg("lab"))
+            .def("has_lab", &SerumData::has_lab, py::arg("hidb"), py::arg("lab"))
             .def("in_hi_assay", &SerumData::in_hi_assay, py::arg("hidb"))
             .def("in_neut_assay", &SerumData::in_neut_assay, py::arg("hidb"))
             ;
