@@ -14,16 +14,7 @@ HIDB_PY_SOURCES = py.cc $(HIDB_SOURCES)
 
 # ----------------------------------------------------------------------
 
-CLANG = $(shell if g++ --version 2>&1 | grep -i llvm >/dev/null; then echo Y; else echo N; fi)
-ifeq ($(CLANG),Y)
-  WEVERYTHING = -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded
-  WARNINGS = -Wno-weak-vtables # -Wno-padded
-  STD = c++14
-else
-  WEVERYTHING = -Wall -Wextra
-  WARNINGS =
-  STD = c++14
-endif
+include $(ACMACSD_ROOT)/share/Makefile.g++
 
 PYTHON_VERSION = $(shell python3 -c 'import sys; print("{0.major}.{0.minor}".format(sys.version_info))')
 PYTHON_CONFIG = python$(PYTHON_VERSION)-config
@@ -71,14 +62,14 @@ test: install
 # ----------------------------------------------------------------------
 
 $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_PY_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
-	g++ -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+	$(GXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 	@#strip $@
 
 $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
-	g++ -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+	$(GXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 
 # $(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
-#	g++ $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
+#	$(GXX) $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
 
 clean:
 	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d
@@ -90,7 +81,7 @@ distclean: clean
 
 $(BUILD)/%.o: cc/%.cc | $(BUILD) install-headers
 	@echo $<
-	@g++ $(CXXFLAGS) -c -o $@ $<
+	@$(GXX) $(CXXFLAGS) -c -o $@ $<
 
 # ----------------------------------------------------------------------
 
