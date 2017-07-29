@@ -5,7 +5,7 @@
 #include <ctime>
 #include <chrono>
 
-#include "rapidjson/document.h"
+#include "acmacs-base/rapidjson.hh"
 
 #include "chart-rj.hh"
 #include "ace.hh"
