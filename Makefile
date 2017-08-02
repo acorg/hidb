@@ -62,14 +62,14 @@ test: install
 # ----------------------------------------------------------------------
 
 $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_PY_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
-	$(GXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+	$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 	@#strip $@
 
 $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
-	$(GXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+	$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 
 # $(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
-#	$(GXX) $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
+#	$(CXX) $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
 
 clean:
 	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d
@@ -81,7 +81,7 @@ distclean: clean
 
 $(BUILD)/%.o: cc/%.cc | $(BUILD) install-headers
 	@echo $<
-	@$(GXX) $(CXXFLAGS) -c -o $@ $<
+	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # ----------------------------------------------------------------------
 
