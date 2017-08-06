@@ -112,7 +112,7 @@ void hidb::Antigens::make_index(const HiDb& aHiDb)
 
 // ----------------------------------------------------------------------
 
-AntigenRefs hidb::Antigens::find_by_index(std::string name, const HiDb& aHiDb) const
+AntigenRefs hidb::Antigens::find_by_index(std::string name, const HiDb& aHiDb, std::string* aNotFoundLocation) const
 {
     AntigenRefs result;
     try {
@@ -134,7 +134,10 @@ AntigenRefs hidb::Antigens::find_by_index(std::string name, const HiDb& aHiDb) c
         }
         catch (LocationNotFound&) {
               // location not found in locdb, makes no sense looking up
-            std::cerr << "LocationNotFound " << n_location << std::endl;
+            if (aNotFoundLocation)
+                *aNotFoundLocation = n_location;
+            else
+                std::cerr << "LocationNotFound " << n_location << std::endl;
         }
     }
     catch (NotFound&) {

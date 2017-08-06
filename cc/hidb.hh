@@ -234,7 +234,8 @@ namespace hidb
             }
 
         void make_index(const HiDb& aHiDb);
-        AntigenRefs find_by_index(std::string name, const HiDb& aHiDb) const;
+          // if location is not found and aNotFoundLocation is not nullptr, location name is copied there and not reported to std::cerr
+        AntigenRefs find_by_index(std::string name, const HiDb& aHiDb, std::string* aNotFoundLocation = nullptr) const;
         AntigenRefs find_by_cdcid(std::string cdcid) const;
 
         inline const AntigenRefs* all_by_index(std::string name) const
@@ -339,7 +340,7 @@ namespace hidb
         const AntigenData& find_antigen_exactly(std::string name_reassortant_annotations_passage) const; // throws NotFound if antigen with this very set of data not found
         std::vector<const AntigenData*> find_antigens_fuzzy(std::string name_reassortant_annotations_passage) const;
         std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name_reassortant_annotations_passage) const;
-        inline std::vector<const AntigenData*> find_antigens_by_name(std::string name) const { return mAntigens.find_by_index(name, *this); }
+        inline std::vector<const AntigenData*> find_antigens_by_name(std::string name, std::string* aNotFoundLocation = nullptr) const { return mAntigens.find_by_index(name, *this, aNotFoundLocation); }
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
         const AntigenData& find_antigen_of_chart(const Antigen& aAntigen) const; // throws if not found
 
