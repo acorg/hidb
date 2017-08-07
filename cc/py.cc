@@ -147,8 +147,8 @@ PYBIND11_MODULE(hidb_backend, m)
         return result;
     };
 
-    auto list_antigens = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string lab, std::string assay) -> std::vector<AntigenData> {
-        return pointer_to_copy_antigen(aHiDb.list_antigens(lab, assay));
+    auto list_antigens = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string lab, std::string lineage, std::string assay) -> std::vector<AntigenData> {
+        return pointer_to_copy_antigen(aHiDb.list_antigens(lab, lineage, assay));
     };
 
     auto find_antigens_by_name = [&pointer_to_copy_antigen](const HiDb& aHiDb, std::string name) -> std::vector<AntigenData> {
@@ -184,8 +184,8 @@ PYBIND11_MODULE(hidb_backend, m)
         return result;
     };
 
-    auto list_sera = [&pointer_to_copy_serum](const HiDb& aHiDb, std::string lab) {
-        return pointer_to_copy_serum(aHiDb.list_sera(lab));
+    auto list_sera = [&pointer_to_copy_serum](const HiDb& aHiDb, std::string lab, std::string lineage) {
+                         return pointer_to_copy_serum(aHiDb.list_sera(lab, lineage));
     };
 
     auto find_sera = [&pointer_to_copy_serum](const HiDb& aHiDb, std::string name) {
@@ -228,16 +228,16 @@ PYBIND11_MODULE(hidb_backend, m)
             .def("stat_antigens", &HiDb::stat_antigens, py::arg("stat"), py::arg("start_date") = "", py::arg("end_date") = "")
             .def("stat_sera", &HiDb::stat_sera, py::arg("stat"), py::arg("stat_unique"), py::arg("start_date") = "", py::arg("end_date") = "")
 
-            .def("list_antigen_names", &HiDb::list_antigen_names, py::arg("lab") = "", py::arg("full_name") = false)
-            .def("list_antigens", list_antigens, py::arg("lab"), py::arg("assay") = "", py::doc("assay: \"hi\", \"neut\", \"\""))
+            .def("list_antigen_names", &HiDb::list_antigen_names, py::arg("lab") = "", py::arg("lineage") = "", py::arg("full_name") = false)
+            .def("list_antigens", list_antigens, py::arg("lab"), py::arg("lineage") = "", py::arg("assay") = "", py::doc("assay: \"hi\", \"neut\", \"\""))
             .def("find_antigens", find_antigens, py::arg("name"))
             .def("find_antigens_fuzzy", find_antigens_fuzzy, py::arg("name"))
             .def("find_antigens_extra_fuzzy", find_antigens_extra_fuzzy, py::arg("name"))
             .def("find_antigens_with_score", find_antigens_with_score, py::arg("name"))
             .def("find_antigens_by_name", find_antigens_by_name, py::arg("name"), py::return_value_policy::reference)
             .def("find_antigens_by_cdcid", find_antigens_by_cdcid, py::arg("cdcid"))
-            .def("list_serum_names", &HiDb::list_serum_names, py::arg("lab") = "", py::arg("full_name") = false)
-            .def("list_sera", list_sera, py::arg("lab"))
+            .def("list_serum_names", &HiDb::list_serum_names, py::arg("lab") = "", py::arg("lineage") = "", py::arg("full_name") = false)
+            .def("list_sera", list_sera, py::arg("lab"), py::arg("lineage") = "")
             .def("find_sera", find_sera, py::arg("name"))
             .def("find_homologous_sera", find_homologous_sera, py::arg("antigen"))
             .def("find_sera_with_score", find_sera_with_score, py::arg("name"))

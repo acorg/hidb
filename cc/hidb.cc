@@ -479,7 +479,7 @@ std::vector<std::pair<const AntigenData*, size_t>> HiDb::find_antigens_with_scor
 
 // ----------------------------------------------------------------------
 
-std::vector<const AntigenData*> HiDb::list_antigens(std::string aLab, std::string aAssay) const
+std::vector<const AntigenData*> HiDb::list_antigens(std::string aLab, std::string aLineage, std::string aAssay) const
 {
     std::function<bool(const AntigenData&)> assay_check;
     if (aAssay.empty())
@@ -491,7 +491,7 @@ std::vector<const AntigenData*> HiDb::list_antigens(std::string aLab, std::strin
 
     std::vector<const AntigenData*> result;
     for (const auto& antigen: antigens()) {
-        if ((aLab.empty() || antigen.has_lab(*this, aLab)) && assay_check(antigen))
+        if ((aLab.empty() || antigen.has_lab(*this, aLab)) && (aLineage.empty() || antigen.lineage() == aLineage) && assay_check(antigen))
             result.push_back(&antigen);
     }
     return result;
@@ -500,22 +500,27 @@ std::vector<const AntigenData*> HiDb::list_antigens(std::string aLab, std::strin
 
 // ----------------------------------------------------------------------
 
-std::vector<std::string> HiDb::list_antigen_names(std::string aLab, bool aFullName) const
+std::vector<std::string> HiDb::list_antigen_names(std::string aLab, std::string aLineage, bool aFullName) const
 {
     auto extract_name = [&aFullName](const auto& ag) -> std::string {
         return aFullName ? ag.data().full_name() : ag.data().name();
     };
     std::vector<std::string> result;
-    if (!aLab.empty()) {
-        for (const auto& antigen: antigens()) {
-            if (antigen.has_lab(*this, aLab)) {
-                result.push_back(extract_name(antigen));
-            }
+    for (const auto& serum: sera()) {
+        if ((aLab.empty() || serum.has_lab(*this, aLab)) && (aLineage.empty() || serum.lineage() == aLineage)) {
+            result.push_back(extract_name(serum));
         }
     }
-    else {
-        std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), extract_name);
-    }
+    // if (!aLab.empty()) {
+    //     for (const auto& antigen: antigens()) {
+    //         if (antigen.has_lab(*this, aLab)) {
+    //             result.push_back(extract_name(antigen));
+    //         }
+    //     }
+    // }
+    // else {
+    //     std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), extract_name);
+    // }
     result.erase(std::unique(result.begin(), result.end()), result.end()); // remove duplicates
     return result;
 
@@ -627,11 +632,11 @@ std::vector<std::pair<const SerumData*, size_t>> HiDb::find_sera_with_score(std:
 
 // ----------------------------------------------------------------------
 
-std::vector<const SerumData*> HiDb::list_sera(std::string aLab) const
+std::vector<const SerumData*> HiDb::list_sera(std::string aLab, std::string aLineage) const
 {
     std::vector<const SerumData*> result;
     for (const auto& serum: sera()) {
-        if (aLab.empty() || serum.has_lab(*this, aLab))
+        if ((aLab.empty() || serum.has_lab(*this, aLab)) && (aLineage.empty() || serum.lineage() == aLineage))
             result.push_back(&serum);
     }
     return result;
@@ -640,22 +645,28 @@ std::vector<const SerumData*> HiDb::list_sera(std::string aLab) const
 
 // ----------------------------------------------------------------------
 
-std::vector<std::string> HiDb::list_serum_names(std::string aLab, bool aFullName) const
+std::vector<std::string> HiDb::list_serum_names(std::string aLab, std::string aLineage, bool aFullName) const
 {
     auto extract_name = [&aFullName](const auto& sr) -> std::string {
         return aFullName ? sr.data().full_name() : sr.data().name();
     };
     std::vector<std::string> result;
-    if (!aLab.empty()) {
-        for (const auto& serum: sera()) {
-            if (serum.has_lab(*this, aLab)) {
-                result.push_back(extract_name(serum));
-            }
+    for (const auto& serum: sera()) {
+        if ((aLab.empty() || serum.has_lab(*this, aLab)) && (aLineage.empty() || serum.lineage() == aLineage)) {
+            result.push_back(extract_name(serum));
         }
     }
-    else {
-        std::transform(sera().begin(), sera().end(), std::back_inserter(result), extract_name);
-    }
+
+    // if (!aLab.empty()) {
+    //     for (const auto& serum: sera()) {
+    //         if (serum.has_lab(*this, aLab)) {
+    //             result.push_back(extract_name(serum));
+    //         }
+    //     }
+    // }
+    // else {
+    //     std::transform(sera().begin(), sera().end(), std::back_inserter(result), extract_name);
+    // }
     result.erase(std::unique(result.begin(), result.end()), result.end());
     return result;
 
