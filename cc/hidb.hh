@@ -59,6 +59,8 @@ namespace hidb
         inline void update(std::string aTableId, const AS& aData)
             {
                   // std::cerr << "add " << aTableId << " " << aAS.full_name() << std::endl;
+                if (lineage() != aData.lineage())
+                    std::cerr << "WARNING: conflicting lineage for " << full_name() << ": db:" << lineage() << " new:" << aData.lineage() << std::endl;
                 PerTable pt(aTableId, aData);
                 auto insert_at = std::lower_bound(mTables.begin(), mTables.end(), pt);
                 if (insert_at == mTables.end() || insert_at->table_id() != aTableId) {
