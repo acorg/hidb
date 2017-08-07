@@ -64,7 +64,7 @@ echo B
 echo
 DB=$DB_DIR/hidb4.b.json.xz
 if [ -f "$DB" ]; then mv -f "$DB" "$DB"~; fi
-/usr/bin/time hidb-update --db "$DB" ~/ac/ace-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/tables-store/B/MELB/{yamagata,victoria}/*.ac* 2>&1
+/usr/bin/time hidb-update --db "$DB" ~/ac/ace-store/B/{CDC,NIID,NIMR}/*.ac* ~/ac/ace-store/B/MELB/{yamagata,victoria}/*.ac* 2>&1
 echo
 date
 echo "----------------------------------------------------------------------"
