@@ -4,7 +4,7 @@
 
 std::string hidb::table_id(const Chart& aChart)
 {
-    const ChartInfo& info = aChart.chart_info();
+    const auto& info = aChart.chart_info();
 
     std::string assay = info.assay();
     if (assay == "FOCUS REDUCTION")

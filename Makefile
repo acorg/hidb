@@ -29,9 +29,9 @@ OPTIMIZATION = -O3 #-fvisibility=hidden -flto
 PROFILE = # -pg
 CXXFLAGS = -MMD -g $(OPTIMIZATION) $(PROFILE) -fPIC -std=$(STD) $(WEVERYTHING) $(WARNINGS) -Icc -I$(BUILD)/include -I$(ACMACSD_ROOT)/include $(PKG_INCLUDES)
 LDFLAGS = $(OPTIMIZATION) $(PROFILE)
-HIDB_LDLIBS = -L$(LIB_DIR) -llocationdb -lacmacsbase -lacmacschart -lboost_filesystem -lboost_system $$(pkg-config --libs liblzma) $$($(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
+HIDB_LDLIBS = -L$(LIB_DIR) -llocationdb -lacmacsbase -lacmacschart -lboost_filesystem -lboost_system $(shell pkg-config --libs liblzma) $(shell $(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
 
-PKG_INCLUDES = $$(pkg-config --cflags liblzma) $$($(PYTHON_CONFIG) --includes)
+PKG_INCLUDES = $(shell pkg-config --cflags liblzma) $(shell $(PYTHON_CONFIG) --includes)
 
 # ----------------------------------------------------------------------
 
@@ -55,6 +55,9 @@ install-headers:
 test: install
 	test/test
 
+rtags:
+	make -nkB | /usr/local/bin/rc --compile - || true
+
 # ----------------------------------------------------------------------
 
 -include $(BUILD)/*.d
@@ -69,7 +72,7 @@ $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_
 	$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 
 # $(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
-#	$(CXX) $(LDFLAGS) -o $@ $^ $$(pkg-config --libs liblzma)
+#	$(CXX) $(LDFLAGS) -o $@ $^ $(shell pkg-config --libs liblzma)
 
 clean:
 	rm -rf $(DIST) $(BUILD)/*.o $(BUILD)/*.d

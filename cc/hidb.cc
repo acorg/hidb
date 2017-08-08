@@ -15,7 +15,7 @@ using namespace hidb;
 // ----------------------------------------------------------------------
 
 ChartData::ChartData(const Chart& aChart)
-    : mTableId(hidb::table_id(aChart)), mChartInfo(aChart.chart_info()), mTiters(aChart.titers().list())
+    : mTableId{hidb::table_id(aChart)}, mChartInfo{static_cast<const ChartInfo&>(aChart.chart_info())}, mTiters{aChart.titers().list()}
 {
     for (const auto& antigen: aChart.antigens()) {
         mAntigens.emplace_back(antigen.name(), variant_id(antigen));
