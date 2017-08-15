@@ -816,6 +816,8 @@ template <typename AS> static void _stat_antigen_serum(AntigenSerumInfo& aInfo, 
     }
     if (!aInfo.continent.empty()) {                      // Unknown continent not counted to avoid stat inconsistency and questions
         aInfo.year_month = aYearMonth(aAntigenSerum);
+        aStart = aStart.substr(0, 6); // just year-month
+        aEnd = aEnd.substr(0, 6); // just year-month
         if ((aStart.empty() || (!aInfo.year_month.empty() && aInfo.year_month >= aStart)) && (aEnd.empty() || (!aInfo.year_month.empty() && aInfo.year_month < aEnd))) {
             if (aInfo.year_month.empty())
                 aInfo.year_month = "????";
