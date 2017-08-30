@@ -58,7 +58,7 @@ namespace hidb
 
         inline void update(std::string aTableId, const AS& aData)
             {
-                  // std::cerr << "add " << aTableId << " " << aAS.full_name() << std::endl;
+                // std::cerr << "add " << aTableId << " " << aData.full_name() << std::endl;
                 if (lineage() != aData.lineage())
                     std::cerr << "WARNING: conflicting lineage for " << full_name() << ": db:" << lineage() << " new:" << aData.lineage() << std::endl;
                 PerTable pt(aTableId, aData);
@@ -68,7 +68,7 @@ namespace hidb
                 }
                 else {
                       // std::cerr << "mTableIds " << mTableIds.size() << std::endl;
-                    throw std::runtime_error("AntigenSerumData::update: table_id already present for this antigen/serum: " + aTableId);
+                    throw std::runtime_error("AntigenSerumData::update: table_id " + aTableId + " already present for antigen/serum: " + aData.full_name() + " (duplicates in the table?)");
                 }
             }
 
