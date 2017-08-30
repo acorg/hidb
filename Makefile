@@ -62,11 +62,13 @@ include $(AD_SHARE)/Makefile.rtags
 # ----------------------------------------------------------------------
 
 $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_PY_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
-	$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+	@echo "SHARED     " $@ # '<--' $^
+	@$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 	@#strip $@
 
 $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
-	$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+	@echo "SHARED     " $@ # '<--' $^
+	@$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 
 # $(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
 #	$(CXX) $(LDFLAGS) -o $@ $^ $(shell pkg-config --libs liblzma)
@@ -74,7 +76,7 @@ $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_
 # ----------------------------------------------------------------------
 
 $(BUILD)/%.o: cc/%.cc | $(BUILD) install-headers
-	@echo $<
+	@echo $(CXX_NAME) $<
 	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # ----------------------------------------------------------------------
