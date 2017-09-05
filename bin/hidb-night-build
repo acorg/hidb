@@ -35,7 +35,7 @@ echo Updating ACMACSD packages
 /usr/bin/time update-all
 
 echo "=================================================================="
-hidb-update-hidb "$LOG"
+hidb-update-hidb
 
 echo "----------------------------------------------------------------------"
 
