@@ -51,12 +51,12 @@ def main(args):
                     if args.sort_by_most_recent:
                         r = sorted(r, key=lambda e: (e.most_recent_table() or NoMostRecentTable()).table_id(), reverse=True)
                 else:
-                    for fn in ["find_antigens", "find_antigens_fuzzy", "find_antigens_extra_fuzzy"]:
+                    for fn, fuzziness in [["find_antigens", ""], ["find_antigens_fuzzy", "*"], ["find_antigens_extra_fuzzy", "**"]]:
                         with timeit(fn):
                             r = getattr(hidb, fn)(args.name.upper())
                         if r:
                             break;
-                report(hidb, r, find_antigens=True, report_tables=args.report_tables, report_oldest_table=args.oldest_table, report_homologous=args.report_homologous, output_json=args.output_json)
+                report(hidb, r, fuzziness=fuzziness, find_antigens=True, report_tables=args.report_tables, report_oldest_table=args.oldest_table, report_homologous=args.report_homologous, output_json=args.output_json)
             else:
                 if args.all:
                     r = hidb.list_sera(lab=args.lab, lineage=args.lineage.upper())
@@ -87,39 +87,39 @@ def main(args):
 
 # ----------------------------------------------------------------------
 
-def report(hidb, data, find_antigens, report_tables, report_oldest_table, report_homologous, output_json):
+def report(hidb, data, find_antigens, report_tables, report_oldest_table, report_homologous, output_json, fuzziness=""):
     if find_antigens:
         if report_tables:
             if report_homologous:
-                fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
+                fmt = "{fuzziness}{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
             else:
-                fmt = "{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+                fmt = "{fuzziness}{full_name} [{date}] tables:{tables} most-recent:{recent} all-tables:{all_tables}"
         elif report_oldest_table:
             if report_homologous:
-                fmt = "{full_name} [{date}] oldest:{oldest} {homologous}"
+                fmt = "{fuzziness}{full_name} [{date}] oldest:{oldest} {homologous}"
             else:
-                fmt = "{full_name} [{date}] oldest:{oldest}"
+                fmt = "{fuzziness}{full_name} [{date}] oldest:{oldest}"
         else:
             if report_homologous:
-                fmt = "{full_name} [{date}]{homologous}"
+                fmt = "{fuzziness}{full_name} [{date}]{homologous}"
             else:
-                fmt = "{full_name} [{date}]"
+                fmt = "{fuzziness}{full_name} [{date}]"
     else:
         if report_tables:
             if report_homologous:
-                fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
+                fmt = "{fuzziness}{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}{homologous}"
             else:
-                fmt = "{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
+                fmt = "{fuzziness}{full_name} tables:{tables} most-recent:{recent} all-tables:{all_tables}"
         elif report_oldest_table:
             if report_homologous:
-                fmt = "{full_name} oldest:{oldest}{homologous}"
+                fmt = "{fuzziness}{full_name} oldest:{oldest}{homologous}"
             else:
                 fmt = "oldest:{oldest:40s} {lineage} {full_name}"
         else:
             if report_homologous:
-                fmt = "{full_name}{homologous}"
+                fmt = "{fuzziness}{full_name}{homologous}"
             else:
-                fmt = "{full_name}"
+                fmt = "{fuzziness}{full_name}"
     print(len(data))
     if output_json:
         print("\n".join(hidb_m.json(e) for e in data))
@@ -142,14 +142,15 @@ def report(hidb, data, find_antigens, report_tables, report_oldest_table, report
                     return ""
             def date(e):
                 return ""
-        print("\n".join(fmt.format(full_name=e.data().full_name(),
-                                       lineage=e.data().lineage(),
-                                       tables=e.number_of_tables(),
-                                       recent=(e.most_recent_table() or NoMostRecentTable()).table_id(),
-                                       date=date(e),
-                                       oldest=(e.oldest_table() or NoOldestTable()).table_id(),
-                                       all_tables=[t.table_id() for t in e.tables()],
-                                       homologous=homologous(e)) for e in data))
+        print("\n".join(fmt.format(fuzziness=fuzziness,
+                                   full_name=e.data().full_name(),
+                                   lineage=e.data().lineage(),
+                                   tables=e.number_of_tables(),
+                                   recent=(e.most_recent_table() or NoMostRecentTable()).table_id(),
+                                   date=date(e),
+                                   oldest=(e.oldest_table() or NoOldestTable()).table_id(),
+                                   all_tables=[t.table_id() for t in e.tables()],
+                                   homologous=homologous(e)) for e in data))
 
 # ----------------------------------------------------------------------
 
