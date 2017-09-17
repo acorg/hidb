@@ -35,16 +35,14 @@ PKG_INCLUDES = $(shell pkg-config --cflags liblzma) $(shell $(PYTHON_CONFIG) --i
 all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
 
 install: check-acmacsd-root install-headers $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
-	ln -sf $(HIDB_LIB) $(AD_LIB)
-	if [ $$(uname) = "Darwin" ]; then /usr/bin/install_name_tool -id $(AD_LIB)/$(notdir $(HIDB_LIB)) $(AD_LIB)/$(notdir $(HIDB_LIB)); fi
+	$(call install_lib,$(HIDB_LIB))
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(AD_PY)
 	ln -sf $(abspath py)/* $(AD_PY)
 	ln -sf $(abspath bin)/hidb-* $(AD_BIN)
 	-$(abspath bin)/hidb-get-from-albertine
 
 install-headers:
-	if [ ! -d $(AD_INCLUDE)/hidb ]; then mkdir $(AD_INCLUDE)/hidb; fi
-	ln -sf $(abspath cc)/*.hh $(AD_INCLUDE)/hidb
+	$(call install_headers,hidb)
 
 test: install
 	test/test
