@@ -398,19 +398,19 @@ template <typename AntigenT, typename Data> inline static void find_scores(std::
 
 // ----------------------------------------------------------------------
 
-template <typename AntigenT> inline static AntigenSerumMatchScore<AntigenT> find_best_score(std::string name, const std::vector<AntigenT*>& antigens)
-{
-    string_match::score_t score_threshold = 0;
-    AntigenSerumMatchScore<AntigenT> result{name, antigens.front(), score_threshold};
-    for (const AntigenT* antigen: antigens) {
-        const AntigenSerumMatchScore<AntigenT> score{name, *antigen, score_threshold};
-        if (score < result)
-            result = score;
-        score_threshold = std::max(score.name_score(), score_threshold);
-    }
-    return result;
+// template <typename AntigenT> inline static AntigenSerumMatchScore<AntigenT> find_best_score(std::string name, const std::vector<AntigenT*>& antigens)
+// {
+//     string_match::score_t score_threshold = 0;
+//     AntigenSerumMatchScore<AntigenT> result{name, antigens.front(), score_threshold};
+//     for (const AntigenT* antigen: antigens) {
+//         const AntigenSerumMatchScore<AntigenT> score{name, *antigen, score_threshold};
+//         if (score < result)
+//             result = score;
+//         score_threshold = std::max(score.name_score(), score_threshold);
+//     }
+//     return result;
 
-} // HiDb::find_scores
+// } // HiDb::find_scores
 
 // ----------------------------------------------------------------------
 

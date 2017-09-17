@@ -1,8 +1,5 @@
 # -*- Makefile -*-
-# Eugene Skepner 2016
-
-# submodules and git: https://git-scm.com/book/en/v2/Git-Tools-Submodules
-
+# Eugene Skepner 2017
 # ----------------------------------------------------------------------
 
 MAKEFLAGS = -w
@@ -14,9 +11,8 @@ HIDB_PY_SOURCES = py.cc $(HIDB_SOURCES)
 
 # ----------------------------------------------------------------------
 
-TARGET_ROOT=$(shell if [ -f /Volumes/rdisk/ramdisk-id ]; then echo /Volumes/rdisk/AD; else echo $(ACMACSD_ROOT); fi)
-include $(TARGET_ROOT)/share/Makefile.g++
-include $(TARGET_ROOT)/share/Makefile.dist-build.vars
+include $(ACMACSD_ROOT)/share/makefiles/Makefile.g++
+include $(ACMACSD_ROOT)/share/makefiles/Makefile.dist-build.vars
 
 PYTHON_VERSION = $(shell python3 -c 'import sys; print("{0.major}.{0.minor}".format(sys.version_info))')
 PYTHON_CONFIG = python$(PYTHON_VERSION)-config
@@ -53,11 +49,11 @@ install-headers:
 test: install
 	test/test
 
-include $(AD_SHARE)/Makefile.rtags
-
 # ----------------------------------------------------------------------
 
 -include $(BUILD)/*.d
+include $(ACMACSD_ROOT)/share/makefiles/Makefile.dist-build.rules
+include $(ACMACSD_ROOT)/share/makefiles/Makefile.rtags
 
 # ----------------------------------------------------------------------
 
@@ -72,24 +68,6 @@ $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_
 
 # $(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
 #	$(CXX) $(LDFLAGS) -o $@ $^ $(shell pkg-config --libs liblzma)
-
-# ----------------------------------------------------------------------
-
-$(BUILD)/%.o: cc/%.cc | $(BUILD) install-headers
-	@echo $(CXX_NAME) $<
-	@$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-# ----------------------------------------------------------------------
-
-# $(BUILD)/submodules:
-#	git submodule init
-#	git submodule update
-#	git submodule update --remote
-#	touch $@
-
-# ----------------------------------------------------------------------
-
-include $(AD_SHARE)/Makefile.dist-build.rules
 
 # ======================================================================
 ### Local Variables:
