@@ -32,7 +32,7 @@ c2 make -j11 acmacs
 echo "=================================================================="
 date
 echo Updating ACMACSD packages
-/usr/bin/time update-all
+${ACMACSD_ROOT}/sources/acmacs-build/bin/install-acmacs-d --source ${ACMACSD_ROOT} --target ${ACMACSD_ROOT} --dev
 
 echo "=================================================================="
 hidb-update-hidb
