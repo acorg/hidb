@@ -152,7 +152,7 @@ std::string hidb::Vaccines::report(PassageType aPassageType, size_t aIndent, siz
     std::ostringstream out;
     const std::string indent(aIndent, ' ');
     auto entry_report = [&](size_t aNo, const auto& entry, bool aMarkIt) {
-        out << indent << (aMarkIt ? ">>" : "  ") << std::setw(2) << aNo << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
+        out << indent << (aMarkIt ? ">>" : "  ") << std::setw(2) << aNo << ' ' << entry.antigen_index << ' ' << entry.antigen->full_name() << " tables:" << entry.antigen_data->number_of_tables() << " recent:" << entry.antigen_data->most_recent_table().table_id() << std::endl;
         for (const auto& hs: entry.homologous_sera)
             out << indent << "      " << hs.serum->serum_id() << ' ' << hs.serum->annotations().join() << " tables:" << hs.serum_data->number_of_tables() << " recent:" << hs.serum_data->most_recent_table().table_id() << std::endl;
     };
