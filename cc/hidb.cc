@@ -3,6 +3,7 @@
 #include <cctype>
 #include <typeinfo>
 
+#include "acmacs-base/timeit.hh"
 #include "acmacs-base/stream.hh"
 #include "acmacs-chart/antigen-serum-match.hh"
 #include "variant-id.hh"
@@ -263,17 +264,20 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
 
 // ----------------------------------------------------------------------
 
-void HiDb::exportTo(std::string aFilename, bool aPretty) const
+void HiDb::exportTo(std::string aFilename, bool aPretty, bool timer) const
 {
+    Timeit timeit("hidb exporting: ", std::cerr, timer);
     hidb_export(aFilename, *this, aPretty ? 1 : 0);
 
 } // HiDb::exportTo
 
 // ----------------------------------------------------------------------
 
-void HiDb::importFrom(std::string aFilename)
+void HiDb::importFrom(std::string aFilename, bool timer)
 {
+    Timeit timeit("hidb loading: ", std::cerr, timer);
     hidb_import(aFilename, *this);
+    Timeit timeit2("hidb indexing: ", std::cerr, timer);
     mAntigens.make_index(*this);
 
 } // HiDb::importFrom
@@ -416,6 +420,7 @@ template <typename AntigenT, typename Data> inline static void find_scores(std::
 
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant_annotations_passage) const
 {
+      // std::cerr << "find_antigens " << name_reassortant_annotations_passage << '\n';
     AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;

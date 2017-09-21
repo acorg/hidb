@@ -8,6 +8,7 @@ MAKEFLAGS = -w
 
 HIDB_SOURCES = hidb.cc hidb-export.cc hidb-import.cc variant-id.cc vaccines.cc
 HIDB_PY_SOURCES = py.cc $(HIDB_SOURCES)
+HIDB_FIND_NAME_SOURCES = hidb-find-name.cc
 
 # ----------------------------------------------------------------------
 
@@ -29,13 +30,18 @@ PKG_INCLUDES = $(shell pkg-config --cflags liblzma) $(shell $(PYTHON_CONFIG) --i
 
 # ----------------------------------------------------------------------
 
-all: check-acmacsd-root $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
+BINS_TO_MAKE = $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) \
+	       $(HIDB_LIB) \
+	       $(DIST)/hidb-find-name
 
-install: check-acmacsd-root install-headers $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(HIDB_LIB)
+all: check-acmacsd-root $(BINS_TO_MAKE)
+
+install: check-acmacsd-root install-headers $(BINS_TO_MAKE)
 	$(call install_lib,$(HIDB_LIB))
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(AD_PY)
 	ln -sf $(abspath py)/* $(AD_PY)
 	ln -sf $(abspath bin)/hidb-* $(AD_BIN)
+	ln -sf $(abspath dist)/hidb-* $(AD_BIN)
 	-$(abspath bin)/hidb-get-from-albertine
 
 test: install
@@ -57,6 +63,10 @@ $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB
 $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_DB_LIB)
 	@echo "SHARED     " $@ # '<--' $^
 	@$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
+
+$(DIST)/hidb-find-name: $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_FIND_NAME_SOURCES)) | $(DIST) $(HIDB_LIB)
+	@echo "LINK       " $@
+	@$(CXX) $(LDFLAGS) -o $@ $^ -lhidb $(HIDB_LDLIBS)
 
 # $(DIST)/test-rapidjson: $(BUILD)/test-rapidjson.o $(BUILD)/chart.o $(BUILD)/chart-rj.o $(BUILD)/ace.o $(BUILD)/read-file.o $(BUILD)/xz.o | $(DIST)
 #	$(CXX) $(LDFLAGS) -o $@ $^ $(shell pkg-config --libs liblzma)

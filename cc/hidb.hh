@@ -328,9 +328,9 @@ namespace hidb
         inline HiDb() {}
 
         void add(const Chart& aChart);
-        void importFrom(std::string aFilename);
-        void exportTo(std::string aFilename, bool aPretty) const;
-        inline void importLocDb(std::string aFilename) { mLocDb.importFrom(aFilename); }
+        void importFrom(std::string aFilename, bool timer = false);
+        void exportTo(std::string aFilename, bool aPretty, bool timer = false) const;
+        inline void importLocDb(std::string aFilename, bool timer = false) { mLocDb.importFrom(aFilename, timer); }
 
         inline const Antigens& antigens() const { return mAntigens; }
         inline Antigens& antigens() { return mAntigens; }
