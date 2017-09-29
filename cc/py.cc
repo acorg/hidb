@@ -248,7 +248,7 @@ PYBIND11_MODULE(hidb_backend, m)
 
     py::class_<hidb::HiDbSet>(m, "HiDbSet")
             .def(py::init<std::string>(), py::arg("hidb_dir"))
-            .def("get", &hidb::HiDbSet::get, py::arg("virus_type"), py::return_value_policy::reference)
+            .def("get", [](hidb::HiDbSet& hidb_set, std::string virus_type, bool timer) { return hidb_set.get(virus_type, timer ? report_time::Yes : report_time::No); }, py::arg("virus_type"), py::arg("timer") = false, py::return_value_policy::reference)
             ;
 }
 

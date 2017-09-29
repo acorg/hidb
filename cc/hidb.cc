@@ -3,6 +3,7 @@
 #include <cctype>
 #include <typeinfo>
 
+#include "acmacs-base/timeit.hh"
 #include "acmacs-base/stream.hh"
 #include "acmacs-chart/antigen-serum-match.hh"
 #include "variant-id.hh"
@@ -951,7 +952,7 @@ void HiDbStat::compute_totals()
 
 // ----------------------------------------------------------------------
 
-const hidb::HiDb& HiDbSet::get(std::string aVirusType) const
+const hidb::HiDb& HiDbSet::get(std::string aVirusType, report_time timer) const
 {
     auto h = mPtrs.find(aVirusType);
     if (h == mPtrs.end()) {
@@ -966,6 +967,7 @@ const hidb::HiDb& HiDbSet::get(std::string aVirusType) const
             throw NoHiDb{};
           //throw std::runtime_error("No HiDb for " + aVirusType);
 
+        Timeit ti("loading hidb from " + filename + ": ", std::cerr, timer);
         std::unique_ptr<HiDb> hidb{new HiDb{}};
           // std::cout << "opening " << filename << std::endl;
         hidb->importFrom(filename);
@@ -975,6 +977,23 @@ const hidb::HiDb& HiDbSet::get(std::string aVirusType) const
     return *h->second;
 
 } // HiDbSet::get
+
+// ----------------------------------------------------------------------
+
+const hidb::HiDb& hidb::get(std::string aHiDbDir, std::string aVirusType, report_time timer)
+{
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#endif
+    static std::unique_ptr<HiDbSet> hidb_set;
+#pragma GCC diagnostic pop
+
+    if (!hidb_set)
+        hidb_set = std::make_unique<HiDbSet>(aHiDbDir);
+    return hidb_set->get(aVirusType, timer);
+
+} // hidb::get
 
 // ----------------------------------------------------------------------
 /// Local Variables:

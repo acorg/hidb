@@ -427,7 +427,7 @@ namespace hidb
      public:
         inline HiDbSet(std::string aHiDbDir) : mHiDbDir(aHiDbDir) {}
 
-        const HiDb& get(std::string aVirusType) const;
+        const HiDb& get(std::string aVirusType, report_time timer = report_time::No) const;
 
      private:
         using Ptrs = std::map<std::string, std::unique_ptr<hidb::HiDb>>;
@@ -436,6 +436,8 @@ namespace hidb
         mutable Ptrs mPtrs;
 
     }; // class HiDbSet
+
+    const HiDb& get(std::string aHiDbDir, std::string aVirusType, report_time timer = report_time::No);
 
 // ----------------------------------------------------------------------
 
