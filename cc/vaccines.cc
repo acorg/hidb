@@ -203,12 +203,13 @@ hidb::Vaccines* hidb::find_vaccines_in_chart(std::string aName, const Chart& aCh
 
 // ----------------------------------------------------------------------
 
-void hidb::vaccines(VaccinesOfChart& aVaccinesOfChart, const Chart& aChart, const hidb::HiDb& aHiDb)
+hidb::VaccinesOfChart hidb::vaccines(const Chart& aChart, const hidb::HiDb& aHiDb)
 {
+    VaccinesOfChart result;
     for (const auto& name_type: vaccines(aChart)) {
-        aVaccinesOfChart.emplace_back(name_type);
-        vaccines_for_name(aVaccinesOfChart.back(), name_type.name, aChart, aHiDb);
+        vaccines_for_name(result.emplace_back(name_type), name_type.name, aChart, aHiDb);
     }
+    return result;
 
 } // hidb::vaccines
 

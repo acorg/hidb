@@ -180,14 +180,7 @@ namespace hidb
     const std::vector<Vaccine>& vaccines(const Chart& aChart);
     Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
     void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
-    void vaccines(VaccinesOfChart& aVaccinesOfChart, const Chart& aChart, const hidb::HiDb& aHiDb);
-
-    inline VaccinesOfChart* vaccines(const Chart& aChart, const hidb::HiDb& aHiDb)
-    {
-        auto* result = new VaccinesOfChart{};
-        vaccines(*result, aChart, aHiDb);
-        return result;
-    }
+    VaccinesOfChart vaccines(const Chart& aChart, const hidb::HiDb& aHiDb);
 
 } // namespace hidb
 
