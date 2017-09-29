@@ -171,9 +171,7 @@ std::string hidb::Vaccines::report(PassageType aPassageType, size_t aIndent, siz
 
 void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
 {
-    std::vector<size_t> by_name;
-    aChart.antigens().find_by_name(aName, by_name);
-    for (size_t ag_no: by_name) {
+    for (size_t ag_no: aChart.antigens().find_by_name(aName)) {
         try {
             const auto& ag = static_cast<const Antigen&>(aChart.antigen(ag_no));
               // std::cerr << ag.full_name() << std::endl;
@@ -181,7 +179,7 @@ void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart
             std::vector<hidb::Vaccines::HomologousSerum> homologous_sera;
             for (const auto* sd: aHiDb.find_homologous_sera(data)) {
                 if (const auto sr_no = aChart.sera().find_by_full_name(hidb::name_for_exact_matching(sd->data())))
-                    homologous_sera.emplace_back(*sr_no, static_cast<const Serum*>(&aChart.serum(sr_no)), sd, aHiDb.charts()[sd->most_recent_table().table_id()].chart_info().date());
+                    homologous_sera.emplace_back(*sr_no, static_cast<const Serum*>(&aChart.serum(*sr_no)), sd, aHiDb.charts()[sd->most_recent_table().table_id()].chart_info().date());
             }
             aVaccines.add(ag_no, ag, &data, std::move(homologous_sera), aHiDb.charts()[data.most_recent_table().table_id()].chart_info().date());
         }

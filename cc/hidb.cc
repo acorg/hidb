@@ -721,9 +721,7 @@ void HiDb::find_homologous_antigens_for_sera_of_chart(Chart& aChart)
             const SerumData& serum_data = find_serum_of_chart(serum);
             const auto homologous = serum_data.homologous_variant_ids();
             if (!homologous.empty()) {
-                std::vector<size_t> antigen_indices;
-                aChart.antigens().find_by_name(serum.name(), antigen_indices);
-                for (size_t antigen_index: antigen_indices) {
+                for (size_t antigen_index: aChart.antigens().find_by_name(serum.name())) {
                     const std::string v_id = variant_id(aChart.antigens()[antigen_index]);
                     if (std::find(homologous.begin(), homologous.end(), v_id) != homologous.end()) {
                         serum.add_homologous(antigen_index);
