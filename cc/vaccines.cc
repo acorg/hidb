@@ -25,7 +25,8 @@ static std::map<std::string, std::vector<hidb::Vaccine>> sVaccines = {
             {"VICTORIA/361/2011",        hidb::Vaccine::Previous},
             {"TEXAS/50/2012",            hidb::Vaccine::Previous},
             {"SWITZERLAND/9715293/2013", hidb::Vaccine::Previous},
-            {"HONG KONG/4801/2014",      hidb::Vaccine::Current},
+            {"HONG KONG/4801/2014",      hidb::Vaccine::Previous},
+            {"SINGAPORE/INFIMH-16-0019/2016", hidb::Vaccine::Current},
             {"SAITAMA/103/2014",         hidb::Vaccine::Surrogate},
             {"HONG KONG/7295/2014",      hidb::Vaccine::Surrogate},
         }},
@@ -34,7 +35,7 @@ static std::map<std::string, std::vector<hidb::Vaccine>> sVaccines = {
             {"BRISBANE/60/2008",         hidb::Vaccine::Current},
               // {"PARIS/1762/2009",          hidb::Vaccine::Current}, // not used by Crick anymore, B/Ireland/3154/2016 is used instead (2017-08-21)
             {"SOUTH AUSTRALIA/81/2012",  hidb::Vaccine::Surrogate},
-            {"IRELAND/3154/2016",  hidb::Vaccine::Surrogate},
+            {"IRELAND/3154/2016",        hidb::Vaccine::Surrogate},
         }},
     {"BYAMAGATA", {
             {"FLORIDA/4/2006",           hidb::Vaccine::Previous},
