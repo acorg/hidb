@@ -3,7 +3,6 @@
 #include <cctype>
 #include <typeinfo>
 
-#include "acmacs-base/timeit.hh"
 #include "acmacs-base/stream.hh"
 #include "acmacs-chart/antigen-serum-match.hh"
 #include "variant-id.hh"
@@ -264,7 +263,7 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
 
 // ----------------------------------------------------------------------
 
-void HiDb::exportTo(std::string aFilename, bool aPretty, bool timer) const
+void HiDb::exportTo(std::string aFilename, bool aPretty, report_time timer) const
 {
     Timeit timeit("hidb exporting: ", std::cerr, timer);
     hidb_export(aFilename, *this, aPretty ? 1 : 0);
@@ -273,7 +272,7 @@ void HiDb::exportTo(std::string aFilename, bool aPretty, bool timer) const
 
 // ----------------------------------------------------------------------
 
-void HiDb::importFrom(std::string aFilename, bool timer)
+void HiDb::importFrom(std::string aFilename, report_time timer)
 {
     Timeit timeit("hidb loading: ", std::cerr, timer);
     hidb_import(aFilename, *this);

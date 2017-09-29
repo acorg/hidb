@@ -15,8 +15,8 @@ int main(int argc, char* const argv[])
             throw std::runtime_error("Usage: "s + argv[0] + " <hidb.json.xz> <name> ...");
 
         HiDb hidb;
-        hidb.importFrom(argv[1], true);
-        hidb.importLocDb(std::getenv("HOME") + "/AD/data/locationdb.json.xz"s, true);
+        hidb.importFrom(argv[1], report_time::Yes);
+        hidb.importLocDb(std::getenv("HOME") + "/AD/data/locationdb.json.xz"s, report_time::Yes);
 
         for (auto arg = 2; arg < argc; ++arg) {
             Timeit timeit("looking: ");

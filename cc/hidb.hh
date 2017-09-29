@@ -7,6 +7,7 @@
 #include <map>
 #include <algorithm>
 
+#include "acmacs-base/timeit.hh"
 #include "acmacs-chart/chart.hh"
 #include "locationdb/locdb.hh"
 
@@ -328,9 +329,9 @@ namespace hidb
         inline HiDb() {}
 
         void add(const Chart& aChart);
-        void importFrom(std::string aFilename, bool timer = false);
-        void exportTo(std::string aFilename, bool aPretty, bool timer = false) const;
-        inline void importLocDb(std::string aFilename, bool timer = false) { mLocDb.importFrom(aFilename, timer); }
+        void importFrom(std::string aFilename, report_time timer = report_time::No);
+        void exportTo(std::string aFilename, bool aPretty, report_time timer = report_time::No) const;
+        inline void importLocDb(std::string aFilename, report_time timer = report_time::No) { mLocDb.importFrom(aFilename, timer); }
 
         inline const Antigens& antigens() const { return mAntigens; }
         inline Antigens& antigens() { return mAntigens; }
