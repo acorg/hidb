@@ -231,12 +231,7 @@ namespace hidb
     class Antigens : public std::vector<AntigenData>
     {
      public:
-        inline AntigenRefs all(const HiDb& aHiDb) const
-            {
-                AntigenRefs result(aHiDb);
-                std::transform(begin(), end(), std::back_inserter(result), [](const auto& ag) { return &ag; });
-                return result;
-            }
+        AntigenRefs all(const HiDb& aHiDb) const;
 
         void make_index(const HiDb& aHiDb);
           // if location is not found and aNotFoundLocation is not nullptr, location name is copied there and not reported to std::cerr

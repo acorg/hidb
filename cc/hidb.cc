@@ -107,7 +107,7 @@ void hidb::Antigens::make_index(const HiDb& aHiDb)
         catch (NotFound&) {
         }
     }
-      // std::cerr << size() << " antigens " << mIndex.size() << " index entries" << std::endl;
+    std::cerr << size() << " antigens " << mIndex.size() << " index entries" << std::endl;
 
 } // hidb::Antigens::make_index
 
@@ -200,6 +200,18 @@ AntigenRefs hidb::Antigens::find_by_cdcid(std::string cdcid) const
 
 // ----------------------------------------------------------------------
 
+AntigenRefs hidb::Antigens::all(const HiDb& aHiDb) const
+{
+    AntigenRefs result(aHiDb);
+    std::cerr << "hidb::Antigens::all0 " << size() << '\n';
+    std::transform(begin(), end(), std::back_inserter(result), [](const auto& ag) { return &ag; });
+    std::cerr << "hidb::Antigens::all1 " << result.size() << '\n';
+    return result;
+
+} // hidb::Antigens::all
+
+// ----------------------------------------------------------------------
+
 void HiDb::add(const Chart& aChart)
 {
     ChartData chart(aChart);
@@ -279,6 +291,7 @@ void HiDb::importFrom(std::string aFilename, report_time timer)
     hidb_import(aFilename, *this);
     Timeit timeit2("hidb indexing: ", std::cerr, timer);
     mAntigens.make_index(*this);
+      // std::cerr << "Antigens: " << mAntigens.size() << '\n';
 
 } // HiDb::importFrom
 
@@ -967,13 +980,14 @@ const hidb::HiDb& HiDbSet::get(std::string aVirusType, report_time timer) const
             throw NoHiDb{};
           //throw std::runtime_error("No HiDb for " + aVirusType);
 
-        Timeit ti("loading hidb from " + filename + ": ", std::cerr, timer);
+        // Timeit ti("loading hidb from " + filename + ": ", std::cerr, timer);
         std::unique_ptr<HiDb> hidb{new HiDb{}};
-          // std::cout << "opening " << filename << std::endl;
-        hidb->importFrom(filename);
-        hidb->importLocDb(mHiDbDir + "/locationdb.json.xz");
+          // std::cerr << "opening " << filename << std::endl;
+        hidb->importFrom(filename, timer);
+        hidb->importLocDb(mHiDbDir + "/locationdb.json.xz", timer);
         h = mPtrs.emplace(aVirusType, std::move(hidb)).first;
     }
+      // std::cerr << "Hidb " << h->second->antigens().size() << '\n';
     return *h->second;
 
 } // HiDbSet::get
