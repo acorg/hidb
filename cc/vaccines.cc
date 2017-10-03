@@ -79,7 +79,7 @@ hidb::Vaccine::Type hidb::Vaccine::type_from_string(std::string aType)
 
 // ----------------------------------------------------------------------
 
-const std::vector<hidb::Vaccine>& hidb::vaccines(std::string aSubtype, std::string aLineage)
+const std::vector<hidb::Vaccine>& hidb::vaccine_names(std::string aSubtype, std::string aLineage)
 {
     return sVaccines.at(aSubtype + aLineage);
 
@@ -87,9 +87,9 @@ const std::vector<hidb::Vaccine>& hidb::vaccines(std::string aSubtype, std::stri
 
 // ----------------------------------------------------------------------
 
-const std::vector<hidb::Vaccine>& hidb::vaccines(const Chart& aChart)
+const std::vector<hidb::Vaccine>& hidb::vaccine_names(const Chart& aChart)
 {
-    return vaccines(aChart.chart_info().virus_type(), aChart.lineage());
+    return vaccine_names(aChart.chart_info().virus_type(), aChart.lineage());
 
 } // hidb::vaccines
 
@@ -170,19 +170,20 @@ std::string hidb::Vaccines::report(PassageType aPassageType, size_t aIndent, siz
 
 // ----------------------------------------------------------------------
 
-void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
+void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart)
 {
+    const auto& hidb = hidb::get(aChart.chart_info().virus_type());
     for (size_t ag_no: aChart.antigens().find_by_name(aName)) {
         try {
             const auto& ag = static_cast<const Antigen&>(aChart.antigen(ag_no));
               // std::cerr << ag.full_name() << std::endl;
-            const auto& data = aHiDb.find_antigen_of_chart(ag);
+            const auto& data = hidb.find_antigen_of_chart(ag);
             std::vector<hidb::Vaccines::HomologousSerum> homologous_sera;
-            for (const auto* sd: aHiDb.find_homologous_sera(data)) {
+            for (const auto* sd: hidb.find_homologous_sera(data)) {
                 if (const auto sr_no = aChart.sera().find_by_full_name(hidb::name_for_exact_matching(sd->data())))
-                    homologous_sera.emplace_back(*sr_no, static_cast<const Serum*>(&aChart.serum(*sr_no)), sd, aHiDb.charts()[sd->most_recent_table().table_id()].chart_info().date());
+                    homologous_sera.emplace_back(*sr_no, static_cast<const Serum*>(&aChart.serum(*sr_no)), sd, hidb.charts()[sd->most_recent_table().table_id()].chart_info().date());
             }
-            aVaccines.add(ag_no, ag, &data, std::move(homologous_sera), aHiDb.charts()[data.most_recent_table().table_id()].chart_info().date());
+            aVaccines.add(ag_no, ag, &data, std::move(homologous_sera), hidb.charts()[data.most_recent_table().table_id()].chart_info().date());
         }
         catch (hidb::HiDb::NotFound&) {
         }
@@ -193,21 +194,21 @@ void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart
 
 // ----------------------------------------------------------------------
 
-hidb::Vaccines* hidb::find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb)
+hidb::Vaccines* hidb::find_vaccines_in_chart(std::string aName, const Chart& aChart)
 {
     Vaccines* result = new Vaccines(Vaccine(aName, hidb::Vaccine::Previous));
-    vaccines_for_name(*result, aName, aChart, aHiDb);
+    vaccines_for_name(*result, aName, aChart);
     return result;
 
 } // find_vaccines_in_chart
 
 // ----------------------------------------------------------------------
 
-hidb::VaccinesOfChart hidb::vaccines(const Chart& aChart, const hidb::HiDb& aHiDb)
+hidb::VaccinesOfChart hidb::vaccines(const Chart& aChart)
 {
     VaccinesOfChart result;
-    for (const auto& name_type: vaccines(aChart)) {
-        vaccines_for_name(result.emplace_back(name_type), name_type.name, aChart, aHiDb);
+    for (const auto& name_type: vaccine_names(aChart)) {
+        vaccines_for_name(result.emplace_back(name_type), name_type.name, aChart);
     }
     return result;
 

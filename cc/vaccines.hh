@@ -127,7 +127,7 @@ namespace hidb
         Vaccine mNameType;
         std::vector<Entry> mEntries[PassageTypeSize];
 
-        friend void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
+        friend void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart);
 
         static inline PassageType passage_type(const Antigen& aAntigen)
             {
@@ -176,11 +176,11 @@ namespace hidb
 
 // ----------------------------------------------------------------------
 
-    const std::vector<Vaccine>& vaccines(std::string aSubtype, std::string aLineage);
-    const std::vector<Vaccine>& vaccines(const Chart& aChart);
-    Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
-    void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, const hidb::HiDb& aHiDb);
-    VaccinesOfChart vaccines(const Chart& aChart, const hidb::HiDb& aHiDb);
+    const std::vector<Vaccine>& vaccine_names(std::string aSubtype, std::string aLineage);
+    const std::vector<Vaccine>& vaccine_names(const Chart& aChart);
+    Vaccines* find_vaccines_in_chart(std::string aName, const Chart& aChart);
+    void vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart);
+    VaccinesOfChart vaccines(const Chart& aChart);
 
 } // namespace hidb
 

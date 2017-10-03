@@ -62,7 +62,7 @@ PYBIND11_MODULE(hidb_backend, m)
             // .def("remove", &Vaccines::remove, py::arg("passage_type") = "")
             ;
 
-    m.def("find_vaccines_in_chart", &find_vaccines_in_chart, py::arg("name"), py::arg("chart"), py::arg("hidb"));
+    m.def("find_vaccines_in_chart", &find_vaccines_in_chart, py::arg("name"), py::arg("chart"));
 
     py::class_<VaccinesOfChart>(m, "hidb_VaccinesOfChart")
             .def("report", &VaccinesOfChart::report, py::arg("indent") = 0)
@@ -76,9 +76,9 @@ PYBIND11_MODULE(hidb_backend, m)
             .def_property_readonly("type", [](const Vaccine& aVaccine) { return aVaccine.type_as_string(); })
             ;
 
-    m.def("vaccines", py::overload_cast<std::string, std::string>(&vaccines), py::arg("subtype"), py::arg("lineage") = "", py::return_value_policy::reference);
-    m.def("vaccines", py::overload_cast<const Chart&>(&vaccines), py::arg("chart"), py::return_value_policy::reference);
-    m.def("vaccines", py::overload_cast<const Chart&, const hidb::HiDb&>(&vaccines), py::arg("chart"), py::arg("hidb")); // -> VaccinesOfChart*
+    m.def("vaccine_names", py::overload_cast<std::string, std::string>(&vaccine_names), py::arg("subtype"), py::arg("lineage") = "", py::return_value_policy::reference);
+    m.def("vaccine_names", py::overload_cast<const Chart&>(&vaccine_names), py::arg("chart"), py::return_value_policy::reference);
+    m.def("vaccines", py::overload_cast<const Chart&>(&vaccines), py::arg("chart")); // -> VaccinesOfChart*
 
       // ----------------------------------------------------------------------
       // HiDb
