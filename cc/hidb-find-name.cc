@@ -1,22 +1,33 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "acmacs-base/timeit.hh"
+#include "acmacs-base/argc-argv.hh"
+#include "acmacs-base/string.hh"
 #include "hidb.hh"
-using namespace hidb;
+
 using namespace std::string_literals;
 
 // ----------------------------------------------------------------------
 
+constexpr const char* sUsage = " [options] <virus-type: B, H1, H3> <name> ...\n";
+
 int main(int argc, char* const argv[])
 {
     try {
-        if (argc < 3)
-            throw std::runtime_error("Usage: "s + argv[0] + " <hidb.json.xz> <name> ...");
+        argc_argv args(argc, argv, {
+                {"--db-dir", ""},
+                {"-v", false},
+                {"--verbose", false},
+                {"-h", false},
+                {"--help", false},
+            });
+        if (args["-h"] || args["--help"] || args.number_of_arguments() < 2) {
+            throw std::runtime_error("Usage: "s + args.program() + sUsage + args.usage_options());
+        }
+          //const bool verbose = args["-v"] || args["--verbose"];
+        hidb::setup(args["--db-dir"]);
 
-        HiDb hidb;
-        hidb.importFrom(argv[1], report_time::Yes);
-        hidb.importLocDb(std::getenv("HOME") + "/AD/data/locationdb.json.xz"s, report_time::Yes);
+        const auto& hidb = hidb::get(string::upper(args[0]), report_time::Yes);
 
         for (auto arg = 2; arg < argc; ++arg) {
             Timeit timeit("looking: ");

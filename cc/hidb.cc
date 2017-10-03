@@ -6,12 +6,15 @@
 #include "acmacs-base/timeit.hh"
 #include "acmacs-base/stream.hh"
 #include "acmacs-chart/antigen-serum-match.hh"
+#include "locationdb/locdb.hh"
+
 #include "variant-id.hh"
 #include "hidb.hh"
 #include "hidb-export.hh"
 #include "hidb-import.hh"
 
 using namespace hidb;
+using namespace std::string_literals;
 
 // ----------------------------------------------------------------------
 
@@ -46,9 +49,9 @@ size_t ChartData::antigen_index_by_full_name(std::string full_name) const
 
 AntigenRefs& AntigenRefs::country(std::string aCountry)
 {
-    auto not_in_country = [this,&aCountry](const auto& e) -> bool {
+    auto not_in_country = [&aCountry](const auto& e) -> bool {
         try {
-            return mHiDb->locdb().country(virus_name::location(e->data().name())) != aCountry;
+            return get_locdb().country(virus_name::location(e->data().name())) != aCountry;
         }
         catch (LocationNotFound&) {
             return true;
@@ -113,14 +116,14 @@ void hidb::Antigens::make_index(const HiDb& aHiDb)
 
 // ----------------------------------------------------------------------
 
-AntigenRefs hidb::Antigens::find_by_index(std::string name, const HiDb& aHiDb, std::string* aNotFoundLocation) const
+AntigenRefs hidb::Antigens::find_by_index(std::string name, std::string* aNotFoundLocation) const
 {
     AntigenRefs result;
     try {
         std::string n_virus_type, n_host, n_location, n_isolation, n_year, n_passage, n_key;
         split(name, n_virus_type, n_host, n_location, n_isolation, n_year, n_passage, n_key);
         try {
-            const auto location = aHiDb.locdb().find(n_location);
+            const auto location = get_locdb().find(n_location);
             n_key = location.name.substr(0, IndexKeySize);
             const AntigenRefs* fk = for_key(n_key);
             if (fk) {
@@ -434,7 +437,7 @@ template <typename AntigenT, typename Data> inline static void find_scores(std::
 std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant_annotations_passage) const
 {
       // std::cerr << "find_antigens " << name_reassortant_annotations_passage << '\n';
-    AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
+    AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage);
     std::vector<FindAntigenScore> scores;
     std::vector<FindAntigenScore>::iterator scores_end;
     find_scores(name_reassortant_annotations_passage, by_name, scores, scores_end);
@@ -446,7 +449,7 @@ std::vector<const AntigenData*> HiDb::find_antigens(std::string name_reassortant
 
 const AntigenData& HiDb::find_antigen_exactly(std::string name_reassortant_annotations_passage) const
 {
-    AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage, *this);
+    AntigenRefs by_name = mAntigens.find_by_index(name_reassortant_annotations_passage);
     auto found = std::find_if(by_name.begin(), by_name.end(), [&](const auto* a) -> bool { return name_reassortant_annotations_passage == name_for_exact_matching(a->data()); });
     if (found == by_name.end())
         throw NotFound(name_reassortant_annotations_passage, by_name);
@@ -759,7 +762,7 @@ std::vector<std::string> HiDb::all_countries() const
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
     last = std::remove(result.begin(), last, std::string()); // remove empty name meaning no location in the name detected, i.e. unrecognized name
-    std::transform(result.begin(), last, result.begin(), [this](const auto& name) -> std::string { try { return mLocDb.country(name); } catch (LocationNotFound&) { return "**UNKNOWN"; } });
+    std::transform(result.begin(), last, result.begin(), [](const auto& name) -> std::string { try { return get_locdb().country(name); } catch (LocationNotFound&) { return "**UNKNOWN"; } });
     std::sort(result.begin(), last);
     last = std::unique(result.begin(), last);
     result.erase(last, result.end());
@@ -777,7 +780,7 @@ std::vector<std::string> HiDb::unrecognized_locations() const
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
     last = std::remove(result.begin(), last, std::string()); // remove empty name meaning no location in the name detected, i.e. unrecognized name
-    std::transform(result.begin(), last, result.begin(), [this](const auto& name) -> std::string { try { mLocDb.find(name); return std::string(); } catch (LocationNotFound&) { return name; } });
+    std::transform(result.begin(), last, result.begin(), [](const auto& name) -> std::string { try { get_locdb().find(name); return std::string(); } catch (LocationNotFound&) { return name; } });
     std::sort(result.begin(), last);
     last = std::unique(result.begin(), last);
     last = std::remove(result.begin(), last, std::string()); // remove empty which mean recognized locations
@@ -819,11 +822,11 @@ struct AntigenSerumInfo
 
 }; // struct AntigenSerumInfo
 
-template <typename AS> static void _stat_antigen_serum(AntigenSerumInfo& aInfo, const LocDb& aLocDb, const Tables& aCharts, const AS& aAntigenSerum, std::string aStart, std::string aEnd, std::function<std::string (const AS&)> aYearMonth)
+template <typename AS> static void _stat_antigen_serum(AntigenSerumInfo& aInfo, const Tables& aCharts, const AS& aAntigenSerum, std::string aStart, std::string aEnd, std::function<std::string (const AS&)> aYearMonth)
 {
     const std::string name = aAntigenSerum.data().name();
     try {
-        aInfo.continent = aLocDb.continent(virus_name::location(name));
+        aInfo.continent = get_locdb().continent(virus_name::location(name));
     }
     catch (LocationNotFound&) {
     }
@@ -897,7 +900,7 @@ void HiDb::stat_antigens(HiDbStat& aStat, std::string aStart, std::string aEnd) 
         const std::string name = antigen.data().name();
         if (name != previous_name) {
             AntigenSerumInfo info;
-            _stat_antigen_serum<AntigenData>(info, locdb(), mCharts, antigen, aStart, aEnd, [&name](const AntigenData& ag) -> std::string { return _year_month(ag.date(), name); });
+            _stat_antigen_serum<AntigenData>(info, mCharts, antigen, aStart, aEnd, [&name](const AntigenData& ag) -> std::string { return _year_month(ag.date(), name); });
             _update_stat(info, aStat);
             previous_name = name;
         }
@@ -918,7 +921,7 @@ void HiDb::stat_sera(HiDbStat& aStat, HiDbStat* aStatUnique, std::string aStart,
         const std::string name = serum.data().name();
         if (name != previous_name) {
             info.reset();
-            _stat_antigen_serum<SerumData>(info, locdb(), mCharts, serum, aStart, aEnd, [&name,this](const auto& sr) -> std::string { return _year_month(this->serum_date(sr), name); });
+            _stat_antigen_serum<SerumData>(info, mCharts, serum, aStart, aEnd, [&name,this](const auto& sr) -> std::string { return _year_month(this->serum_date(sr), name); });
             _update_stat(info, aStat);
             previous_name = name;
         }
@@ -965,47 +968,75 @@ void HiDbStat::compute_totals()
 
 // ----------------------------------------------------------------------
 
-const hidb::HiDb& HiDbSet::get(std::string aVirusType, report_time timer) const
+namespace hidb
 {
-    auto h = mPtrs.find(aVirusType);
-    if (h == mPtrs.end()) {
-        std::string filename;
-        if (aVirusType == "A(H1N1)")
-            filename = mHiDbDir + "/hidb4.h1.json.xz";
-        else if (aVirusType == "A(H3N2)")
-            filename = mHiDbDir + "/hidb4.h3.json.xz";
-        else if (aVirusType == "B")
-            filename = mHiDbDir + "/hidb4.b.json.xz";
-        else
-            throw NoHiDb{};
-          //throw std::runtime_error("No HiDb for " + aVirusType);
 
-        // Timeit ti("loading hidb from " + filename + ": ", std::cerr, timer);
-        std::unique_ptr<HiDb> hidb{new HiDb{}};
-          // std::cerr << "opening " << filename << std::endl;
-        hidb->importFrom(filename, timer);
-        hidb->importLocDb(mHiDbDir + "/locationdb.json.xz", timer);
-        h = mPtrs.emplace(aVirusType, std::move(hidb)).first;
+#pragma GCC diagnostic push
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wglobal-constructors"
+#pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#endif
+
+    class HiDbSet;
+
+    static std::unique_ptr<HiDbSet> sHiDbSet;
+    static std::string sHiDbDir = std::getenv("HOME") + "/AD/data"s;
+
+#pragma GCC diagnostic pop
+
+    void setup(std::string aHiDbDir, std::optional<std::string> aLocDbFilename)
+    {
+        if (!aHiDbDir.empty())
+            sHiDbDir = aHiDbDir;
+        if (aLocDbFilename && !aLocDbFilename->empty())
+            locdb_setup(*aLocDbFilename);
+        else if (!aHiDbDir.empty())
+            locdb_setup(aHiDbDir + "/locationdb.json.xz");
     }
-      // std::cerr << "Hidb " << h->second->antigens().size() << '\n';
-    return *h->second;
 
-} // HiDbSet::get
+    class HiDbSet
+    {
+     public:
+        const HiDb& get(std::string aVirusType, report_time timer = report_time::No) const
+            {
+                auto h = mPtrs.find(aVirusType);
+                if (h == mPtrs.end()) {
+                    std::string filename;
+                    if (aVirusType == "A(H1N1)" || aVirusType == "H1")
+                        filename = sHiDbDir + "/hidb4.h1.json.xz";
+                    else if (aVirusType == "A(H3N2)" || aVirusType == "H3")
+                        filename = sHiDbDir + "/hidb4.h3.json.xz";
+                    else if (aVirusType == "B")
+                        filename = sHiDbDir + "/hidb4.b.json.xz";
+                    else
+                        throw NoHiDb{};
+                      //throw std::runtime_error("No HiDb for " + aVirusType);
+
+                      // Timeit ti("loading hidb from " + filename + ": ", std::cerr, timer);
+                    std::unique_ptr<HiDb> hidb{new HiDb{}};
+                      // std::cerr << "opening " << filename << std::endl;
+                    hidb->importFrom(filename, timer);
+                    h = mPtrs.emplace(aVirusType, std::move(hidb)).first;
+                }
+                  // std::cerr << "Hidb " << h->second->antigens().size() << '\n';
+                return *h->second;
+            }
+
+     private:
+        using Ptrs = std::map<std::string, std::unique_ptr<hidb::HiDb>>;
+
+        mutable Ptrs mPtrs;
+
+    }; // class HiDbSet
+}
 
 // ----------------------------------------------------------------------
 
-const hidb::HiDb& hidb::get(std::string aHiDbDir, std::string aVirusType, report_time timer)
+const hidb::HiDb& hidb::get(std::string aVirusType, report_time timer)
 {
-#pragma GCC diagnostic push
-#ifdef __clang__
-#pragma GCC diagnostic ignored "-Wexit-time-destructors"
-#endif
-    static std::unique_ptr<HiDbSet> hidb_set;
-#pragma GCC diagnostic pop
-
-    if (!hidb_set)
-        hidb_set = std::make_unique<HiDbSet>(aHiDbDir);
-    return hidb_set->get(aVirusType, timer);
+    if (!sHiDbSet)
+        sHiDbSet = std::make_unique<HiDbSet>();
+    return sHiDbSet->get(aVirusType, timer);
 
 } // hidb::get
 

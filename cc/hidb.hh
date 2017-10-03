@@ -6,10 +6,10 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <optional>
 
 #include "acmacs-base/timeit.hh"
 #include "acmacs-chart/chart.hh"
-#include "locationdb/locdb.hh"
 
 // ----------------------------------------------------------------------
 
@@ -235,7 +235,7 @@ namespace hidb
 
         void make_index(const HiDb& aHiDb);
           // if location is not found and aNotFoundLocation is not nullptr, location name is copied there and not reported to std::cerr
-        AntigenRefs find_by_index(std::string name, const HiDb& aHiDb, std::string* aNotFoundLocation = nullptr) const;
+        AntigenRefs find_by_index(std::string name, std::string* aNotFoundLocation = nullptr) const;
         AntigenRefs find_by_cdcid(std::string cdcid) const;
 
         inline const AntigenRefs* all_by_index(std::string name) const
@@ -326,7 +326,6 @@ namespace hidb
         void add(const Chart& aChart);
         void importFrom(std::string aFilename, report_time timer = report_time::No);
         void exportTo(std::string aFilename, bool aPretty, report_time timer = report_time::No) const;
-        inline void importLocDb(std::string aFilename, report_time timer = report_time::No) { mLocDb.importFrom(aFilename, timer); }
 
         inline const Antigens& antigens() const { return mAntigens; }
         inline Antigens& antigens() { return mAntigens; }
@@ -340,7 +339,7 @@ namespace hidb
         const AntigenData& find_antigen_exactly(std::string name_reassortant_annotations_passage) const; // throws NotFound if antigen with this very set of data not found
         std::vector<const AntigenData*> find_antigens_fuzzy(std::string name_reassortant_annotations_passage) const;
         std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name_reassortant_annotations_passage) const;
-        inline std::vector<const AntigenData*> find_antigens_by_name(std::string name, std::string* aNotFoundLocation = nullptr) const { return mAntigens.find_by_index(name, *this, aNotFoundLocation); }
+        inline std::vector<const AntigenData*> find_antigens_by_name(std::string name, std::string* aNotFoundLocation = nullptr) const { return mAntigens.find_by_index(name, aNotFoundLocation); }
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
         const AntigenData& find_antigen_of_chart(const Antigen& aAntigen) const; // throws if not found
 
@@ -366,13 +365,10 @@ namespace hidb
         void stat_antigens(HiDbStat& aStat, std::string aStart, std::string aEnd) const;
         void stat_sera(HiDbStat& aStat, HiDbStat* aStatUnique, std::string aStart, std::string aEnd) const;
 
-        const LocDb& locdb() const { return mLocDb; }
-
      private:
         Antigens mAntigens;
         Sera mSera;
         Tables mCharts;
-        LocDb mLocDb;
 
         void add_antigen(const Antigen& aAntigen, std::string aTableId);
         void add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens);
@@ -417,22 +413,8 @@ namespace hidb
 
     class NoHiDb : public std::exception {};
 
-    class HiDbSet
-    {
-     public:
-        inline HiDbSet(std::string aHiDbDir) : mHiDbDir(aHiDbDir) {}
-
-        const HiDb& get(std::string aVirusType, report_time timer = report_time::No) const;
-
-     private:
-        using Ptrs = std::map<std::string, std::unique_ptr<hidb::HiDb>>;
-
-        std::string mHiDbDir;
-        mutable Ptrs mPtrs;
-
-    }; // class HiDbSet
-
-    const HiDb& get(std::string aHiDbDir, std::string aVirusType, report_time timer = report_time::No);
+    void setup(std::string aHiDbDir, std::optional<std::string> aLocDbFilename = {});
+    const HiDb& get(std::string aVirusType, report_time timer = report_time::No);
 
 // ----------------------------------------------------------------------
 

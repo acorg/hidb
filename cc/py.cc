@@ -214,11 +214,12 @@ PYBIND11_MODULE(hidb_backend, m)
       // --------------------------------------------------
 
     py::class_<HiDb>(m, "HiDb")
-            .def(py::init<>())
             .def("add", &HiDb::add, py::arg("chart"))
+
+              // three functions below required by bin/hidb-update
+            .def(py::init<>())
             .def("export_to", [](const HiDb& aHiDb, std::string aFilename, bool aPretty, bool aTimer) { aHiDb.exportTo(aFilename, aPretty, aTimer ? report_time::Yes : report_time::No); }, py::arg("filename"), py::arg("pretty") = false, py::arg("timer") = false)
             .def("import_from", [](HiDb& aHiDb, std::string aFilename, bool aTimer) { aHiDb.importFrom(aFilename, aTimer ? report_time::Yes : report_time::No); }, py::arg("filename"), py::arg("timer") = false)
-            .def("import_locdb", [](HiDb& aHiDb, std::string aFilename, bool aTimer) { aHiDb.importLocDb(aFilename, aTimer ? report_time::Yes : report_time::No); }, py::arg("filename"), py::arg("timer") = false)
 
             .def("table", &HiDb::table, py::arg("table_id"), py::return_value_policy::reference)
             .def("all_antigens", &HiDb::all_antigens, py::return_value_policy::reference)
@@ -246,10 +247,9 @@ PYBIND11_MODULE(hidb_backend, m)
 
       // ----------------------------------------------------------------------
 
-    py::class_<hidb::HiDbSet>(m, "HiDbSet")
-            .def(py::init<std::string>(), py::arg("hidb_dir"))
-            .def("get", [](hidb::HiDbSet& hidb_set, std::string virus_type, bool timer) { return hidb_set.get(virus_type, timer ? report_time::Yes : report_time::No); }, py::arg("virus_type"), py::arg("timer") = false, py::return_value_policy::reference)
-            ;
+    m.def("hidb_setup", [](std::string hidb_dir, std::string locdb_filename) { hidb::setup(hidb_dir, locdb_filename); }, py::arg("hidb_dir"), py::arg("locdb_filename") = "");
+    m.def("get_hidb", [](std::string aVirusType, bool aTimer) { return hidb::get(aVirusType, aTimer ? report_time::Yes : report_time::No); }, py::arg("virus_type"), py::arg("timer") = false, py::return_value_policy::reference);
+
 }
 
 // ----------------------------------------------------------------------

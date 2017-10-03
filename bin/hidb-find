@@ -30,9 +30,6 @@ def main(args):
     hidb = hidb_m.HiDb()
     with timeit("Reading hidb"):
         hidb.import_from(args.path_to_hidb)
-    if args.path_to_locdb is not None:
-        with timeit("Reading locationdb"):
-            hidb.import_locdb(args.path_to_locdb)
     if args.name or args.cdcid or args.all:
         if args.report_score:
             if args.find_antigens:
@@ -170,7 +167,7 @@ try:
     parser.add_argument('--list-antigen-names', dest="list_antigen_names", action="store_true", default=False, help='List all antigen names.')
     parser.add_argument('--list-serum-names', dest="list_serum_names", action="store_true", default=False, help='List all serum names.')
     parser.add_argument('--db', action='store', dest='path_to_hidb', required=True)
-    parser.add_argument('--locdb', action='store', dest='path_to_locdb', default=os.environ["ACMACSD_ROOT"] + "/data/locationdb.json.xz")
+    # parser.add_argument('--locdb', action='store', dest='path_to_locdb', default=os.environ["ACMACSD_ROOT"] + "/data/locationdb.json.xz")
     parser.add_argument('--score', dest="report_score", action="store_true", default=False)
     parser.add_argument('--tables', dest="report_tables", action="store_true", default=False)
     parser.add_argument('-s', '--sera', dest="find_antigens", action="store_false", default=True)
