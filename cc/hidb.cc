@@ -206,9 +206,7 @@ AntigenRefs hidb::Antigens::find_by_cdcid(std::string cdcid) const
 AntigenRefs hidb::Antigens::all(const HiDb& aHiDb) const
 {
     AntigenRefs result(aHiDb);
-    std::cerr << "hidb::Antigens::all0 " << size() << '\n';
     std::transform(begin(), end(), std::back_inserter(result), [](const auto& ag) { return &ag; });
-    std::cerr << "hidb::Antigens::all1 " << result.size() << '\n';
     return result;
 
 } // hidb::Antigens::all
