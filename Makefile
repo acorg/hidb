@@ -36,13 +36,15 @@ BINS_TO_MAKE = $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) \
 
 all: check-acmacsd-root $(BINS_TO_MAKE)
 
-install: check-acmacsd-root install-headers $(BINS_TO_MAKE)
-	$(call install_lib,$(HIDB_LIB))
+install: check-acmacsd-root install-headers $(AD_LIB)/libhidb.so $(BINS_TO_MAKE)
 	ln -sf $(DIST)/hidb_backend$(PYTHON_MODULE_SUFFIX) $(AD_PY)
 	ln -sf $(abspath py)/* $(AD_PY)
 	ln -sf $(abspath bin)/hidb-* $(AD_BIN)
 	ln -sf $(abspath dist)/hidb-* $(AD_BIN)
 	-$(abspath bin)/hidb-get-from-albertine
+
+$(AD_LIB)/libhidb.so: $(HIDB_LIB)
+	$(call install_lib,$(HIDB_LIB))
 
 test: install
 	test/test
@@ -64,7 +66,7 @@ $(HIDB_LIB): $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_SOURCES)) | $(DIST) $(LOCATION_
 	@echo "SHARED     " $@ # '<--' $^
 	@$(CXX) -shared $(LDFLAGS) -o $@ $^ $(HIDB_LDLIBS)
 
-$(DIST)/hidb-find-name: $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_FIND_NAME_SOURCES)) | $(DIST) $(HIDB_LIB)
+$(DIST)/hidb-find-name: $(patsubst %.cc,$(BUILD)/%.o,$(HIDB_FIND_NAME_SOURCES)) | $(DIST) $(AD_LIB)/libhidb.so
 	@echo "LINK       " $@
 	@$(CXX) $(LDFLAGS) -o $@ $^ -lhidb $(HIDB_LDLIBS)
 
