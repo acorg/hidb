@@ -24,7 +24,7 @@ HIDB_LIB = $(DIST)/libhidb.so
 
 CXXFLAGS = -MMD -g $(OPTIMIZATION) $(PROFILE) -fPIC -std=$(STD) $(WARNINGS) -Icc -I$(AD_INCLUDE) $(PKG_INCLUDES)
 LDFLAGS = $(OPTIMIZATION) $(PROFILE)
-HIDB_LDLIBS = -L$(AD_LIB) -llocationdb -lacmacsbase -lacmacschart $(shell pkg-config --libs liblzma) $(shell $(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//')
+HIDB_LDLIBS = -L$(AD_LIB) -llocationdb -lacmacsbase -lacmacschart $(shell pkg-config --libs liblzma) $(shell $(PYTHON_CONFIG) --ldflags | sed -E 's/-Wl,-stack_size,[0-9]+//') $(CXX_LIB)
 
 PKG_INCLUDES = $(shell pkg-config --cflags liblzma) $(shell $(PYTHON_CONFIG) --includes)
 

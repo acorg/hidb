@@ -110,7 +110,7 @@ void hidb::Antigens::make_index(const HiDb& aHiDb)
         catch (NotFound&) {
         }
     }
-    std::cerr << size() << " antigens " << mIndex.size() << " index entries" << std::endl;
+    // std::cerr << "HiDb: " << size() << " antigens " << mIndex.size() << " index entries" << std::endl;
 
 } // hidb::Antigens::make_index
 
@@ -288,11 +288,12 @@ void HiDb::exportTo(std::string aFilename, bool aPretty, report_time timer) cons
 
 void HiDb::importFrom(std::string aFilename, report_time timer)
 {
-    Timeit timeit("hidb loading: ", std::cerr, timer);
+    Timeit timeit("DEBUG: HiDb loading: ", std::cerr, timer);
     hidb_import(aFilename, *this);
-    Timeit timeit2("hidb indexing: ", std::cerr, timer);
+    Timeit timeit2("DEBUG: HiDb indexing: ", std::cerr, timer);
     mAntigens.make_index(*this);
-      // std::cerr << "Antigens: " << mAntigens.size() << '\n';
+    if (timer == report_time::Yes)
+        std::cerr << "DEBUG: HiDb: " << mAntigens.size() << " antigens\n";
 
 } // HiDb::importFrom
 

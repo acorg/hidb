@@ -170,9 +170,9 @@ std::string hidb::Vaccines::report(PassageType aPassageType, size_t aIndent, siz
 
 // ----------------------------------------------------------------------
 
-void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart)
+void hidb::vaccines_for_name(Vaccines& aVaccines, std::string aName, const Chart& aChart, bool aVerbose)
 {
-    const auto& hidb = hidb::get(aChart.chart_info().virus_type());
+    const auto& hidb = hidb::get(aChart.chart_info().virus_type(), aVerbose ? report_time::Yes : report_time::No);
     for (size_t ag_no: aChart.antigens().find_by_name(aName)) {
         try {
             const auto& ag = static_cast<const Antigen&>(aChart.antigen(ag_no));
@@ -204,11 +204,11 @@ hidb::Vaccines* hidb::find_vaccines_in_chart(std::string aName, const Chart& aCh
 
 // ----------------------------------------------------------------------
 
-hidb::VaccinesOfChart hidb::vaccines(const Chart& aChart)
+hidb::VaccinesOfChart hidb::vaccines(const Chart& aChart, bool aVerbose)
 {
     VaccinesOfChart result;
     for (const auto& name_type: vaccine_names(aChart)) {
-        vaccines_for_name(result.emplace_back(name_type), name_type.name, aChart);
+        vaccines_for_name(result.emplace_back(name_type), name_type.name, aChart, aVerbose);
     }
     return result;
 

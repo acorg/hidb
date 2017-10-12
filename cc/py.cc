@@ -78,7 +78,7 @@ PYBIND11_MODULE(hidb_backend, m)
 
     m.def("vaccine_names", py::overload_cast<std::string, std::string>(&vaccine_names), py::arg("subtype"), py::arg("lineage") = "", py::return_value_policy::reference);
     m.def("vaccine_names", py::overload_cast<const Chart&>(&vaccine_names), py::arg("chart"), py::return_value_policy::reference);
-    m.def("vaccines", py::overload_cast<const Chart&>(&vaccines), py::arg("chart")); // -> VaccinesOfChart*
+    m.def("vaccines", py::overload_cast<const Chart&, bool>(&vaccines), py::arg("chart"), py::arg("verbose") = false); // -> VaccinesOfChart*
 
       // ----------------------------------------------------------------------
       // HiDb
