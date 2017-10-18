@@ -279,7 +279,7 @@ void HiDb::add_serum(const Serum& aSerum, std::string aTableId, const std::vecto
 
 void HiDb::exportTo(std::string aFilename, bool aPretty, report_time timer) const
 {
-    Timeit timeit("hidb exporting: ", std::cerr, timer);
+    Timeit timeit("hidb exporting: ", timer);
     hidb_export(aFilename, *this, aPretty ? 1 : 0);
 
 } // HiDb::exportTo
@@ -288,9 +288,9 @@ void HiDb::exportTo(std::string aFilename, bool aPretty, report_time timer) cons
 
 void HiDb::importFrom(std::string aFilename, report_time timer)
 {
-    Timeit timeit("DEBUG: HiDb loading: ", std::cerr, timer);
+    Timeit timeit("DEBUG: HiDb loading: ", timer);
     hidb_import(aFilename, *this);
-    Timeit timeit2("DEBUG: HiDb indexing: ", std::cerr, timer);
+    Timeit timeit2("DEBUG: HiDb indexing: ", timer);
     mAntigens.make_index(*this);
     if (timer == report_time::Yes)
         std::cerr << "DEBUG: HiDb: " << mAntigens.size() << " antigens\n";
@@ -1011,7 +1011,7 @@ namespace hidb
                         throw NoHiDb{};
                       //throw std::runtime_error("No HiDb for " + aVirusType);
 
-                      // Timeit ti("loading hidb from " + filename + ": ", std::cerr, timer);
+                      // Timeit ti("loading hidb from " + filename + ": ", timer);
                     std::unique_ptr<HiDb> hidb{new HiDb{}};
                       // std::cerr << "opening " << filename << std::endl;
                     hidb->importFrom(filename, timer);
