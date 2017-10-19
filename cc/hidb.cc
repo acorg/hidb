@@ -730,7 +730,7 @@ const SerumData& HiDb::find_serum_of_chart(const Serum& aSerum, bool report_if_n
 
 // ----------------------------------------------------------------------
 
-void HiDb::find_homologous_antigens_for_sera_of_chart(Chart& aChart)
+void HiDb::find_homologous_antigens_for_sera_of_chart(Chart& aChart) const
 {
     for (Serum& serum: aChart.sera()) {
         try {
