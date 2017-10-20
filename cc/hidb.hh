@@ -216,7 +216,7 @@ namespace hidb
     {
      public:
         inline AntigenRefs() : mHiDb(nullptr) {}
-        inline AntigenRefs(const HiDb& aHiDb) : mHiDb(&aHiDb) {}
+        inline AntigenRefs(const HiDb& aHiDb, size_t aReserve) : mHiDb(&aHiDb) { reserve(aReserve); }
         template <typename Iterator> inline AntigenRefs(const HiDb& aHiDb, Iterator first, Iterator last) : std::vector<const AntigenData*>(first, last), mHiDb(&aHiDb) {}
         AntigenRefs& country(std::string aCountry);
         AntigenRefs& date_range(std::string aBegin, std::string aEnd);

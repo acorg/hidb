@@ -103,7 +103,7 @@ void hidb::Antigens::make_index(const HiDb& aHiDb)
             const std::string key = index_key(antigen.data().name());
             auto p = mIndex.find(key);
             if (p == mIndex.end()) {
-                p = mIndex.emplace(key, aHiDb).first;
+                p = mIndex.emplace(key, AntigenRefs(aHiDb, size() / 16)).first;
             }
             p->second.push_back(&antigen);
         }
@@ -205,7 +205,7 @@ AntigenRefs hidb::Antigens::find_by_cdcid(std::string cdcid) const
 
 AntigenRefs hidb::Antigens::all(const HiDb& aHiDb) const
 {
-    AntigenRefs result(aHiDb);
+    AntigenRefs result(aHiDb, size());
     std::transform(begin(), end(), std::back_inserter(result), [](const auto& ag) { return &ag; });
     return result;
 
@@ -288,10 +288,12 @@ void HiDb::exportTo(std::string aFilename, bool aPretty, report_time timer) cons
 
 void HiDb::importFrom(std::string aFilename, report_time timer)
 {
-    Timeit timeit("DEBUG: HiDb loading: ", timer);
+    Timeit timeit_load("DEBUG: HiDb loading: ", timer);
     hidb_import(aFilename, *this);
-    Timeit timeit2("DEBUG: HiDb indexing: ", timer);
+    timeit_load.report();
+    Timeit timeit_index("DEBUG: HiDb indexing: ", timer);
     mAntigens.make_index(*this);
+    timeit_index.report();
     if (timer == report_time::Yes)
         std::cerr << "DEBUG: HiDb: " << mAntigens.size() << " antigens\n";
 
