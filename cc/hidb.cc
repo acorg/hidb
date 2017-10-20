@@ -288,9 +288,13 @@ void HiDb::exportTo(std::string aFilename, bool aPretty, report_time timer) cons
 
 void HiDb::importFrom(std::string aFilename, report_time timer)
 {
-    Timeit timeit_load("DEBUG: HiDb loading: ", timer);
+    Timeit timeit_load("DEBUG: HiDb loading from " + aFilename + ": ", timer);
     hidb_import(aFilename, *this);
     timeit_load.report();
+    if (std::string_view(aFilename).substr(aFilename.size() - 15) == "hidb4.b.json.xz")
+        mAntigens.location_func(&virus_name::location_human_b);
+    else if (std::string_view(aFilename).substr(aFilename.size() - 16) == "hidb4.h3.json.xz" || std::string_view(aFilename).substr(aFilename.size() - 16) == "hidb4.h1.json.xz")
+        mAntigens.location_func(&virus_name::location_human_a);
     Timeit timeit_index("DEBUG: HiDb indexing: ", timer);
     mAntigens.make_index(*this);
     timeit_index.report();
@@ -758,7 +762,7 @@ void HiDb::find_homologous_antigens_for_sera_of_chart(Chart& aChart) const
 std::vector<std::string> HiDb::all_countries() const
 {
     std::vector<std::string> result;
-    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return virus_name::location(ag.data().name()); });
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [location_func=mAntigens.location_func()](const auto& ag) -> std::string { return location_func(ag.data().name()); });
       // Note: cdc_abbreviation starts with #
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
@@ -776,8 +780,8 @@ std::vector<std::string> HiDb::all_countries() const
 std::vector<std::string> HiDb::unrecognized_locations() const
 {
     std::vector<std::string> result;
-    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [](const auto& ag) -> std::string { return virus_name::location(ag.data().name()); });
-    std::transform(sera().begin(), sera().end(), std::back_inserter(result), [](const auto& sr) -> std::string { return virus_name::location(sr.data().name()); });
+    std::transform(antigens().begin(), antigens().end(), std::back_inserter(result), [location_func=mAntigens.location_func()](const auto& ag) -> std::string { return location_func(ag.data().name()); });
+    std::transform(sera().begin(), sera().end(), std::back_inserter(result), [location_func=mAntigens.location_func()](const auto& sr) -> std::string { return location_func(sr.data().name()); });
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
     last = std::remove(result.begin(), last, std::string()); // remove empty name meaning no location in the name detected, i.e. unrecognized name

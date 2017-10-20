@@ -248,9 +248,13 @@ namespace hidb
                 }
             }
 
+        inline void location_func(virus_name::location_func_t aLocationFunc) { mLocationFunc = aLocationFunc; }
+        inline virus_name::location_func_t location_func() const { return mLocationFunc; }
+
      private:
         static constexpr const size_t IndexKeySize = 2;
         std::map<std::string, AntigenRefs> mIndex;
+        virus_name::location_func_t mLocationFunc = &virus_name::location;
 
         class NotFound : public std::runtime_error { public: using std::runtime_error::runtime_error; };
 
@@ -268,7 +272,7 @@ namespace hidb
         inline std::string index_key(std::string name) const
             {
                 try {
-                    return virus_name::location(name).substr(0, IndexKeySize);
+                    return mLocationFunc(name).substr(0, IndexKeySize);
                 }
                 catch (virus_name::Unrecognized&) {
                     throw NotFound{"cannot find location in " + name};
