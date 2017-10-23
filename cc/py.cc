@@ -247,7 +247,7 @@ PYBIND11_MODULE(hidb_backend, m)
 
       // ----------------------------------------------------------------------
 
-    m.def("hidb_setup", [](std::string hidb_dir, std::string locdb_filename) { hidb::setup(hidb_dir, locdb_filename); }, py::arg("hidb_dir"), py::arg("locdb_filename") = "");
+    m.def("hidb_setup", [](std::string hidb_dir, std::string locdb_filename, bool verbose) { hidb::setup(hidb_dir, locdb_filename, verbose); }, py::arg("hidb_dir"), py::arg("locdb_filename") = "", py::arg("verbose") = false);
     m.def("get_hidb", [](std::string aVirusType, bool aTimer) { return hidb::get(aVirusType, aTimer ? report_time::Yes : report_time::No); }, py::arg("virus_type"), py::arg("timer") = false, py::return_value_policy::reference);
 
 }

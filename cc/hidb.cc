@@ -986,17 +986,19 @@ namespace hidb
 
     static std::unique_ptr<HiDbSet> sHiDbSet;
     static std::string sHiDbDir = std::getenv("HOME") + "/AD/data"s;
+    static bool sVerbose = false;
 
 #pragma GCC diagnostic pop
 
-    void setup(std::string aHiDbDir, std::optional<std::string> aLocDbFilename)
+    void setup(std::string aHiDbDir, std::optional<std::string> aLocDbFilename, bool aVerbose)
     {
+        sVerbose = aVerbose;
         if (!aHiDbDir.empty())
             sHiDbDir = aHiDbDir;
         if (aLocDbFilename && !aLocDbFilename->empty())
-            locdb_setup(*aLocDbFilename);
+            locdb_setup(*aLocDbFilename, sVerbose);
         else if (!aHiDbDir.empty())
-            locdb_setup(aHiDbDir + "/locationdb.json.xz");
+            locdb_setup(aHiDbDir + "/locationdb.json.xz", sVerbose);
     }
 
     class HiDbSet
@@ -1017,13 +1019,10 @@ namespace hidb
                         throw NoHiDb{};
                       //throw std::runtime_error("No HiDb for " + aVirusType);
 
-                      // Timeit ti("loading hidb from " + filename + ": ", timer);
                     std::unique_ptr<HiDb> hidb{new HiDb{}};
-                      // std::cerr << "opening " << filename << std::endl;
-                    hidb->importFrom(filename, timer);
+                    hidb->importFrom(filename, sVerbose ? report_time::Yes : timer);
                     h = mPtrs.emplace(aVirusType, std::move(hidb)).first;
                 }
-                  // std::cerr << "Hidb " << h->second->antigens().size() << '\n';
                 return *h->second;
             }
 

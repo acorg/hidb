@@ -417,7 +417,7 @@ namespace hidb
 
     class NoHiDb : public std::exception {};
 
-    void setup(std::string aHiDbDir, std::optional<std::string> aLocDbFilename = {});
+    void setup(std::string aHiDbDir, std::optional<std::string> aLocDbFilename = {}, bool aVerbose = false);
     const HiDb& get(std::string aVirusType, report_time timer = report_time::No);
 
 // ----------------------------------------------------------------------

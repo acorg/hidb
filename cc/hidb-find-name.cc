@@ -24,8 +24,8 @@ int main(int argc, char* const argv[])
         if (args["-h"] || args["--help"] || args.number_of_arguments() < 2) {
             throw std::runtime_error("Usage: "s + args.program() + sUsage + args.usage_options());
         }
-          //const bool verbose = args["-v"] || args["--verbose"];
-        hidb::setup(args["--db-dir"]);
+        const bool verbose = args["-v"] || args["--verbose"];
+        hidb::setup(args["--db-dir"], {}, verbose);
 
         const auto& hidb = hidb::get(string::upper(args[0]), report_time::Yes);
 
