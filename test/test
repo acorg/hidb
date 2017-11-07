@@ -22,9 +22,11 @@ trap failed ERR
 
 # ======================================================================
 
-export LD_LIBRARY_PATH="$ACMACSD_ROOT"/lib
-cd "$TESTDIR"
-../bin/hidb-update --db "$TDIR"/hidb.json.xz ./test.acd1.xz
-../bin/hidb-copy "$TDIR"/hidb.json.xz "$TDIR"/hidb2.json.xz
-xzdiff "$TDIR"/hidb.json.xz "$TDIR"/hidb2.json.xz
-../bin/hidb-find --db "$TDIR"/hidb.json.xz -n CONNECTICUT/13/2010 | diff connecticut.txt -
+if [[ "${HOSTNAME}" == "jagd" || "${HOSTNAME}" == "i19" ]]; then
+    export LD_LIBRARY_PATH="$ACMACSD_ROOT"/lib
+    cd "$TESTDIR"
+    ../bin/hidb-update --db "$TDIR"/hidb.json.xz ./test.acd1.xz
+    ../bin/hidb-copy "$TDIR"/hidb.json.xz "$TDIR"/hidb2.json.xz
+    xzdiff "$TDIR"/hidb.json.xz "$TDIR"/hidb2.json.xz
+    ../bin/hidb-find --db "$TDIR"/hidb.json.xz -n CONNECTICUT/13/2010 | diff connecticut.txt -
+fi

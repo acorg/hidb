@@ -41,7 +41,7 @@ install: check-acmacsd-root install-headers $(AD_LIB)/libhidb.so $(BINS_TO_MAKE)
 	ln -sf $(abspath py)/* $(AD_PY)
 	ln -sf $(abspath bin)/hidb-* $(AD_BIN)
 	ln -sf $(abspath dist)/hidb-* $(AD_BIN)
-	-$(abspath bin)/hidb-get-from-albertine
+	@#-$(abspath bin)/hidb-get-from-albertine
 
 $(AD_LIB)/libhidb.so: $(HIDB_LIB)
 	$(call install_lib,$(HIDB_LIB))
