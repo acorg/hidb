@@ -5,7 +5,7 @@
 
 #include "acmacs-base/timeit.hh"
 #include "acmacs-base/stream.hh"
-#include "acmacs-chart/antigen-serum-match.hh"
+#include "acmacs-chart-1/antigen-serum-match.hh"
 #include "locationdb/locdb.hh"
 
 #include "variant-id.hh"

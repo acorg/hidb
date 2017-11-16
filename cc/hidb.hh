@@ -9,7 +9,7 @@
 #include <optional>
 
 #include "acmacs-base/timeit.hh"
-#include "acmacs-chart/chart.hh"
+#include "acmacs-chart-1/chart.hh"
 
 // ----------------------------------------------------------------------
 

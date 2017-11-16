@@ -1,7 +1,7 @@
 #pragma once
 
 #include "acmacs-base/string.hh"
-#include "acmacs-chart/chart.hh"
+#include "acmacs-chart-1/chart.hh"
 
 // ----------------------------------------------------------------------
 

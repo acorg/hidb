@@ -1,7 +1,7 @@
 #include <stack>
 
 #include "acmacs-base/read-file.hh"
-#include "acmacs-chart/chart.hh"
+#include "acmacs-chart-1/chart.hh"
 #include "hidb-export.hh"
 #include "hidb/hidb.hh"
 #include "hidb/json-keys.hh"
