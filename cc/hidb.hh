@@ -7,9 +7,11 @@
 #include <map>
 #include <algorithm>
 #include <optional>
+#include <memory>
 
 #include "acmacs-base/timeit.hh"
-#include "acmacs-chart-1/chart.hh"
+#include "acmacs-base/virus-name.hh"
+#include "acmacs-chart-2/chart.hh"
 
 // ----------------------------------------------------------------------
 
@@ -24,8 +26,8 @@ namespace hidb
     {
      public:
         inline PerTable() = default;
-        inline PerTable(std::string aTableId, const Antigen& aAntigen) : mTableId(aTableId), mDate(aAntigen.date()), mLabId(aAntigen.lab_id()) {}
-        inline PerTable(std::string aTableId, const Serum& /*aSerum*/) : mTableId(aTableId) {}
+        inline PerTable(std::string aTableId, const acmacs::chart::Antigen& aAntigen) : mTableId(aTableId), mDate(aAntigen.date()), mLabId(aAntigen.lab_ids()) {}
+        inline PerTable(std::string aTableId, const acmacs::chart::Serum& /*aSerum*/) : mTableId(aTableId) {}
 
         inline const std::string table_id() const { return mTableId; }
         inline std::string& table_id() { return mTableId; }
@@ -143,8 +145,8 @@ namespace hidb
 
     }; // class AntigenSerumData<>
 
-    using AntigenData = AntigenSerumData<Antigen>;
-    using SerumData = AntigenSerumData<Serum>;
+    using AntigenData = AntigenSerumData<acmacs::chart::Antigen>;
+    using SerumData = AntigenSerumData<acmacs::chart::Serum>;
 
 // ----------------------------------------------------------------------
 
@@ -155,10 +157,10 @@ namespace hidb
         using Titers = std::vector<std::vector<std::string>>;
 
         inline ChartData() = default;
-        ChartData(const Chart& aChart);
+        ChartData(const acmacs::chart::Chart& aChart);
 
         inline const std::string table_id() const { return mTableId; }
-        inline const ChartInfo& chart_info() const { return mChartInfo; }
+        inline const acmacs::chart::Info& chart_info() const { return *mChartInfo; }
         inline size_t number_of_antigens() const { return mAntigens.size(); }
         inline size_t number_of_sera() const { return mSera.size(); }
         inline const std::vector<AgSrRef>& antigens() const { return mAntigens; }
@@ -167,7 +169,7 @@ namespace hidb
         inline std::string titer(size_t antigen_no, size_t serum_no) const { return titers()[antigen_no][serum_no]; }
 
         inline std::string& table_id() { return mTableId; }
-        inline ChartInfo& chart_info() { return mChartInfo; }
+          // inline acmacs::chart::Info& chart_info() { return *mChartInfo; }
         inline std::vector<AgSrRef>& antigens() { return mAntigens; }
         inline std::vector<AgSrRef>& sera() { return mSera; }
         inline Titers& titers() { return mTiters; }
@@ -180,7 +182,7 @@ namespace hidb
 
      private:
         std::string mTableId;
-        ChartInfo mChartInfo;
+        std::shared_ptr<acmacs::chart::Info> mChartInfo;
         std::vector<AgSrRef> mAntigens;
         std::vector<AgSrRef> mSera;
         Titers mTiters;
@@ -327,7 +329,7 @@ namespace hidb
 
         inline HiDb() {}
 
-        void add(const Chart& aChart);
+        void add(const acmacs::chart::Chart& aChart);
         void importFrom(std::string aFilename, report_time timer = report_time::No);
         void exportTo(std::string aFilename, bool aPretty, report_time timer = report_time::No) const;
 
@@ -345,7 +347,7 @@ namespace hidb
         std::vector<const AntigenData*> find_antigens_extra_fuzzy(std::string name_reassortant_annotations_passage) const;
         inline std::vector<const AntigenData*> find_antigens_by_name(std::string name, std::string* aNotFoundLocation = nullptr) const { return mAntigens.find_by_index(name, aNotFoundLocation); }
         inline std::vector<const AntigenData*> find_antigens_by_cdcid(std::string cdcid) const  { return mAntigens.find_by_cdcid(cdcid); }
-        const AntigenData& find_antigen_of_chart(const Antigen& aAntigen) const; // throws if not found
+        const AntigenData& find_antigen_of_chart(const acmacs::chart::Antigen& aAntigen) const; // throws if not found
 
         std::vector<std::pair<const AntigenData*, size_t>> find_antigens_with_score(std::string name) const;
         std::vector<std::string> list_antigen_names(std::string aLab, std::string aLineage, bool aFullName) const;
@@ -356,8 +358,8 @@ namespace hidb
         std::vector<std::string> list_serum_names(std::string aLab, std::string aLineage, bool aFullName) const;
         std::vector<const SerumData*> list_sera(std::string aLab, std::string aLineage) const;
         std::vector<const SerumData*> find_homologous_sera(const AntigenData& aAntigen) const;
-        const SerumData& find_serum_of_chart(const Serum& aSerum, bool report_if_not_found = false) const; // throws if not found
-        void find_homologous_antigens_for_sera_of_chart(Chart& aChart) const;
+        const SerumData& find_serum_of_chart(const acmacs::chart::Serum& aSerum, bool report_if_not_found = false) const; // throws if not found
+        void find_homologous_antigens_for_sera_of_chart(acmacs::chart::Chart& aChart) const;
         std::string serum_date(const SerumData& aSerum) const;
 
           // name is just (international) name without reassortant/passage
@@ -374,8 +376,8 @@ namespace hidb
         Sera mSera;
         Tables mCharts;
 
-        void add_antigen(const Antigen& aAntigen, std::string aTableId);
-        void add_serum(const Serum& aSerum, std::string aTableId, const std::vector<Antigen>& aAntigens);
+        void add_antigen(const acmacs::chart::Antigen& aAntigen, std::string aTableId);
+        void add_serum(const acmacs::chart::Serum& aSerum, std::string aTableId, const std::vector<acmacs::chart::Antigen>& aAntigens);
         const AntigenData& find_antigen_in_suggestions(std::string aName, const AntigenRefs& aSuggestions) const;
 
     }; // class HiDb

@@ -5,7 +5,7 @@
 
 #include "acmacs-base/timeit.hh"
 #include "acmacs-base/stream.hh"
-#include "acmacs-chart-1/antigen-serum-match.hh"
+//#include "acmacs-chart-1/antigen-serum-match.hh"
 #include "locationdb/locdb.hh"
 
 #include "variant-id.hh"
@@ -18,14 +18,14 @@ using namespace std::string_literals;
 
 // ----------------------------------------------------------------------
 
-ChartData::ChartData(const Chart& aChart)
-    : mTableId{hidb::table_id(aChart)}, mChartInfo{static_cast<const ChartInfo&>(aChart.chart_info())}, mTiters{aChart.titers().list()}
+ChartData::ChartData(const acmacs::chart::Chart& aChart)
+    : mTableId{hidb::table_id(aChart)}, mChartInfo{aChart.info()}, mTiters{aChart.titers().list()}
 {
-    for (const auto& antigen: aChart.antigens()) {
-        mAntigens.emplace_back(antigen.name(), variant_id(antigen));
+    for (auto antigen: *aChart.antigens()) {
+        mAntigens.emplace_back(antigen->name(), variant_id(*antigen));
     }
-    for (const auto& serum: aChart.sera()) {
-        mSera.emplace_back(serum.name(), variant_id(serum));
+    for (auto serum: *aChart.sera()) {
+        mSera.emplace_back(serum->name(), variant_id(*serum));
     }
 }
 
@@ -213,7 +213,7 @@ AntigenRefs hidb::Antigens::all(const HiDb& aHiDb) const
 
 // ----------------------------------------------------------------------
 
-void HiDb::add(const Chart& aChart)
+void HiDb::add(const acmacs::chart::Chart& aChart)
 {
     ChartData chart(aChart);
     std::cout << chart.table_id() << std::endl;
@@ -236,7 +236,7 @@ void HiDb::add(const Chart& aChart)
 
 // ----------------------------------------------------------------------
 
-void HiDb::add_antigen(const Antigen& aAntigen, std::string aTableId)
+void HiDb::add_antigen(const acmacs::chart::Antigen& aAntigen, std::string aTableId)
 {
     if (!aAntigen.distinct()) {
         AntigenData antigen_data(aAntigen);

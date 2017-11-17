@@ -12,10 +12,10 @@ TARGETS = \
 	$(DIST)/hidb-find-name
 
 HIDB_SOURCES = hidb.cc hidb-export.cc hidb-import.cc variant-id.cc vaccines.cc
-HIDB_PY_SOURCES = py.cc $(HIDB_SOURCES)
+HIDB_PY_SOURCES = $(HIDB_SOURCES) py.cc
 HIDB_FIND_NAME_SOURCES = hidb-find-name.cc
 
-HIDB_LIB_MAJOR = 1
+HIDB_LIB_MAJOR = 2
 HIDB_LIB_MINOR = 0
 HIDB_LIB_NAME = libhidb
 HIDB_LIB = $(DIST)/$(call shared_lib_name,$(HIDB_LIB_NAME),$(HIDB_LIB_MAJOR),$(HIDB_LIB_MINOR))
