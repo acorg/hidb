@@ -295,7 +295,7 @@ void hidb_import(std::string buffer, hidb::HiDb& aHiDb)
     if (buffer == "-")
         buffer = acmacs::file::read_stdin();
     else if (buffer[0] != '{')
-        buffer = acmacs::file::read(buffer, true);
+        buffer = acmacs::file::read(buffer);
     if (buffer[0] == '{') { // && buffer.find("\"  version\": \"hidb-v4\"") != std::string::npos) {
         HiDbReaderEventHandler handler{aHiDb};
         rapidjson::Reader reader;
